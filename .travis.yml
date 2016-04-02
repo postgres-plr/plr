@@ -18,5 +18,5 @@ script:
   - export USE_PGXS=1
   - make 
   - sudo  make install
-  - /usr/lib/postgresql/9.4/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --inputdir=./ --psqldir='/usr/lib/postgresql/9.4/bin' --dbname=contrib_regression plr
+  - /usr/lib/postgresql/9.5/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --inputdir=./ --psqldir='/usr/lib/postgresql/9.5/bin' --dbname=contrib_regression plr
   - cat regression.diffs
