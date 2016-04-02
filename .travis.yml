@@ -18,4 +18,4 @@ script:
   - export USE_PGXS=1
   - make 
   - sudo  make install
-  - pg_regress/pg_regress --dbname=contrib_regression plr
+  - pg_regress --dbname=contrib_regression plr
