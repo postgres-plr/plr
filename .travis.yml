@@ -12,3 +12,6 @@ before_script:
 services:
   - postgresql
 
+script:
+  - export USE_PGXS=1
+  - make && make install
