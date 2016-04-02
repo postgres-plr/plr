@@ -10,13 +10,13 @@ before_script:
   - sudo apt-get install -qq r-base-dev
   - sudo apt-get install -qq postgresql-server-dev-all postgresql-client
   - sudo apt-get install -qq postgresql-common
+  - sudo pg_createcluster 9.5 main
+  - sudo pg_ctlcluster 9.5 main start
 
-services:
-  - postgresql
 
 script:
   - export USE_PGXS=1
-  - export PGPORT=5433
+  - export PGPORT=5432
   - make 
   - sudo  make install
   - /usr/lib/postgresql/9.5/bin/pg_config
