@@ -8,17 +8,15 @@ before_script:
   - sudo apt-get update -qq
   - sudo apt-get install -qq r-base
   - sudo apt-get install -qq r-base-dev
-  - sudo apt-get install postgresql-server-dev-all
-  - sudo apt-get install postgresql-common
-
-addons:
-  - postgresql: "9.5"
+  - sudo apt-get install -qq postgresql-server-dev-all postgresql-client
+  - sudo apt-get install -qq postgresql-common
 
 services:
   - postgresql
 
 script:
   - export USE_PGXS=1
+  - export PGPORT=5433
   - make 
   - sudo  make install
   - /usr/lib/postgresql/9.5/bin/pg_config
