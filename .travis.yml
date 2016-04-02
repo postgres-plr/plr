@@ -8,6 +8,8 @@ before_script:
   - sudo apt-get update -qq
   - sudo apt-get install -qq r-base
   - sudo apt-get install -qq r-base-dev
+  - sudo apt-get install postgresql-server-dev-all
+  - sudo apt-get install postgresql-common
 
 services:
   - postgresql
