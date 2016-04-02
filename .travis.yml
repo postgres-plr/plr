@@ -10,8 +10,7 @@ before_script:
   - sudo apt-get update -qq
   - sudo apt-get install -qq r-base
   - sudo apt-get install -qq r-base-dev
-  - sudo apt-get install -qq postgresql-server-dev-all postgresql-client
-  - sudo apt-get install -qq postgresql-common
+  - sudo apt-get install -qq postgresql-9.5 
   - sudo pg_createcluster 9.5 main
   - sudo pg_ctlcluster 9.5 main start
 
