@@ -5,8 +5,9 @@ language: c
 sudo : false
 
 before_script:
-  - apt-get install r-base
-  - apt-get install r-base-dev
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq r-base
+  - sudo apt-get install -qq r-base-dev
 
 services:
   - postgresql
