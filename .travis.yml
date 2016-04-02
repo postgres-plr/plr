@@ -2,7 +2,7 @@ os:
   - linux
 
 language: c
-sudo : false
+sudo : required 
 
 before_script:
   - sudo apt-get update -qq
