@@ -11,6 +11,9 @@ before_script:
   - sudo apt-get install postgresql-server-dev-all
   - sudo apt-get install postgresql-common
 
+addons:
+  - postgresql: "9.5"
+
 services:
   - postgresql
 
