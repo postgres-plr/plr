@@ -16,4 +16,5 @@ services:
 
 script:
   - export USE_PGXS=1
-  - make && make install
+  - make 
+  - sudo  make install
