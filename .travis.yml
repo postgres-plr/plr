@@ -16,6 +16,7 @@ before_script:
   - sudo apt-get install postgresql-server-dev-9.5
 
 script:
+  - sudo pg_lsclusters
   - export USE_PGXS=1
   - export PGPORT=5432
   - make 
