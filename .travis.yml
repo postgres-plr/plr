@@ -18,7 +18,7 @@ before_script:
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
-  - export PGPORT=5432
+  - export PGPORT=5433
   - make 
   - sudo  make install
   - /usr/lib/postgresql/9.5/bin/pg_config
