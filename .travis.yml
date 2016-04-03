@@ -19,10 +19,10 @@ script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
   - export PGPORT=5433
-  - sudo -u postgres sh -c 'createuser -S -d -w travis -U postgres'
+  - sudo -u postgres sh -c '/usr/lib/postgresql/9.5/bin/createuser -S -d -w travis -U postgres'
   - make 
   - sudo  make install
   - /usr/lib/postgresql/9.5/bin/pg_config
   - psql --version 
-  - /usr/lib/postgresql/9.5/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --inputdir=./ --bindir='/usr/bin' --dbname=contrib_regression plr
+  - /usr/lib/postgresql/9.5/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --inputdir=./ --bindir='/usr/lib/postgresql/9.5/bin/' --dbname=contrib_regression plr
   - cat regression.diffs
