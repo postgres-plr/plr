@@ -1003,7 +1003,7 @@ get_scalar_datum(SEXP rval, Oid result_typid, FmgrInfo result_in_func, bool *isn
 {
 	Datum		dvalue;
 	SEXP		obj;
-	const char *value;
+	const char *value=NULL;
 
 	/*
 	 * Element type is zero, we don't have an array, so coerce to string
@@ -1027,7 +1027,18 @@ get_scalar_datum(SEXP rval, Oid result_typid, FmgrInfo result_in_func, bool *isn
 			dvalue = (Datum) 0;
 			return dvalue;
 		}
-		value = CHAR(STRING_ELT(obj, 0));
+		obj = STRING_ELT(obj, 0);
+		if (TYPEOF(obj) == CHARSXP )
+		{
+			value = CHAR(obj);
+		}
+		else
+		{
+			ereport(ERROR,
+					(errcode(ERRCODE_DATA_EXCEPTION),
+					 errmsg("R interpreter expression evaluation error"),
+					 errdetail("return type cannot be coerced to char")));
+		}
 		UNPROTECT(1);
 		
 		if (value != NULL)
