@@ -7,7 +7,7 @@
 SELECT plr_version();
  plr_version 
 -------------
- 08.03.00.16
+ 08.03.00.17
 (1 row)
 
 -- make typenames available in the global namespace
