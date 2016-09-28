@@ -1,4 +1,4 @@
-/* plr/plr--unpackaged--8.3.0.16.sql */
+/* plr/plr--unpackaged--8.3.0.17.sql */
 
 ALTER EXTENSION plr ADD type plr_environ_type;
 ALTER EXTENSION plr ADD type r_typename;

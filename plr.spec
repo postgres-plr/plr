@@ -3,7 +3,7 @@
 %define pkgsharedir %(pg_config --sharedir)
 Summary:	A loadable procedural language that enables you to write PostgreSQL functions and triggers in the R programming language.
 Name:		plr
-Version:	8.3.0.16
+Version:	8.3.0.17
 Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
@@ -52,6 +52,6 @@ rm -rf %{buildroot}
 %doc %{pkgdocdir}/extension/README.plr
 %{pkgsharedir}/extension/plr.sql
 %{pkgsharedir}/extension/plr.control
-%{pkgsharedir}/extension/plr--8.3.0.16.sql
-%{pkgsharedir}/extension/plr--unpackaged--8.3.0.16.sql
+%{pkgsharedir}/extension/plr--8.3.0.17.sql
+%{pkgsharedir}/extension/plr--unpackaged--8.3.0.17.sql
 %{pkglibdir}/plr.so*
