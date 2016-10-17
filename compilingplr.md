@@ -13,6 +13,7 @@ cat R.dump.csv | tr -s ' ' | cut -d ' ' -f 5 > R.def
 
 Add the following two lines to the top of the file:
  LIBRARY R
+ 
  EXPORTS
 
 Then run the following using R.def
