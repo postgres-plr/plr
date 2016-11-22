@@ -26,7 +26,7 @@ DATA_built	= plr.sql
 DATA		= plr--8.3.0.17.sql plr--unpackaged--8.3.0.17.sql
 DOCS		= README.plr
 REGRESS		= plr
-EXTRA_CLEAN	= doc/html/* doc/plr-US.aux doc/plr-*.log doc/plr-*.out doc/plr-*.pdf doc/plr-*.tex-pdf
+EXTRA_CLEAN	= doc/html/* doc/plr-US.aux doc/plr-*.log doc/plr-*.out doc/plr-*.pdf doc/plr-*.tex-pdf doc/HTML.index
 
 ifdef USE_PGXS
 ifndef PG_CONFIG
