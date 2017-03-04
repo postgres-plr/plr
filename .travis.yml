@@ -18,7 +18,6 @@ before_script:
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
-  - export PGPORT=5433
   - sudo -u postgres sh -c '/usr/lib/postgresql/9.5/bin/createuser -s -d -w travis -U postgres'
   - make 
   - sudo  make install
