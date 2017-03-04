@@ -8,7 +8,7 @@ Release:	1%{?dist}
 License:	BSD
 Group:		Applications/Databases
 Source:		http://www.joeconway.com/plr/plr-%{version}.tar.gz
-URL:		http://www.joeconway.com/plr/
+URL:		http://www.joeconway.com/plr.html
 BuildRequires:	postgresql-devel >= 8.3
 BuildRequires:	R-devel
 Requires:	postgresql-server >= 8.3
