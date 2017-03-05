@@ -30,7 +30,7 @@
  * 
  */
 
-See http://www.joeconway.com/plr/ for release notes and latest docs
+See http://www.joeconway.com/plr.html for release notes and latest docs
 
 Notes:
     - R headers are required. Download and install R prior to building
@@ -44,13 +44,13 @@ Notes:
       PL/R will refuse to load.
 
 Installation:
-  See http://www.joeconway.com/plr/doc/plr-install.html
+  See http://www.joeconway.com/doc/plr-install.html
   for the most up-to-date instructions.
 
 Documentation:
 
   See the following:
-     See http://www.joeconway.com/plr/doc/
+     See http://www.joeconway.com/doc/doc.html
      doc/plr.sgml    - PL/R documentation source
      doc/*.html      - Preprocessed html version of the documentation
 
