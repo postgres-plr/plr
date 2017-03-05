@@ -3,6 +3,9 @@
 -- does not depend on contents of plr.sql.
 --
 \set ECHO none
+-- make sure we at least can get notice messages
+set client_min_messages to  notice
+
 -- check version
 SELECT plr_version();
  plr_version 
