@@ -7,7 +7,7 @@
 \set ECHO all
 
 -- make sure we at least can get notice messages
-set client_min_messages to  notice
+set client_min_messages to  notice;
 
 -- check version
 SELECT plr_version();
