@@ -6,6 +6,9 @@
 \i plr.sql
 \set ECHO all
 
+-- make sure we get the notices
+set client_min_messages to notice;
+
 -- check version
 SELECT plr_version();
 
