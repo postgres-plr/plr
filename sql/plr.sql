@@ -430,7 +430,7 @@ returns setof record as '
  return (arg1)
 ' language 'plr';
 
-select * from restore_df((select test_serialize('select oid, typname from pg_type where typname in (''oid'',''name'',''int4'')'))) as t(oid oid, typname name);
+select * from restore_df((select test_serialize('select oid, typname from pg_type where typname in (''oid'',''name'',''int4'')'))) as t(oid oid, typname name) order by oid;
 
 --Test WINDOW functions
 -- create test table
