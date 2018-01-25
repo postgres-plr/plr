@@ -1428,3 +1428,33 @@ WINDOW w AS (ORDER BY firm, fyear ROWS 8 PRECEDING);
    70 |  2000 |  1.99 |    1.98 | 1.000000
 (400 rows)
 
+CREATE OR REPLACE FUNCTION rlargeint8out(n int) RETURNS int8[] AS $$
+matrix(2, 1, n)
+$$ LANGUAGE plr;
+CREATE OR REPLACE FUNCTION routfloat4(n int) RETURNS float4[] AS $$
+vector(mode = "numeric", length = n)
+$$ LANGUAGE plr;
+SELECT rlargeint8out(10);
+      rlargeint8out      
+-------------------------
+ {{2,2,2,2,2,2,2,2,2,2}}
+(1 row)
+
+SELECT routfloat4(10);
+      routfloat4       
+-----------------------
+ {0,0,0,0,0,0,0,0,0,0}
+(1 row)
+
+SELECT count(rlargeint8out(15000));
+ count 
+-------
+     1
+(1 row)
+
+SELECT count(routfloat4(15000));
+ count 
+-------
+     1
+(1 row)
+
