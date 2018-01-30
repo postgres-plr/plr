@@ -14,7 +14,7 @@ before_script:
   - sudo apt-get remove postgresql 
   - sudo apt-get install postgresql-9.5 
   - sudo apt-get install postgresql-server-dev-9.5
-
+  - sudo pg_ctlcluster 9.5 main start
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
