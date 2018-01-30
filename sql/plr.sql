@@ -468,3 +468,17 @@ FROM (SELECT firm, fyear, eps,
 FROM test_data) AS a
 WHERE eps IS NOT NULL
 WINDOW w AS (ORDER BY firm, fyear ROWS 8 PRECEDING);
+
+CREATE OR REPLACE FUNCTION rlargeint8out(n int) RETURNS int8[] AS $$
+matrix(2, 1, n)
+$$ LANGUAGE plr;
+
+CREATE OR REPLACE FUNCTION routfloat4(n int) RETURNS float4[] AS $$
+vector(mode = "numeric", length = n)
+$$ LANGUAGE plr;
+
+SELECT rlargeint8out(10);
+SELECT routfloat4(10);
+
+SELECT count(rlargeint8out(15000));
+SELECT count(routfloat4(15000));
