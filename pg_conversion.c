@@ -476,7 +476,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 	/* Count non-dropped attributes so we can later ignore the dropped ones */
 	for (j = 0; j < nc; j++)
 	{
-		if (!tupdesc->attrs[j]->attisdropped)
+		if (!tupdesc->attrs[j].attisdropped)
 			nc_non_dropped++;
 	}
 
@@ -501,7 +501,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 		char		typalign;
 
 		/* ignore dropped attributes */
-		if (tupdesc->attrs[j]->attisdropped)
+		if (tupdesc->attrs[j].attisdropped)
 			continue;
 
 		/* set column name */
@@ -800,7 +800,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 	 */
 	for (j = 0; j < nc; j++)
 	{
-		if (tupdesc->attrs[j]->attisdropped)
+		if (tupdesc->attrs[j].attisdropped)
 			nc_dropped++;
 	}
 
@@ -863,7 +863,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 		for (j = 0; j < nc + nc_dropped; j++)
 		{
 			/* insert NULL for dropped attributes */
-			if (tupdesc->attrs[j]->attisdropped)
+			if (tupdesc->attrs[j].attisdropped)
 				values[j] = NULL;
 			else
 			{
@@ -1878,7 +1878,7 @@ get_frame_tuplestore(SEXP rval,
 	HeapTuple			tuple;
 	TupleDesc			tupdesc = attinmeta->tupdesc;
 	int					tupdesc_nc = tupdesc->natts;
-	Form_pg_attribute  *attrs = tupdesc->attrs;
+	Form_pg_attribute  attrs = tupdesc->attrs;
 	MemoryContext		oldcontext;
 	int					i, j;
 	int					nr = 0;
@@ -1925,7 +1925,7 @@ get_frame_tuplestore(SEXP rval,
 	{
 		PROTECT(dfcol = VECTOR_ELT(rval, j));
 		if((!isFactor(dfcol)) &&
-		   ((attrs[j]->attndims == 0) ||
+		   ((attrs[j].attndims == 0) ||
 			(TYPEOF(dfcol) != VECSXP)))
 		{
 			SEXP	obj;
@@ -1934,7 +1934,7 @@ get_frame_tuplestore(SEXP rval,
 			SET_VECTOR_ELT(result, j, obj);
 			UNPROTECT(1);
 		}
-		else if(attrs[j]->attndims != 0)	/* array data type */
+		else if(attrs[j].attndims != 0)	/* array data type */
 		{
 			SEXP	obj;
 
@@ -2010,9 +2010,9 @@ get_frame_tuplestore(SEXP rval,
 			}
 			else
 			{
-				if ((attrs[j]->attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
+				if ((attrs[j].attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
 				{
-					if (attrs[j]->attndims == 0)
+					if (attrs[j].attndims == 0)
 					{
 						values[j] = pstrdup(CHAR(STRING_ELT(dfcol, i)));
 					}

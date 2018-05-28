@@ -955,8 +955,11 @@ do_compile(FunctionCallInfo fcinfo,
 	function->fn_tid = procTup->t_self;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
-	/* Flag for window functions */
+#if PG_VERSION_NUM >= 110000
+	function->iswindow = (procStruct->prokind == PROKIND_WINDOW);
+#else
 	function->iswindow = procStruct->proiswindow;
+#endif
 #endif
 
 	/* Lookup the pg_language tuple by Oid*/
@@ -1074,7 +1077,7 @@ do_compile(FunctionCallInfo fcinfo,
 	
 			for (i = 0; i < function->result_natts; i++)
 			{
-				function->result_fld_elem_typid[i] = get_element_type(tupdesc->attrs[i]->atttypid);
+				function->result_fld_elem_typid[i] = get_element_type(tupdesc->attrs[i].atttypid);
 				if (OidIsValid(function->result_fld_elem_typid[i]))
 				{
 					get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
