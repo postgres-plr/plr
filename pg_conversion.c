@@ -476,7 +476,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 	/* Count non-dropped attributes so we can later ignore the dropped ones */
 	for (j = 0; j < nc; j++)
 	{
-		if (!tupdesc->attrs[j].attisdropped)
+		if (!TupleDescAttr(tupdesc,i)->attisdropped)
 			nc_non_dropped++;
 	}
 
@@ -501,7 +501,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 		char		typalign;
 
 		/* ignore dropped attributes */
-		if (tupdesc->attrs[j].attisdropped)
+		if (TupleDescAttr(tupdesc,j)->attisdropped)
 			continue;
 
 		/* set column name */
@@ -800,7 +800,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 	 */
 	for (j = 0; j < nc; j++)
 	{
-		if (tupdesc->attrs[j].attisdropped)
+		if (TupleDescAttr(tupdesc,j)->attisdropped)
 			nc_dropped++;
 	}
 
@@ -863,7 +863,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 		for (j = 0; j < nc + nc_dropped; j++)
 		{
 			/* insert NULL for dropped attributes */
-			if (tupdesc->attrs[j].attisdropped)
+			if (TupleDescAttr(tupdesc,j)->attisdropped)
 				values[j] = NULL;
 			else
 			{
