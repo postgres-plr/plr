@@ -1878,7 +1878,6 @@ get_frame_tuplestore(SEXP rval,
 	HeapTuple			tuple;
 	TupleDesc			tupdesc = attinmeta->tupdesc;
 	int					tupdesc_nc = tupdesc->natts;
-	Form_pg_attribute  attrs = tupdesc->attrs;
 	MemoryContext		oldcontext;
 	int					i, j;
 	int					nr = 0;
@@ -1925,7 +1924,7 @@ get_frame_tuplestore(SEXP rval,
 	{
 		PROTECT(dfcol = VECTOR_ELT(rval, j));
 		if((!isFactor(dfcol)) &&
-		   ((attrs[j].attndims == 0) ||
+		   ((TupleDescAttr(tupdesc,j)->attndims == 0) ||
 			(TYPEOF(dfcol) != VECSXP)))
 		{
 			SEXP	obj;
@@ -1934,7 +1933,7 @@ get_frame_tuplestore(SEXP rval,
 			SET_VECTOR_ELT(result, j, obj);
 			UNPROTECT(1);
 		}
-		else if(attrs[j].attndims != 0)	/* array data type */
+		else if(TupleDescAttr(tupdesc,j)->attndims != 0)	/* array data type */
 		{
 			SEXP	obj;
 
@@ -2010,9 +2009,9 @@ get_frame_tuplestore(SEXP rval,
 			}
 			else
 			{
-				if ((attrs[j].attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
+				if ((TupleDescAttr(tupdesc,j)->attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
 				{
-					if (attrs[j].attndims == 0)
+					if (TupleDescAttr(tupdesc,j)->attndims == 0)
 					{
 						values[j] = pstrdup(CHAR(STRING_ELT(dfcol, i)));
 					}
