@@ -476,7 +476,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 	/* Count non-dropped attributes so we can later ignore the dropped ones */
 	for (j = 0; j < nc; j++)
 	{
-		if (!TupleDescAttr(tupdesc,i)->attisdropped)
+		if (!TUPLE_DESC_ATTR(tupdesc,i)->attisdropped)
 			nc_non_dropped++;
 	}
 
@@ -501,7 +501,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
 		char		typalign;
 
 		/* ignore dropped attributes */
-		if (TupleDescAttr(tupdesc,j)->attisdropped)
+		if (TUPLE_DESC_ATTR(tupdesc,j)->attisdropped)
 			continue;
 
 		/* set column name */
@@ -800,7 +800,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 	 */
 	for (j = 0; j < nc; j++)
 	{
-		if (TupleDescAttr(tupdesc,j)->attisdropped)
+		if (TUPLE_DESC_ATTR(tupdesc,j)->attisdropped)
 			nc_dropped++;
 	}
 
@@ -863,7 +863,7 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 		for (j = 0; j < nc + nc_dropped; j++)
 		{
 			/* insert NULL for dropped attributes */
-			if (TupleDescAttr(tupdesc,j)->attisdropped)
+			if (TUPLE_DESC_ATTR(tupdesc,j)->attisdropped)
 				values[j] = NULL;
 			else
 			{
@@ -1924,7 +1924,7 @@ get_frame_tuplestore(SEXP rval,
 	{
 		PROTECT(dfcol = VECTOR_ELT(rval, j));
 		if((!isFactor(dfcol)) &&
-		   ((TupleDescAttr(tupdesc,j)->attndims == 0) ||
+		   ((TUPLE_DESC_ATTR(tupdesc,j)->attndims == 0) ||
 			(TYPEOF(dfcol) != VECSXP)))
 		{
 			SEXP	obj;
@@ -1933,7 +1933,7 @@ get_frame_tuplestore(SEXP rval,
 			SET_VECTOR_ELT(result, j, obj);
 			UNPROTECT(1);
 		}
-		else if(TupleDescAttr(tupdesc,j)->attndims != 0)	/* array data type */
+		else if(TUPLE_DESC_ATTR(tupdesc,j)->attndims != 0)	/* array data type */
 		{
 			SEXP	obj;
 
@@ -2009,9 +2009,9 @@ get_frame_tuplestore(SEXP rval,
 			}
 			else
 			{
-				if ((TupleDescAttr(tupdesc,j)->attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
+				if ((TUPLE_DESC_ATTR(tupdesc,j)->attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
 				{
-					if (TupleDescAttr(tupdesc,j)->attndims == 0)
+					if (TUPLE_DESC_ATTR(tupdesc,j)->attndims == 0)
 					{
 						values[j] = pstrdup(CHAR(STRING_ELT(dfcol, i)));
 					}

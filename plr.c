@@ -1077,7 +1077,7 @@ do_compile(FunctionCallInfo fcinfo,
 	
 			for (i = 0; i < function->result_natts; i++)
 			{
-				function->result_fld_elem_typid[i] = get_element_type(TupleDescAttr(tupdesc,i)->atttypid);
+				function->result_fld_elem_typid[i] = get_element_type(TUPLE_DESC_ATTR(tupdesc,i)->atttypid);
 				if (OidIsValid(function->result_fld_elem_typid[i]))
 				{
 					get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
