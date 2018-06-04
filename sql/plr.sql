@@ -297,7 +297,7 @@ if (arg2 < 1 || arg3 < 1 || arg4 < 1)
 if (arg2 > dim(arg1)[1] || arg3 > dim(arg1)[2] || arg4 > dim(arg1)[3])
   return(NA)
 return(arg1[arg2,arg3,arg4])
-' language 'plr' STRICT; 
+' language 'plr' STRICT;
 
 select arr3d('{{{111,112},{121,122},{131,132}},{{211,212},{221,222},{231,232}}}',2,3,1) as "231";
 -- for sake of comparison, see what normal pgsql array operations produces
@@ -312,7 +312,7 @@ select f1[0][1][1] is null as "NULL" from (select '{{{111,112},{121,122},{131,13
 --
 -- test 3D array return value
 --
-create or replace function arr3d(_int4) returns int4[] as 'return(arg1)' language 'plr' STRICT;  
+create or replace function arr3d(_int4) returns int4[] as 'return(arg1)' language 'plr' STRICT;
 select arr3d('{{{111,112},{121,122},{131,132}},{{211,212},{221,222},{231,232}}}');
 
 --

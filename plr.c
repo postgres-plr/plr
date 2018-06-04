@@ -1576,12 +1576,12 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 		else
 		{
 			Datum			dvalue;
-			bool			isnull;
+			bool			isnull,isout;
 			WindowObject	winobj = PG_WINDOW_OBJECT();
 
 			/* get datum for the current row of the window frame */
-			dvalue = WinGetFuncArgInFrame(winobj, i, 0, WINDOW_SEEK_CURRENT, false, &isnull, NULL);
-
+			dvalue = WinGetFuncArgInPartition(winobj, i, 0, WINDOW_SEEK_CURRENT, false, &isnull, &isout);
+			/* I think we can ignore isout as isnull should be set and null will be returned */ 
 			if (isnull)
 			{
 				/* fast track for null arguments */
