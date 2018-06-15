@@ -12,9 +12,6 @@ before_script:
   - sudo apt-get install -qq r-base-dev
   - sudo /etc/init.d/postgresql stop
   - sudo apt-get remove --purge postgresql\*
-  - sudo rm -r /etc/postgresql
-  - sudo rm -r /etc/postgresql-common/
-  - sudo rm -r /var/lib/postgresql 
   - sudo apt-get install postgresql-10
   - sudo apt-get install postgresql-server-dev-10
 script:
