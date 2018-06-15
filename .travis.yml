@@ -14,7 +14,6 @@ before_script:
   - sudo apt-get remove postgresql 
   - sudo apt-get install postgresql-10
   - sudo apt-get install postgresql-server-dev-10
-  - sudo pg_ctlcluster 10 main start
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
