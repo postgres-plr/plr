@@ -1003,7 +1003,7 @@ get_scalar_datum(SEXP rval, Oid result_typid, FmgrInfo result_in_func, bool *isn
 {
 	Datum		dvalue;
 	SEXP		obj;
-	const char *value=NULL;
+	const char *value = NULL;
 
 	/*
 	 * Element type is zero, we don't have an array, so coerce to string
@@ -1367,6 +1367,7 @@ get_md_array_datum(SEXP rval, int ndims, plr_function *function, int col, bool *
 	int			cntr = 0;
 	bool	   *nulls;
 	bool		have_nulls = FALSE;
+	Oid 		return_type_oid = function->result_elem;
 
 	if (ndims > 0)
 	{
@@ -1427,37 +1428,187 @@ get_md_array_datum(SEXP rval, int ndims, plr_function *function, int col, bool *
 	nitems = nr * nc * nz;
 	dvalues = (Datum *) palloc(nitems * sizeof(Datum));
 	nulls = (bool *) palloc(nitems * sizeof(bool));
-	PROTECT(obj =  coerce_to_char(rval));
 
-	for (i = 0; i < nr; i++)
+	/*
+	 * Convert common R data type directly to datum
+	 */
+	if (TYPEOF(rval) == REALSXP && return_type_oid == INT8OID)
 	{
-		for (j = 0; j < nc; j++)
+		for (i = 0; i < nr; i++)
 		{
-			for (k = 0; k < nz; k++)
+			for (j = 0; j < nc; j++)
 			{
-				int		arridx = cntr++;
-
-				idx = (k * nr * nc) + (j * nr) + i;
-				value = CHAR(STRING_ELT(obj, idx));
-
-				if (STRING_ELT(obj, idx) == NA_STRING || value == NULL)
+				for (k = 0; k < nz; k++)
 				{
-					nulls[arridx] = TRUE;
-					have_nulls = TRUE;
-				}
-				else
-				{
-					nulls[arridx] = FALSE;
-					dvalues[arridx] = FunctionCall3(&in_func,
-											CStringGetDatum(value),
-											(Datum) 0,
-											Int32GetDatum(-1));
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (REAL(rval)[idx] == NA_REAL)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Int64GetDatum((int64) REAL(rval)[idx]);
+					}
 				}
 			}
 		}
 	}
-	UNPROTECT(1);
+	else if (TYPEOF(rval) == REALSXP && return_type_oid == FLOAT4OID)
+	{
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (REAL(rval)[idx] == NA_REAL)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Float4GetDatum((float) REAL(rval)[idx]);
+					}
+				}
+			}
+		}
+	}
+	else if (TYPEOF(rval) == REALSXP && return_type_oid == FLOAT8OID)
+	{
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (REAL(rval)[idx] == NA_REAL)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Float8GetDatum((double) REAL(rval)[idx]);
+					}
+				}
+			}
+		}
+	}
+	else if (TYPEOF(rval) == REALSXP && return_type_oid == NUMERICOID)
+	{
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (REAL(rval)[idx] == NA_REAL)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Float8GetDatum((double) REAL(rval)[idx]);
+					}
+				}
+			}
+		}
+	}
+	else if (TYPEOF(rval) == INTSXP && return_type_oid == INT4OID)
+	{
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (INTEGER(rval)[idx] == NA_INTEGER)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Int32GetDatum((int32) INTEGER(rval)[idx]);
+					}
+				}
+			}
+		}
+	}
+	else if (TYPEOF(rval) == INTSXP && return_type_oid == INT2OID)
+	{
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int     arridx = cntr++;
+					idx = (k * nr * nc) + (j * nr) + i;
+					if (INTEGER(rval)[idx] == NA_INTEGER)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = Int16GetDatum((int16) INTEGER(rval)[idx]);
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		PROTECT(obj =  coerce_to_char(rval));
 
+		for (i = 0; i < nr; i++)
+		{
+			for (j = 0; j < nc; j++)
+			{
+				for (k = 0; k < nz; k++)
+				{
+					int		arridx = cntr++;
+
+					idx = (k * nr * nc) + (j * nr) + i;
+					value = CHAR(STRING_ELT(obj, idx));
+
+					if (STRING_ELT(obj, idx) == NA_STRING || value == NULL)
+					{
+						nulls[arridx] = TRUE;
+						have_nulls = TRUE;
+					}
+					else
+					{
+						nulls[arridx] = FALSE;
+						dvalues[arridx] = FunctionCall3(&in_func,
+												CStringGetDatum(value),
+												(Datum) 0,
+												Int32GetDatum(-1));
+					}
+				}
+			}
+		}
+		UNPROTECT(1);
+	}
 	if (!have_nulls)
 		array = construct_md_array(dvalues, NULL, ndims, dims, lbs,
 									result_elem, typlen, typbyval, typalign);
@@ -1523,33 +1674,37 @@ get_generic_array_datum(SEXP rval, plr_function *function, int col, bool *isnull
 		switch (TYPEOF(rval)) {
 		case INTSXP:
 			if (result_elem == INT4OID)
+			{
 				fast_track_type = true;
+				for (i = 0; i < objlen; i++)
+				{
+					if (INTEGER(rval)[i] == NA_INTEGER)
+					{
+						has_na = true;
+						break;
+					}
+				}
+			}
 			else
 				fast_track_type = false;
 
-			for (i = 0; i < objlen; i++)
-			{
-				if (INTEGER(rval)[i] == NA_INTEGER)
-				{
-					has_na = true;
-					break;
-				}
-			}
 			break;
 		case REALSXP:
 			if (result_elem == FLOAT8OID)
+			{
 				fast_track_type = true;
+				for (i = 0; i < objlen; i++)
+				{
+					if (ISNAN(REAL(rval)[i]))
+					{
+						has_na = true;
+						break;
+					}
+				}
+			}
 			else
 				fast_track_type = false;
 
-			for (i = 0; i < objlen; i++)
-			{
-				if (ISNAN(REAL(rval)[i]))
-				{
-					has_na = true;
-					break;
-				}
-			}
 			break;
 		default:
 			fast_track_type = false;
@@ -1602,29 +1757,99 @@ get_generic_array_datum(SEXP rval, plr_function *function, int col, bool *isnull
 		/* original code */
 		dvalues = (Datum *) palloc(objlen * sizeof(Datum));
 		nulls = (bool *) palloc(objlen * sizeof(bool));
-		PROTECT(obj =  coerce_to_char(rval));
 
-		/* Loop is needed here as result value might be of length > 1 */
-		for(i = 0; i < objlen; i++)
+		/*
+		 * Convert common R data type directly to datum
+		 */
+		if (TYPEOF(rval) == REALSXP && result_elem == INT8OID)
 		{
-			value = CHAR(STRING_ELT(obj, i));
-
-			if (STRING_ELT(obj, i) == NA_STRING || value == NULL)
+			for(i = 0; i < objlen; i++)
 			{
-				nulls[i] = TRUE;
-				have_nulls = TRUE;
-			}
-			else
-			{
-				nulls[i] = FALSE;
-				dvalues[i] = FunctionCall3(&in_func,
-										CStringGetDatum(value),
-										(Datum) 0,
-										Int32GetDatum(-1));
+				if (REAL(rval)[i] == NA_REAL)
+				{
+					nulls[i] = TRUE;
+					have_nulls = TRUE;
+				}
+				else
+				{
+					nulls[i] = FALSE;
+					dvalues[i] = Int64GetDatum((int64) REAL(rval)[i]);
+				}
 			}
 		}
-		UNPROTECT(1);
+		else if((TYPEOF(rval) == REALSXP && result_elem == FLOAT4OID))
+		{
+			for(i = 0; i < objlen; i++)
+			{
+				if (REAL(rval)[i] == NA_REAL)
+				{
+					nulls[i] = TRUE;
+					have_nulls = TRUE;
+				}
+				else
+				{
+					nulls[i] = FALSE;
+					dvalues[i] = Float4GetDatum((float) REAL(rval)[i]);
+				}
+			}
+		}
+		else if((TYPEOF(rval) == REALSXP && result_elem == NUMERICOID))
+		{
+			for(i = 0; i < objlen; i++)
+			{
+				if (REAL(rval)[i] == NA_REAL)
+				{
+					nulls[i] = TRUE;
+					have_nulls = TRUE;
+				}
+				else
+				{
+					nulls[i] = FALSE;
+					dvalues[i] = Float8GetDatum((double) REAL(rval)[i]);
+				}
+			}
+		}
+		else if((TYPEOF(rval) == INTSXP && result_elem == INT2OID))
+		{
+			for(i = 0; i < objlen; i++)
+			{
+				if (INTEGER(rval)[i] == NA_INTEGER)
+				{
+					nulls[i] = TRUE;
+					have_nulls = TRUE;
+				}
+				else
+				{
+					nulls[i] = FALSE;
+					dvalues[i] = Int16GetDatum((int16) INTEGER(rval)[i]);
+				}
+			}
+		}
+		else
+		{
+			PROTECT(obj =  coerce_to_char(rval));
 
+			/* Loop is needed here as result value might be of length > 1 */
+			for(i = 0; i < objlen; i++)
+			{
+				value = CHAR(STRING_ELT(obj, i));
+
+				if (STRING_ELT(obj, i) == NA_STRING || value == NULL)
+				{
+					nulls[i] = TRUE;
+					have_nulls = TRUE;
+				}
+				else
+				{
+					nulls[i] = FALSE;
+					dvalues[i] = FunctionCall3(&in_func,
+											CStringGetDatum(value),
+											(Datum) 0,
+											Int32GetDatum(-1));
+				}
+			}
+			UNPROTECT(1);
+		}
 		dims[0] = objlen;
 		lbs[0] = 1;
 
