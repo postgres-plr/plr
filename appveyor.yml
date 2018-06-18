@@ -5,7 +5,7 @@ init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   
 install:
-  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-3.4.3-win.exe 
+  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/old/R-3.4.3-win.exe 
   - R-3.4.3-win.exe /VERYSILENT /dir=C:\R-3.4.3
   - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
   - cd c:\projects\postgresql
