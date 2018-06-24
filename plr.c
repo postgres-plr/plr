@@ -955,8 +955,11 @@ do_compile(FunctionCallInfo fcinfo,
 	function->fn_tid = procTup->t_self;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
-	/* Flag for window functions */
+#if PG_VERSION_NUM >= 110000
+	function->iswindow = (procStruct->prokind == PROKIND_WINDOW);
+#else
 	function->iswindow = procStruct->proiswindow;
+#endif
 #endif
 
 	/* Lookup the pg_language tuple by Oid*/
@@ -1074,7 +1077,7 @@ do_compile(FunctionCallInfo fcinfo,
 	
 			for (i = 0; i < function->result_natts; i++)
 			{
-				function->result_fld_elem_typid[i] = get_element_type(tupdesc->attrs[i]->atttypid);
+				function->result_fld_elem_typid[i] = get_element_type(TUPLE_DESC_ATTR(tupdesc,i)->atttypid);
 				if (OidIsValid(function->result_fld_elem_typid[i]))
 				{
 					get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
@@ -1573,12 +1576,12 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 		else
 		{
 			Datum			dvalue;
-			bool			isnull;
+			bool			isnull,isout;
 			WindowObject	winobj = PG_WINDOW_OBJECT();
 
 			/* get datum for the current row of the window frame */
-			dvalue = WinGetFuncArgInFrame(winobj, i, 0, WINDOW_SEEK_CURRENT, false, &isnull, NULL);
-
+			dvalue = WinGetFuncArgInPartition(winobj, i, 0, WINDOW_SEEK_CURRENT, false, &isnull, &isout);
+			/* I think we can ignore isout as isnull should be set and null will be returned */ 
 			if (isnull)
 			{
 				/* fast track for null arguments */

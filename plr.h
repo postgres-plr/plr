@@ -157,6 +157,12 @@ extern int R_SignalHandlers;
 #define HAVE_WINDOW_FUNCTIONS
 #endif
 
+#if PG_VERSION_NUM >= 110000 
+#define TUPLE_DESC_ATTR(tupdesc,i) TupleDescAttr(tupdesc,i)
+#else 
+#define TUPLE_DESC_ATTR(tupdesc,i) tupdesc->attrs[i] 
+#endif
+		
 #ifdef DEBUGPROTECT
 #undef PROTECT
 extern SEXP pg_protect(SEXP s, char *fn, int ln);
