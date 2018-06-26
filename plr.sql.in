@@ -19,18 +19,18 @@ LANGUAGE C;
 CREATE OR REPLACE FUNCTION install_rcmd (text)
 RETURNS text
 AS 'MODULE_PATHNAME','install_rcmd'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT;
 REVOKE EXECUTE ON FUNCTION install_rcmd (text) FROM PUBLIC;
 
 CREATE OR REPLACE FUNCTION plr_singleton_array (float8)
 RETURNS float8[]
 AS 'MODULE_PATHNAME','plr_array'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT;
 
 CREATE OR REPLACE FUNCTION plr_array_push (_float8, float8)
 RETURNS float8[]
 AS 'MODULE_PATHNAME','plr_array_push'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT; 
 
 CREATE OR REPLACE FUNCTION plr_array_accum (_float8, float8)
 RETURNS float8[]
@@ -78,7 +78,7 @@ RETURNS setof r_version_type as '
 CREATE OR REPLACE FUNCTION plr_set_rhome (text)
 RETURNS text
 AS 'MODULE_PATHNAME','plr_set_rhome'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT;
 REVOKE EXECUTE ON FUNCTION plr_set_rhome (text) FROM PUBLIC;
 
 CREATE OR REPLACE FUNCTION plr_unset_rhome ()
@@ -90,11 +90,11 @@ REVOKE EXECUTE ON FUNCTION plr_unset_rhome () FROM PUBLIC;
 CREATE OR REPLACE FUNCTION plr_set_display (text)
 RETURNS text
 AS 'MODULE_PATHNAME','plr_set_display'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT;
 REVOKE EXECUTE ON FUNCTION plr_set_display (text) FROM PUBLIC;
 
 CREATE OR REPLACE FUNCTION plr_get_raw (bytea)
 RETURNS bytea
 AS 'MODULE_PATHNAME','plr_get_raw'
-LANGUAGE C WITH (isstrict);
+LANGUAGE C STRICT; 
 
