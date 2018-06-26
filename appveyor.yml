@@ -1,9 +1,9 @@
 #  appveyor.yml
 
+clone_folder: c:\projects\plr
 
 init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  - clone_folder: c:\projects\plr
   
 install:
   - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/old/3.4.3/R-3.4.3-win.exe 
