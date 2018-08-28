@@ -528,7 +528,7 @@ available for use:
 
 
 
-```
+```sql
 select load_r_typenames();
 load_r_typenames
 ------------------
@@ -537,7 +537,7 @@ OK
 ```
 Another support function,r_typenames()may be used to list the predefined Global variables:
 
-```
+```sql
 select * from r_typenames();
 typename | typeoid
 -----------------+---------
@@ -568,13 +568,13 @@ type_vector previously given topg.spi.prepare. Pass `NA` for `value_list` if the
 no arguments. The following illustrates the use of `pg.spi.prepare` and `pg.spi.execp` with and
 without query arguments:
 
-```
+```sql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1, c(NAMEOID, NAMEOID));
 print("OK")
 ’ language ’plr’;
 ```
-```
+```sql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = $1 or typname = $2’);
 test_spi_prep
@@ -582,12 +582,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```
+```sql
 create or replace function test_spi_execp(text, text, text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1), list(arg2,arg3))
 ’ language ’plr’;
 ```
-```
+```sql
 select * from test_spi_execp(’sp’,’oid’,’text’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -595,13 +595,13 @@ typeid | typename
 26 | oid
 (2 rows)
 ```
-```
+```sql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1, NA);
 print("OK")
 ’ language ’plr’;
 ```
-```
+```sql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = ”bytea” or typname = ”text”’);
 test_spi_prep
@@ -609,11 +609,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```
+```sql
 create or replace function test_spi_execp(text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1), NA)
 ’ language ’plr’;
-
+```
+```sql
 select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -621,13 +622,13 @@ typeid | typename
 25 | text
 (2 rows)
 ```
-```
+```sql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1);
 print("OK")
 ’ language ’plr’;
 ```
-```
+```sql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = ”bytea” or typname = ”text”’);
 test_spi_prep
@@ -635,12 +636,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```
+```sql
 create or replace function test_spi_execp(text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1))
 ’ language ’plr’;
 ```
-```
+```sql
 select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -774,12 +775,13 @@ function is capable of accepting and returning other data types, although the re
 array of the input parameter type. It can also accept multiple input parameters. For example, to define
 a `plr_array` function to create a text array from two input text values:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION plr_array (text, text)
 RETURNS text[]
 AS ’$libdir/plr’,’plr_array’
 LANGUAGE ’C’ WITH (isstrict);
-
+```
+```sql
 select plr_array(’hello’,’world’);
 plr_array
 ---------------
@@ -787,20 +789,20 @@ plr_array
 (1 row)
 ```
 
-plr_array_push(float8[]array,float8next_element)
+`plr_array_push(float8[] array,float8 next_element)`
 
 Pushes a new element onto the end of an existing PostgreSQL array. This function is predefined to
 accept one float8 array and a float8 value, and return a float8 array. The C function that implements
 this PostgreSQL function is capable of accepting and returning other data types. For example, to
 define a `plr_array_push` function to add a text value to an existing text array:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION plr_array_push (_text, text)
 RETURNS text[]
 AS ’$libdir/plr’,’plr_array_push’
 LANGUAGE ’C’ WITH (isstrict);
 ```
-```
+```sql
 select plr_array_push(plr_array(’hello’,’world’), ’how are you’);
 plr_array_push
 -----------------------------
@@ -817,12 +819,13 @@ float8 array and a float8 value, and return a float8 array. The C function that 
 PostgreSQL function is capable of accepting and returning other data types. For example, to define
 a `plr_array_accum` function to add an int4 value to an existing int4 array:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION plr_array_accum (_int4, int4)
 RETURNS int4[]
 AS ’$libdir/plr’,’plr_array_accum’
 LANGUAGE ’C’;
-
+```
+```sql
 select plr_array_accum(NULL, 42);
 plr_array_accum
 -------------
@@ -837,27 +840,27 @@ plr_array_accum
 
 This function may be useful for creating custom aggregates. See Chapter 8 for an example.
 
-load_r_typenames()
+`load_r_typenames()`
 
 Installs datatype Oid variables into the R interpreter as globals. See also `r_typenames` below.
 
-r_typenames()
+`r_typenames()`
 
 Displays the datatype Oid variables installed into the R interpreter as globals. See Chapter 6 for an example.
 
-plr_environ()
+`plr_environ()`
 
 Displays the environment under which the Postmaster is currently running. This may be useful to
 debug issues related to R specific environment variables. This function is installed with EXECUTE
 permission revoked from PUBLIC.
 
-plr_set_display(textdisplay)
+`plr_set_display(text display)`
 
 Sets the DISPLAY environment vaiable under which the Postmaster is currently running. This may
 be useful if using R to plot to a virtual frame buffer. This function is installed with EXECUTE
 permission revoked from PUBLIC.
 
-plr_get_raw(bytea serialized_object)
+`plr_get_raw(bytea serialized_object)`
 
 By default, when R objects are returned as type `bytea`, the R object is serialized using an internal
 R function prior to sending to PostgreSQL. This function unserializes the R object using another
@@ -874,12 +877,12 @@ There is more than one way to create a new aggregate using PL/R. A simple aggreg
 using the predefined PostgreSQL C function,plr_array_accum(see Chapter 7) as a state transition
 function, and a PL/R function as a finalizer. For example:
 
-```
+```sql
 create or replace function r_median(_float8) returns float as ’
 median(arg1)
 ’ language ’plr’;
 ```
-```
+```sql
 CREATE AGGREGATE median (
 sfunc = plr_array_accum,
 basetype = float8,
@@ -887,7 +890,7 @@ stype = _float8,
 finalfunc = r_median
 );
 ```
-```
+```sql
 create table foo(f0 int, f1 text, f2 float8);
 insert into foo values(1,’cat1’,1.21);
 insert into foo values(2,’cat1’,1.24);
@@ -899,7 +902,7 @@ insert into foo values(7,’cat2’,1.26);
 insert into foo values(8,’cat2’,1.32);
 insert into foo values(9,’cat2’,1.30);
 ```
-```
+```postgresql
 select f1, median(f2) from foo group by f1 order by f1;
 f1 | median
 ------+--------
@@ -937,23 +940,22 @@ LANGUAGE plr WINDOW;
 
 A number of variables are automatically provided by PL/R to the R interpreter:
 
-```
-fargN
-```
-`farg1` and `farg2` are R vectors containing the current row’s data plus that of the related rows.
 
-```
-fnumrows
-```
+`fargN`
+
+farg1` and `farg2` are R vectors containing the current row’s data plus that of the related rows.
+
+`fnumrows`
+
 The number of rows in the current `WINDOW` frame.
 
-prownum(not shown)
+`prownum` (not shown)
 
 Provides the 1-based row offset of the current row in the current `PARTITION`.
 
 A more complete example follows:
 
-```
+```sql
 -- create test table
 CREATE TABLE test_data (
 fyear integer,
@@ -961,15 +963,15 @@ firm float8,
 eps float8
 );
 ```
-```
+```postgresql
 -- insert randomly pertubated data for test
 INSERT INTO test_data
 SELECT (b.f + 1) % 10 + 2000 AS fyear,
 floor((b.f+1)/10) + 50 AS firm,
 f::float8/100 + random()/10 AS eps
-
 FROM generate_series(-500,499,1) b(f);
-
+```
+```postgresql
 CREATE OR REPLACE
 FUNCTION r_regr_slope(float8, float8)
 RETURNS float8 AS
@@ -981,7 +983,8 @@ if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
 return(slope)
 $BODY$
 LANGUAGE plr WINDOW;
-
+```
+```postgresql
 SELECT*, r_regr_slope(eps, lag_eps) OVER w AS slope_R
 FROM (SELECT firm, fyear, eps,
 lag(eps) OVER (ORDER BY firm, fyear) AS lag_eps
@@ -1000,14 +1003,15 @@ if that value is outside certain bounds, a trimmed value. So for example `winsor
 value at the 10th percentile for values of eps less that that, the value of the 90th percentile for eps greater
 than that value, and the unmodified value of eps otherwise.
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION winsorize(float8, float8)
 RETURNS float8 AS
 $BODY$
 library(psych)
 return(winsor(as.vector(farg1), arg2)[prownum])
 $BODY$ LANGUAGE plr VOLATILE WINDOW;
-
+```
+```postgresql
 SELECT fyear, eps,
 winsorize(eps, 0.1) OVER (PARTITION BY fyear) AS w_eps
 FROM test_data ORDER BY fyear, eps;
@@ -1023,7 +1027,7 @@ PL/R has support for auto-loading R code during interpreter initialization. It u
 are fetched from the table and loaded into the R interpreter immediately after creation.
 The definition of the table `plr_modules` is as follows:
 
-```
+```postgresql
 CREATE TABLE plr_modules (
 modseq int4,
 modsrc text
@@ -1034,18 +1038,19 @@ The field `modseq` is used to control the order of installation. The field `mods
 the R code to be executed, including assignment if that is desired. Consider, for example, the following
 statement:
 
-```
+```postgresql
 INSERT INTO plr_modules
 VALUES (0, ’pg.test.module.load <-function(msg) {print(msg)}’);
 ```
 
 This statement will cause an R function namedpg.test.module.load to be created in the R interpreter on initialization. A PL/R function may now simply reference the function directly as follows:
 
-```
+```postgresql
 create or replace function pg_test_module_load(text) returns text as ’
 pg.test.module.load(arg1)
 ’ language ’plr’;
-
+```
+```postgresql
 select pg_test_module_load(’hello world’);
 pg_test_module_load
 ---------------------
@@ -1136,9 +1141,9 @@ Here’s a little example trigger procedure that forces an integer value in a ta
 of updates that are performed on the row. For new rows inserted, the value is initialized to 0 and then
 incremented on every update operation.
 
+```postgresql
 CREATE FUNCTION trigfunc_modcount() RETURNS trigger AS ’
 
-```
 if (pg.tg.op == "INSERT")
 {
 retval <- pg.tg.new
@@ -1151,16 +1156,18 @@ retval[pg.tg.args[1]] <- pg.tg.old[pg.tg.args[1]] + 1
 }
 if (pg.tg.op == "DELETE")
 retval <- pg.tg.old
-```
 return(retval)
 ’ LANGUAGE plr;
-
+```
+```postgresql
 CREATE TABLE mytab (num integer, description text, modcnt integer);
-
+```
+```postgresql
 CREATE TRIGGER trig_mytab_modcount BEFORE INSERT OR UPDATE ON mytab
 FOR EACH ROW EXECUTE PROCEDURE trigfunc_modcount(’modcnt’);
+```
 
-Notice that the trigger procedure itself does not know the column name; that’s supplied from the trigger
+**Notice** that the trigger procedure itself does not know the column name; that’s supplied from the trigger
 arguments. This lets the trigger procedure be reused with different tables.
 
 ## License
