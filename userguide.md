@@ -61,7 +61,7 @@ new data types.
 1. [http://www.r-project.org/](http://www.r-project.org/)
 
 
-## Chapter 2. Installation
+## Installation
 
 If you are going to compile PostgreSQL from the source, use the follwing commands from the untared
 and unzipped file downloaded from http://www.postgresql.org/ftp/source/:
@@ -79,7 +79,7 @@ cd plr
 make
 make install
 ```
-#### You may explicitly include the path of pg_config toPATH, such as
+#### You may explicitly include the path of pg_config to `PATH`, such as
 
 ```
 cd plr
@@ -103,24 +103,20 @@ USE_PGXS=1 make install
 Win32 - adjust paths according to your own setup, and be sure to restart the PostgreSQL service after
 changing:
 
-```
 In Windows environment:
+```
 R_HOME=C:\Progra~1\R\R-2.5.
 Path=%PATH%;C:\Progra~1\R\R-2.5.0\bin
 ```
-```
+
 In MSYS:
-```
-
-#### Chapter 2. Installation
-
 ```
 export R_HOME=/c/progra~1/R/R-2.5.
 export PATH=$PATH:/c/progra~1/PostgreSQL/8.2/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
-You can use `plr.sql` (which is created incontrib/plr) to create the language and support functions
+You can use `plr.sql` (which is created in contrib/plr) to create the language and support functions
 in your database of choice:
 
 ```
@@ -151,17 +147,15 @@ DROP EXTENSION plr;
 ```
 
 
-**Tip** If a language is installed intotemplate1, all subsequently created databases will have the lan-
-guage installed automatically.
+**Tip** If a language is installed into `template1`, all subsequently created databases will have the 
+language installed automatically.
 
 **Tip** In addition to the documentation, the plr.out.* files in plr/expected are a good source of
 usage examples.
 
 **Tip** R headers are required. Download and install R prior to building PL/R. R must have been built
-with the--enable-R-shliboption when it was configured, in order for the libR shared object library
+with the `--enable-R-shlib` option when it was configured, in order for the libR shared object library
 to be available.
-
-#### Chapter 2. Installation
 
 **Tip:** Additionally, libR must be findable by your runtime linker. On Linux, this involves adding an entry
 in /etc/ld.so.conf for the location of libR (typically $R_HOME/bin or $R_HOME/lib), and then running
@@ -172,7 +166,7 @@ beforethe postmaster is started. Otherwise PL/R will refuse to load. See plr_env
 examination of the environment available to the PostgreSQL postmaster process.
 
 
-## Chapter 3. Functions and Arguments<a name="functions"></a>
+## Functions and Arguments<a name="functions"></a>
 
 To create a function in the PL/R language, use standard R syntax, but without the enclosing braces or
 function assignment. Instead of ```myfunc <- function(arguments) { function body }```, the body
@@ -325,7 +319,7 @@ round
 **Tip** Because the function body is passed as an SQL string literal to `CREATE FUNCTION`, you have to
 escape single quotes and backslashes within your R source, typically by doubling them.
 
-## Chapter 4. Passing Data Values<a name="passing-data"></a>
+## Passing Data Values<a name="passing-data"></a>
 
 The argument values supplied to a PL/R function’s script are the input arguments converted to a corresponding R form. See Table 4-1. Scalar PostgreSQL values become single element R vectors. One exception to this are scalar bytea values. These are first converted to R raw type, and then processed by the R unserialize command. One-dimensional PostgreSQL arrays are converted to multi-element R vectors, two-dimensional PostgreSQL arrays are mapped to R matrixes, and three-dimensional PostgreSQL arrays are converted to three-dimensional R arrays. Greater than three-dimensional arrays are not supported.
  Composite-types are transformed into R data.frames.
@@ -366,7 +360,7 @@ PostgreSQL return type and the type of R object. That mapping is shown in Table 
 |setof composite|2D array,matrix,data.frame|multi-row, multi-column set|array(1:4,c(2,2)) in R returns 2 rows of 2 columns|
 
 
-## Chapter 5. Using Global Data
+## Using Global Data<a name="global-data"></a>
 
 Sometimes it is useful to have some global status data that is held between two calls to a procedure or
 is shared between different procedures. Equally useful is the ability to create functions that your PL/R
@@ -481,14 +475,14 @@ row_number | f
 
 
 
-## Chapter 6. Database Access and Support
+## Database Access and Support<a name='database-access'></a>
 
 ## Functions
 
 The following commands are available to access the database from the body of a PL/R procedure, or in
 support thereof:
 
-### 6.1. Normal Support
+### Normal Support<a name='normal-support'></a>
 
 pg.spi.exec(character query)
 
@@ -656,7 +650,7 @@ typeid | typename
 ```
 
 
-NULL arguments should be passed as individual NAvalues invalue_list.
+NULL arguments should be passed as individual `NA` values invalue_list.
 Except for the way in which the query and its arguments are specified,`pg.spi.execp` works just
 like `pg.spi.exec`.
 
@@ -714,8 +708,6 @@ are added only if necessary (i.e., if the string contains non-identifier charact
 be inserted into SQL queries given to `pg.spi.exec` or `pg.spi.prepare`.
 
 
-#### Chapter 6. Database Access and Support Functions
-
 `pg.thrownotice(character message)`
 
 `pg.throwerror(character message)`
@@ -729,12 +721,12 @@ Accepts an Rdata.frameas input, and converts all non-numeric columns tofactors. 
 be useful for data.frames produced bypg.spi.execorpg.spi.prepare, because the PL/R con-
 version mechanism does **not** do that for you.
 
-### 6.2. RPostgreSQL Compatibility Support
+### RPostgreSQL Compatibility Support<a name='rpostgresql-support'></a>
 
 The following functions are intended to provide some level of compatibility between PL/R and RPostgreSQL (PostgreSQL DBI package). This allows, for example, a function to be first prototyped using an
 R client, and then easily moved to PL/R for production use.
 
-`dbDriver(character dvr_name)
+`dbDriver(character dvr_name)`
 
 `dbConnect (DBIDriver drv, character user, character password, character host, character dbname,character port,character tty,character options)`
 
@@ -757,7 +749,7 @@ performed in the current database. Therefore all driver and connection related p
 and dbDriver, dbConnect, dbDisconnect, and dbUnloadDriver are no-ops.
 
 
-## Chapter 7. PostgreSQL Support Functions
+## PostgreSQL Support Functions<a name='postgresql-support'></a>
 
 The following commands are available to use in PostgreSQL queries to aid in the use of PL/R functions:
 
@@ -873,7 +865,7 @@ internal R function, and returns the pure raw bytes to PostgreSQL. This is usefu
 R object being returned is a JPEG or PNG graphic for use outside of R.
 
 
-## Chapter 8. Aggregate Functions
+## Aggregate Functions<a name='aggregate-functions'></a>
 
 Aggregates in PostgreSQL are extensible via SQL commands. In general, to create a new aggregate, a
 state transition function and possibly a final function are specified. The final function is used in case the
@@ -918,7 +910,7 @@ cat2 | 1.28
 A more complex aggregate might be created by using a PL/R functions for both state transition and finalizer.
 
 
-## Chapter 9. Window Functions
+## Window Functions <a name='window-functions'></a>
 
 Starting with version 8.4, PostgreSQL supports `WINDOW` functions which provide the ability to perform
 calculations across sets of rows that are related to the current query row. This is comparable to the type
@@ -1024,7 +1016,7 @@ FROM test_data ORDER BY fyear, eps;
 In this example, use of the variable `prownum` is illustrated.
 
 
-## Chapter 10. Loading R Modules at Startup
+## Loading R Modules at Startup <a name='startup'></a>
 
 PL/R has support for auto-loading R code during interpreter initialization. It uses a special table,
 `plr_modules`, which is presumed to contain modules of R code. If this table exists, the modules defined
@@ -1065,7 +1057,7 @@ The table `plr_modules` must be readable by all, but it is wise to make it owned
 database administrator.
 
 
-## Chapter 11. R Function Names
+## R Function Names <a name='rfunction-names'></a>
 
 In PostgreSQL, one and the same function name can be used for different functions as long as the number
 of arguments or their types differ. R, however, requires all function names to be distinct. PL/R deals with
@@ -1076,7 +1068,7 @@ be visible when debugging. If a specific, known, function name is needed so that
 functions, the `install_rcmd(text)` command can be used. See Chapter 5.
 
 
-## Chapter 12. Trigger Procedures
+## Trigger Procedures <a name='trigger-procedures'></a>
 
 Trigger procedures can be written in PL/R. PostgreSQL requires that a procedure that is to be called as a
 trigger must be declared as a function with no arguments and a return type of `trigger`.
@@ -1140,8 +1132,6 @@ trigger manager that will be inserted instead of the one given in `pg.tg.new`. T
 ROW`; otherwise the return value is ignored.
 
 
-#### Chapter 12. Trigger Procedures
-
 Here’s a little example trigger procedure that forces an integer value in a table to keep track of the numbe
 of updates that are performed on the row. For new rows inserted, the value is initialized to 0 and then
 incremented on every update operation.
@@ -1173,7 +1163,7 @@ FOR EACH ROW EXECUTE PROCEDURE trigfunc_modcount(’modcnt’);
 Notice that the trigger procedure itself does not know the column name; that’s supplied from the trigger
 arguments. This lets the trigger procedure be reused with different tables.
 
-## Chapter 13. License
+## License
 
 License: GPL version 2 or newer. http://www.gnu.org/copyleft/gpl.html
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
