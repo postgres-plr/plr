@@ -45,7 +45,7 @@
 ## Overview
 
 PL/R is a loadable procedural language that enables you to write PostgreSQL functions and triggers in the
-R programming language^1. PL/R offers most (if not all) of the capabilities a function writer has in the R
+R programming language<sup>1</sup>. PL/R offers most (if not all) of the capabilities a function writer has in the R
 language.
 Commands are available to access the database via the PostgreSQL Server Programming Interface (SPI)
 and to raise messages via ```elog()```. There is no way to access internals of the database backend. However
