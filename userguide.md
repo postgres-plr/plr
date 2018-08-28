@@ -125,7 +125,7 @@ psql mydatabase < plr.sql
 
 Alternatively you can create the language manually using SQL commands:
 
-```sql
+```postgresql
 CREATE FUNCTION plr_call_handler()
 RETURNS LANGUAGE_HANDLER
 AS ’$libdir/plr’ LANGUAGE C;
@@ -135,14 +135,14 @@ CREATE LANGUAGE plr HANDLER plr_call_handler;
 
 As of PostgreSQL 9.1 you can use the new ```CREATE EXTENSION``` command:
 
-```sql
+```postgresql
 CREATE EXTENSION plr;
 ```
 
 This is not only simple, it has the added advantage of tracking all PL/R installed objects as dependent on
 the extension, and therefore they can be removed just as easily if desired:
 
-```sql
+```postgresql
 DROP EXTENSION plr;
 ```
 
@@ -172,7 +172,7 @@ To create a function in the PL/R language, use standard R syntax, but without th
 function assignment. Instead of `myfunc <- function(arguments) { function body }`, the body
 of your PL/R function is just `sqlfunction body`
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTIONfuncname(argument-types)
 RETURNSreturn-typeAS ’
 function body
@@ -183,7 +183,7 @@ The body of the function is simply a piece of R script. When the function is cal
 are passed as variables arg1...argNto the R script. The result is returned from the R code in the usual
 way. For example, a function returning the greater of two integer values could be defined as:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
 if (arg1 > arg2)
 return(arg1)
@@ -196,7 +196,7 @@ Starting with PostgreSQL 8.0, arguments may be explicitly named when creating a 
 is explicitly named at function creation time, that name will be available to your R script in place of
 the usual ```argNvariable```. For example:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION sd(vals float8[]) RETURNS float AS ’
 sd(vals)
 ’ LANGUAGE ’plr’ STRICT;
@@ -209,7 +209,7 @@ For each explicit argument, a corresponding variable called `farg1...fargN` is p
 These contain an R vector of all the values of the related argument for the moving `WINDOW` frame within
 the current `PARTITION`. For example:
 
-```sql
+```postgresql
 CREATE OR REPLACE
 FUNCTION r_regr_slope(float8, float8)
 RETURNS float8 AS
@@ -233,7 +233,7 @@ NULL result automatically. In a non-strict function, if the actual value of an a
 corresponding `argN` variable will be set to a `NULLR` object. For example, suppose that we wanted `r_max`
 with one null and one non-null argument to return the non-null argument, rather than NULL:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
 if (is.null(arg1) && is.null(arg2))
 return(NULL)
@@ -253,7 +253,7 @@ Composite-type (tuple) arguments are passed to the procedure as R data.frames. T
 the frame are the attribute names of the composite type. If an attribute in the passed row has the NULL
 value, it will appear as an "NA" in the frame. Here is an example:
 
-```
+```postgresql
 CREATE TABLE emp (name text, age int, salary numeric(10,2));
 INSERT INTO emp VALUES (’Joe’, 41, 250000.00);
 INSERT INTO emp VALUES (’Jim’, 25, 120000.00);
@@ -268,7 +268,7 @@ return(TRUE)
 return(FALSE)
 ’ LANGUAGE ’plr’;
 ```
-```
+```postgresql
 SELECT name, overpaid(emp) FROM emp;
 name | overpaid
 ------+----------
@@ -280,7 +280,7 @@ Jon | f
 
 There is also support for returning a composite-type result value:
 
-```
+```postgresql
 CREATE OR REPLACE FUNCTION get_emps() RETURNS SETOF emp AS ’
 names <- c("Joe","Jim","Jon")
 ages <- c(41,25,35)
@@ -289,7 +289,7 @@ df <- data.frame(name = names, age = ages, salary = salaries)
 return(df)
 ’ LANGUAGE ’plr’;
 ```
-```
+```postgresql
 select* from get_emps();
 name | age | salary
 ------+-----+-----------
@@ -306,7 +306,7 @@ be defined with no body, and the arguments will be passed directly to the R func
 
 For example:
 
-```sql
+```postgresql
 create or replace function sd(_float8) returns float as '' language ’plr’;
 select round(sd(’{1.23,1.31,1.42,1.27}’::_float8)::numeric,8);
 round
@@ -373,25 +373,26 @@ A globally available, user named, R function (the R function name of PL/R functi
 PostgreSQL function name; see: Chapter 11) can be created dynamically using the provided PostgreSQL
 function `install_rcmd(text)`. Here is an example:
 
-```
+```postgresql
 select install_rcmd(’pg.test.install <-function(msg) {print(msg)}’);
 install_rcmd
 --------------
 OK
 (1 row)
 ```
-```
+```postgresql
 create or replace function pg_test_install(text) returns text as ’
 pg.test.install(arg1)
 ’ language ’plr’;
 ```
-```
+```postgresql
 select pg_test_install(’hello world’);
 pg_test_install
 -----------------
 hello world
 (1 row)
 ```
+
 A globally available, user named, R function can also be automatically created and installed in the R
 interpreter. See: Chapter 10 PL/R also provides a global variable called pg.state.firstpass. 
 This variable is reset to TRUE the first time each `PL/R` function is called, for a particular query. 
@@ -401,13 +402,13 @@ the query.
 
 For example:
 
-```
+```postgresql
 create table t (f1 int);
 insert into t values (1);
 insert into t values (2);
 insert into t values (3);
 ```
-```
+```postgresql
 create or replace function f1() returns int as ’
 msg <- paste("enter f1, pg.state.firstpass is", pg.state.firstpass)
 pg.thrownotice(msg)
@@ -418,7 +419,7 @@ pg.thrownotice(msg)
 return(0)
 ’ language plr;
 ```
-```
+```postgresql
 create or replace function f2() returns int as ’
 msg <- paste("enter f2, pg.state.firstpass is", pg.state.firstpass)
 pg.thrownotice(msg)
@@ -429,7 +430,7 @@ pg.thrownotice(msg)
 return(0)
 ’ language plr;
 ```
-```
+```postgresql
 select f1(), f2(), f1 from t;
 NOTICE: enter f1, pg.state.firstpass is TRUE
 NOTICE: exit f1, pg.state.firstpass is FALSE
@@ -450,7 +451,7 @@ f1 | f2 | f
 0 | 0 | 3
 (3 rows)
 ```
-```
+```postgresql
 create or replace function row_number() returns int as ’
 if (pg.state.firstpass)
 {
@@ -463,7 +464,7 @@ assign("plrcounter", lclcntr, env=.GlobalEnv)
 return(lclcntr)
 ’ language ’plr’;
 ```
-```
+```postgresql
 SELECT row_number(), f1 from t;
 row_number | f
 ------------+----
@@ -496,12 +497,12 @@ is provided.
 
 If a field of a SELECT result is NULL, the target variable for it is set to “NA”. For example:
 
-```sql
+```postgresql
 create or replace function test_spi_tup(text) returns setof record as ’
 pg.spi.exec(arg1)
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select * from test_spi_tup(’select oid, NULL::text as nullcol,
 typname from pg_type where typname = ”oid” or typname = ”text”’)
 as t(typeid oid, nullcol text, typename name);
@@ -528,7 +529,7 @@ available for use:
 
 
 
-```sql
+```postgresql
 select load_r_typenames();
 load_r_typenames
 ------------------
@@ -537,7 +538,7 @@ OK
 ```
 Another support function,r_typenames()may be used to list the predefined Global variables:
 
-```sql
+```postgresql
 select * from r_typenames();
 typename | typeoid
 -----------------+---------
@@ -556,6 +557,7 @@ VOIDOID | 2278
 XIDOID | 28
 (59 rows)
 ```
+
 The return value from pg.spi.prepare is a query ID to be used in subsequent calls to
 pg.spi.execp. See `spi_execp` for an example.
 
@@ -568,13 +570,13 @@ type_vector previously given topg.spi.prepare. Pass `NA` for `value_list` if the
 no arguments. The following illustrates the use of `pg.spi.prepare` and `pg.spi.execp` with and
 without query arguments:
 
-```sql
+```postgresql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1, c(NAMEOID, NAMEOID));
 print("OK")
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = $1 or typname = $2’);
 test_spi_prep
@@ -582,12 +584,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```sql
+```postgresql
 create or replace function test_spi_execp(text, text, text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1), list(arg2,arg3))
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select * from test_spi_execp(’sp’,’oid’,’text’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -595,13 +597,13 @@ typeid | typename
 26 | oid
 (2 rows)
 ```
-```sql
+```postgresql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1, NA);
 print("OK")
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = ”bytea” or typname = ”text”’);
 test_spi_prep
@@ -609,12 +611,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```sql
+```postgresql
 create or replace function test_spi_execp(text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1), NA)
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -622,13 +624,13 @@ typeid | typename
 25 | text
 (2 rows)
 ```
-```sql
+```postgresql
 create or replace function test_spi_prep(text) returns text as ’
 sp <<- pg.spi.prepare(arg1);
 print("OK")
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select test_spi_prep(’select oid, typname from pg_type
 where typname = ”bytea” or typname = ”text”’);
 test_spi_prep
@@ -636,12 +638,12 @@ test_spi_prep
 OK
 (1 row)
 ```
-```sql
+```postgresql
 create or replace function test_spi_execp(text) returns setof record as ’
 pg.spi.execp(pg.reval(arg1))
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
 typeid | typename
 --------+----------
@@ -707,7 +709,6 @@ be used to safely quote strings that are to be inserted into SQL queries given t
 Return the given string suitably quoted to be used as an identifier in an SQL query string. Quotes
 are added only if necessary (i.e., if the string contains non-identifier characters or would be case folded). Embedded quotes are properly doubled. This may be used to safely quote strings that are to
 be inserted into SQL queries given to `pg.spi.exec` or `pg.spi.prepare`.
-
 
 `pg.thrownotice(character message)`
 
@@ -775,13 +776,13 @@ function is capable of accepting and returning other data types, although the re
 array of the input parameter type. It can also accept multiple input parameters. For example, to define
 a `plr_array` function to create a text array from two input text values:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION plr_array (text, text)
 RETURNS text[]
 AS ’$libdir/plr’,’plr_array’
 LANGUAGE ’C’ WITH (isstrict);
 ```
-```sql
+```postgresql
 select plr_array(’hello’,’world’);
 plr_array
 ---------------
@@ -796,13 +797,13 @@ accept one float8 array and a float8 value, and return a float8 array. The C fun
 this PostgreSQL function is capable of accepting and returning other data types. For example, to
 define a `plr_array_push` function to add a text value to an existing text array:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION plr_array_push (_text, text)
 RETURNS text[]
 AS ’$libdir/plr’,’plr_array_push’
 LANGUAGE ’C’ WITH (isstrict);
 ```
-```sql
+```postgresql
 select plr_array_push(plr_array(’hello’,’world’), ’how are you’);
 plr_array_push
 -----------------------------
@@ -811,7 +812,7 @@ plr_array_push
 ```
 
 
-plr_array_accum(float8[]state_value,float8next_element)
+`plr_array_accum(float8[]state_value,float8next_element)`
 
 Creates a new array using next_element if state_value is NULL. Otherwise, pushes
 next_element onto the end of state_value. This function is predefined to accept one
@@ -819,13 +820,13 @@ float8 array and a float8 value, and return a float8 array. The C function that 
 PostgreSQL function is capable of accepting and returning other data types. For example, to define
 a `plr_array_accum` function to add an int4 value to an existing int4 array:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION plr_array_accum (_int4, int4)
 RETURNS int4[]
 AS ’$libdir/plr’,’plr_array_accum’
 LANGUAGE ’C’;
 ```
-```sql
+```postgresql
 select plr_array_accum(NULL, 42);
 plr_array_accum
 -------------
@@ -877,12 +878,12 @@ There is more than one way to create a new aggregate using PL/R. A simple aggreg
 using the predefined PostgreSQL C function,plr_array_accum(see Chapter 7) as a state transition
 function, and a PL/R function as a finalizer. For example:
 
-```sql
+```postgresql
 create or replace function r_median(_float8) returns float as ’
 median(arg1)
 ’ language ’plr’;
 ```
-```sql
+```postgresql
 CREATE AGGREGATE median (
 sfunc = plr_array_accum,
 basetype = float8,
@@ -890,7 +891,7 @@ stype = _float8,
 finalfunc = r_median
 );
 ```
-```sql
+```postgresql
 create table foo(f0 int, f1 text, f2 float8);
 insert into foo values(1,’cat1’,1.21);
 insert into foo values(2,’cat1’,1.24);
@@ -925,7 +926,7 @@ use of this capability.
 
 PL/R functions may be defined as `WINDOW`. For example:
 
-```sql
+```postgresql
 CREATE OR REPLACE FUNCTION r_regr_slope(float8, float8)
 RETURNS float8 AS
 $BODY$
@@ -943,7 +944,7 @@ A number of variables are automatically provided by PL/R to the R interpreter:
 
 `fargN`
 
-farg1` and `farg2` are R vectors containing the current row’s data plus that of the related rows.
+`farg1` and `farg2` are R vectors containing the current row’s data plus that of the related rows.
 
 `fnumrows`
 
@@ -955,7 +956,7 @@ Provides the 1-based row offset of the current row in the current `PARTITION`.
 
 A more complete example follows:
 
-```sql
+```postgresql
 -- create test table
 CREATE TABLE test_data (
 fyear integer,
@@ -993,12 +994,12 @@ WHERE eps IS NOT NULL
 WINDOW w AS (ORDER BY firm, fyear ROWS 8 PRECEDING);
 ```
 
-In this example, the variablesfarg1andfarg2contain the current row value for eps and lag_eps, as well
+In this example, the variables `farg1` and `farg2` contain the current row value for eps and lag_eps, as well
 as the preceding 8 rows which are also in the same `WINDOW` frame within the same `PARTITION`. In this
 case since no `PARTITION` is explicitly defined, the `PARTITION` is the entire set of rows returned from the
 inner sub-select.
 
-Another interesting example follows. The idea of “Winsorizing” is to return either the original value or,
+Another interesting example follows. The idea of "Winsorizing" is to return either the original value or,
 if that value is outside certain bounds, a trimmed value. So for example `winsorize(eps, 0.1)` would return the
 value at the 10th percentile for values of eps less that that, the value of the 90th percentile for eps greater
 than that value, and the unmodified value of eps otherwise.
@@ -1079,57 +1080,49 @@ Trigger procedures can be written in PL/R. PostgreSQL requires that a procedure 
 trigger must be declared as a function with no arguments and a return type of `trigger`.
 The information from the trigger manager is passed to the procedure body in the following variables:
 
-```
-pg.tg.name
-```
+
+`pg.tg.name`
+
 The name of the trigger from the `CREATE TRIGGER` statement.
 
-```
-pg.tg.relid
-```
+`pg.tg.relid`
+
 The object ID of the table that caused the trigger procedure to be invoked.
 
-```
-pg.tg.relname
-```
+`pg.tg.relname`
+
 The name of the table that caused the trigger procedure to be invoked.
 
-```
-pg.tg.when
-```
+`pg.tg.when`
+
 The string `BEFORE` or `AFTER` depending on the type of trigger call.
 
-```
-pg.tg.level
-```
+`pg.tg.level`
+
 The string `ROW` or `STATEMENT` depending on the type of trigger call.
 
-```
-pg.tg.op
-```
+`pg.tg.op`
+
 The string `INSERT`,`UPDATE`, or `DELETE` depending on the type of trigger call.
 
-```
-pg.tg.new
-```
-When the trigger is defined`FOR EACH ROW`, a data.frame containing the values of the new table
-row forINSERTorUPDATEactions. For triggers definedFOR EACH STATEMENTand for`DELETE`
-actions, set toNULL. The atribute names are the table’s column names. Columns that are null will be
-represented as NA.
+`pg.tg.new`
 
-```
-pg.tg.old
-```
+When the trigger is defined`FOR EACH ROW`, a data.frame containing the values of the new table
+row for `INSERT` or `UPDATE` actions. For triggers defined `FOR EACH STATEMENT` and for`DELETE`
+actions, set to `NULL`. The atribute names are the table’s column names. Columns that are null will be
+represented as `NA`.
+
+`pg.tg.old`
+
 When the trigger is defined `FOR EACH ROW`, a data.frame containing the values of the old table
 row for`DELETE` or `UPDATE` actions. For triggers defined `FOR EACH STATEMENT` and for `INSERT`
 actions, set to `NULL`. The atribute names are the table’s column names. Columns that are null will be
-represented as NA.
+represented as `NA`.
 
-```
-pg.tg.args
-```
+`pg.tg.args`
+
 A vector of the arguments to the procedure as given in the `CREATE TRIGGER` statement.
-The return value from a trigger procedure can beNULLor a one row data.frame matching the number
+The return value from a trigger procedure can be `NULL` or a one row data.frame matching the number
 and type of columns in the trigger table. `NULL` tells the trigger manager to silently suppress the operation
 for this row. If a one row data.frame is returned, it tells PL/R to return a possibly modified row to the
 trigger manager that will be inserted instead of the one given in `pg.tg.new`. This works for `INSERT` and
