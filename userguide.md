@@ -484,7 +484,7 @@ support thereof:
 
 ### Normal Support <a name='normal-support'></a>
 
-pg.spi.exec(character query)
+`pg.spi.exec(character query)`
 
 Execute an SQL query given as a string. An error in the query causes an error to be raised. Otherwise, 
 the command’s return value is the number of rows processed for `INSERT` ,`UPDATE`, or`DELETE`
@@ -496,12 +496,12 @@ is provided.
 
 If a field of a SELECT result is NULL, the target variable for it is set to “NA”. For example:
 
-```
+```sql
 create or replace function test_spi_tup(text) returns setof record as ’
 pg.spi.exec(arg1)
 ’ language ’plr’;
 ```
-```
+```sql
 select * from test_spi_tup(’select oid, NULL::text as nullcol,
 typname from pg_type where typname = ”oid” or typname = ”text”’)
 as t(typeid oid, nullcol text, typename name);
