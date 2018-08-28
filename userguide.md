@@ -22,7 +22,7 @@
 
 #### 6. [Database Access and Support Functions](#database-access)
 
-#### 6.1. [Normal Support](#normal-support)
+#### 6.1  [Normal Support](#normal-support)
 
 #### 6.2. [RPostgreSQL Compatibility Support](#rpostgresql)
 
@@ -66,7 +66,7 @@ new data types.
 If you are going to compile PostgreSQL from the source, use the follwing commands from the untared
 and unzipped file downloaded from http://www.postgresql.org/ftp/source/:
 
-```
+```bash
 ./configure --enable-R-shlib --prefix=/opt/postgres_plr && make && make install
 ```
 
@@ -74,28 +74,28 @@ Place source tar file incontribin the PostgreSQL source tree and untar it. The s
 call handler is built and installed in the PostgreSQL library directory via the following commands (starting
 from/path/to/postgresql_source/contrib):
 
-```
+```bash
 cd plr
 make
 make install
 ```
 #### You may explicitly include the path of pg_config to `PATH`, such as
 
-```
+```bash
 cd plr
 PATH=/usr/pgsql-9.4/bin/:$PATH; USE_PGXS=1 make
 echo ’PATH=/usr/pgsql-9.4/bin/:$PATH; USE_PGXS=1 make install’ | sudo sh
 ```
 #### If you want to use git to pull the repository, run the following command before the make command:
 
-```
+```bash
 git clone https://github.com/postgres-plr/plr
 ```
 As of PostgreSQL 8.0.0, PL/R can also be built without the PostgreSQL source tree. Untar PL/R
 whereever you prefer. The shared object for the R call handler is built and installed in the PostgreSQL
 library directory via the following commands (starting from/path/to/plr):
 
-```
+```bash
 cd plr
 USE_PGXS=1 make
 USE_PGXS=1 make install
@@ -119,13 +119,13 @@ USE_PGXS=1 make install
 You can use `plr.sql` (which is created in contrib/plr) to create the language and support functions
 in your database of choice:
 
-```
+```bash
 psql mydatabase < plr.sql
 ```
 
 Alternatively you can create the language manually using SQL commands:
 
-```
+```sql
 CREATE FUNCTION plr_call_handler()
 RETURNS LANGUAGE_HANDLER
 AS ’$libdir/plr’ LANGUAGE C;
@@ -135,14 +135,14 @@ CREATE LANGUAGE plr HANDLER plr_call_handler;
 
 As of PostgreSQL 9.1 you can use the new ```CREATE EXTENSION``` command:
 
-```
+```sql
 CREATE EXTENSION plr;
 ```
 
 This is not only simple, it has the added advantage of tracking all PL/R installed objects as dependent on
 the extension, and therefore they can be removed just as easily if desired:
 
-```
+```sql
 DROP EXTENSION plr;
 ```
 
@@ -166,13 +166,13 @@ beforethe postmaster is started. Otherwise PL/R will refuse to load. See plr_env
 examination of the environment available to the PostgreSQL postmaster process.
 
 
-## Functions and Arguments<a name="functions"></a>
+## Functions and Arguments <a name="functions"></a>
 
 To create a function in the PL/R language, use standard R syntax, but without the enclosing braces or
-function assignment. Instead of ```myfunc <- function(arguments) { function body }```, the body
-of your PL/R function is just ```function body```
+function assignment. Instead of `myfunc <- function(arguments) { function body }`, the body
+of your PL/R function is just `sqlfunction body`
 
-```
+```sql
 CREATE OR REPLACE FUNCTIONfuncname(argument-types)
 RETURNSreturn-typeAS ’
 function body
@@ -183,7 +183,7 @@ The body of the function is simply a piece of R script. When the function is cal
 are passed as variables arg1...argNto the R script. The result is returned from the R code in the usual
 way. For example, a function returning the greater of two integer values could be defined as:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
 if (arg1 > arg2)
 return(arg1)
@@ -196,7 +196,7 @@ Starting with PostgreSQL 8.0, arguments may be explicitly named when creating a 
 is explicitly named at function creation time, that name will be available to your R script in place of
 the usual ```argNvariable```. For example:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION sd(vals float8[]) RETURNS float AS ’
 sd(vals)
 ’ LANGUAGE ’plr’ STRICT;
@@ -209,7 +209,7 @@ For each explicit argument, a corresponding variable called `farg1...fargN` is p
 These contain an R vector of all the values of the related argument for the moving `WINDOW` frame within
 the current `PARTITION`. For example:
 
-```
+```sql
 CREATE OR REPLACE
 FUNCTION r_regr_slope(float8, float8)
 RETURNS float8 AS
@@ -233,7 +233,7 @@ NULL result automatically. In a non-strict function, if the actual value of an a
 corresponding `argN` variable will be set to a `NULLR` object. For example, suppose that we wanted `r_max`
 with one null and one non-null argument to return the non-null argument, rather than NULL:
 
-```
+```sql
 CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
 if (is.null(arg1) && is.null(arg2))
 return(NULL)
@@ -360,7 +360,7 @@ PostgreSQL return type and the type of R object. That mapping is shown in Table 
 |setof composite|2D array,matrix,data.frame|multi-row, multi-column set|array(1:4,c(2,2)) in R returns 2 rows of 2 columns|
 
 
-## Using Global Data<a name="global-data"></a>
+## Using Global Data <a name="global-data"></a>
 
 Sometimes it is useful to have some global status data that is held between two calls to a procedure or
 is shared between different procedures. Equally useful is the ability to create functions that your PL/R
@@ -475,14 +475,14 @@ row_number | f
 
 
 
-## Database Access and Support<a name='database-access'></a>
+## Database Access and Support <a name='database-access'></a>
 
 ## Functions
 
 The following commands are available to access the database from the body of a PL/R procedure, or in
 support thereof:
 
-### Normal Support<a name='normal-support'></a>
+### Normal Support <a name='normal-support'></a>
 
 pg.spi.exec(character query)
 
@@ -1059,7 +1059,7 @@ database administrator.
 
 ## R Function Names <a name='rfunction-names'></a>
 
-In PostgreSQL, one and the same function name can be used for different functions as long as the number
+In PostgreSQL, a function name can be used for different functions as long as the number
 of arguments or their types differ. R, however, requires all function names to be distinct. PL/R deals with
 this by constructing the internal R function names as a concatenation of the string “PLR” with the object
 ID of the procedure’s `pg_proc`. Thus, PostgreSQL functions with the same name and different argument
