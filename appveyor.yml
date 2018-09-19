@@ -1,15 +1,16 @@
 #  appveyor.yml
 
+clone_folder: c:\projects\plr
 
 init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   
 install:
-  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-3.4.3-win.exe 
+  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/old/3.4.3/R-3.4.3-win.exe 
   - R-3.4.3-win.exe /VERYSILENT /dir=C:\R-3.4.3
   - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
   - cd c:\projects\postgresql
-  - git checkout REL_10_0
+  - git checkout REL_10_4
   - mv c:\projects\plr src\pl
   - cinst winflexbison
   - SET R_HOME=C:\R-3.4.3
@@ -64,3 +65,4 @@ deploy:
 artifacts:
   - path: '.\plr.dll'
     name: plr.dll
+
