@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# DOCBOOKSTYLE=/path/to/docbook/dsssl-stylesheets-1.79
+# PGSRCROOT=/path/to/plr
+
 openjade -wall -wno-unused-param -wno-empty -wfully-tagged \
  -c ${DOCBOOKSTYLE}/catalog \
  -d stylesheet.dsl -t sgml -i output-html -V html-index plr.sgml
@@ -9,7 +12,7 @@ openjade -wall -wno-unused-param -wno-empty -wfully-tagged \
  -d stylesheet.dsl -t sgml -i output-html -i include-index plr.sgml
 
 openjade  -D . -c ${DOCBOOKSTYLE}/catalog \
- -d ${PGSRCROOT}/doc/src/sgml/stylesheet.dsl \
+ -d ${PGSRCROOT}/doc/stylesheet.dsl \
  -t tex -V tex-backend -i output-print \
  -V texpdf-output -V '%paper-type%'=USletter -o plr-US.tex-pdf plr.sgml
 
