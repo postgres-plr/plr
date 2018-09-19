@@ -9,7 +9,7 @@ set client_min_messages to notice;
 SELECT plr_version();
  plr_version 
 -------------
- 08.03.00.17
+ 08.03.00.18
 (1 row)
 
 -- make typenames available in the global namespace
