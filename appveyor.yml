@@ -10,6 +10,7 @@ install:
   - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
   - cd c:\projects\postgresql
   - git checkout REL_11_STABLE
+  - env
   - mv %APPVEYOR_BUILD_FOLDER% src\contrib\plr
   - cinst winflexbison
   - SET R_HOME=C:\R-3.5.1
@@ -64,6 +65,3 @@ deploy:
 artifacts:
   - path: '.\plr.dll'
     name: plr.dll
-
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
