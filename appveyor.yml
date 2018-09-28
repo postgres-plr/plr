@@ -10,7 +10,7 @@ install:
   - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
   - cd c:\projects\postgresql
   - git checkout REL_11_STABLE
-  - mv c:\projects\plr src\contrib
+  - mv %APPVEYOR_BUILD_NUMBER% src\contrib
   - cinst winflexbison
   - SET R_HOME=C:\R-3.5.1
   - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
