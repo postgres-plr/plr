@@ -12,7 +12,7 @@ install:
   - git checkout REL_11_STABLE
   - cd c:\projects
   - ren %APPVEYOR_PROJECT_SLUG% plr
-  - mv plr src\contrib\
+  - mv plr postgresql\src\contrib\
   - cd c:\projects\postgresql
   - cinst winflexbison
   - SET R_HOME=C:\R-3.5.1
