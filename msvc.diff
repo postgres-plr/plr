@@ -44,18 +44,6 @@ index a083ac7..fcf44b7 100644
  	return;
  }
  
-diff --git a/src/tools/msvc/Solution.pm b/src/tools/msvc/Solution.pm
-index 78db247..7065744 100644
---- a/src/tools/msvc/Solution.pm
-+++ b/src/tools/msvc/Solution.pm
-@@ -645,6 +645,7 @@ sub AddProject
- 		$proj->AddIncludeDir($self->{options}->{uuid} . '\include');
- 		$proj->AddLibrary($self->{options}->{uuid} . '\lib\uuid.lib');
- 	}
-+	$proj->AddIncludeDir('C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include');
- 	return $proj;
- }
- 
 diff --git a/src/tools/msvc/vcregress.pl b/src/tools/msvc/vcregress.pl
 index ce5c976..9d3e119 100644
 --- a/src/tools/msvc/vcregress.pl
