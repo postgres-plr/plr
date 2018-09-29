@@ -1013,7 +1013,7 @@ RETURNS float8 AS
 $BODY$
   slope <- NA
   y <- farg1
-  x <- farg2 
+  x <- farg2
   if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
   return(slope)
 $BODY$
