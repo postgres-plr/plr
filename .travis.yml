@@ -24,4 +24,4 @@ script:
   - /usr/lib/postgresql/10/bin/pg_config
   - psql --version 
   - /usr/lib/postgresql/10/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --user=postgres --inputdir=./ --bindir='/usr/lib/postgresql/10/bin/' --dbname=contrib_regression plr
-
+  - cat regression.diff
