@@ -51,7 +51,7 @@ test_script:
   - cp plr--8.3.0.18.sql c:\pgsql\share\extension
   - mkdir c:\projects\plr
   - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\plr\
-  - ps: Start-Process -FilePath ..\..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
+  - ps: Start-Process -FilePath ..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
         
 deploy:
    provider: GitHub
