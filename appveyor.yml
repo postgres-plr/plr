@@ -23,13 +23,13 @@ before_build:
   - rename c:\ProgramData\chocolatey\bin\win_flex.exe flex.exe
   - rename c:\ProgramData\chocolatey\bin\win_bison.exe bison.exe
   - cd c:\projects\postgresql
-  - perl c:\projects\postgresql\src\contrib\plr\buildsetup.pl
-  - dumpbin /EXPORTS C:\R-3.5.1\bin\x64\R.dll > c:\projects\postgresql\src\contrib\plr\R.symbols
-  - tail -n +19 c:\projects\postgresql\src\contrib\plr\R.symbols  | tr -s ' ' |cut -d ' ' -f 5 > c:\projects\postgresql\src\contrib\plr\R.stripped
-  - cat c:\projects\postgresql\src\contrib\plr\header.def c:\projects\postgresql\src\contrib\plr\R.stripped > c:\projects\postgresql\src\contrib\plr\R.def
-  - lib /def:c:\projects\postgresql\src\contrib\plr\R.def /out:C:\R-3.5.1\bin\x64\R.lib
+  - perl c:\projects\postgresql\contrib\plr\buildsetup.pl
+  - dumpbin /EXPORTS C:\R-3.5.1\bin\x64\R.dll > c:\projects\postgresql\contrib\plr\R.symbols
+  - tail -n +19 c:\projects\postgresql\contrib\plr\R.symbols  | tr -s ' ' |cut -d ' ' -f 5 > c:\projects\postgresql\contrib\plr\R.stripped
+  - cat c:\projects\postgresql\contrib\plr\header.def c:\projects\postgresql\contrib\plr\R.stripped > c:\projects\postgresql\contrib\plr\R.def
+  - lib /def:c:\projects\postgresql\contrib\plr\R.def /out:C:\R-3.5.1\bin\x64\R.lib
   - SET PATH=%PATH%;C:\R-3.5.1\bin\x64\
-  - patch -p1 < src\contrib\plr\msvc.diff
+  - patch -p1 < contrib\plr\msvc.diff
 
 build_script:
   - cd c:\projects\postgresql\src\tools\msvc
@@ -46,7 +46,7 @@ test_script:
   - cd c:\pgsql
   - bin\initdb -D data
   - ps: Start-Process -FilePath .\bin\pg_ctl -ArgumentList "-D data -l logfile start"
-  - cd c:\projects\postgresql\src\contrib\plr
+  - cd c:\projects\postgresql\contrib\plr
   - cp plr.control c:\pgsql\share\extension
   - cp plr--8.3.0.18.sql c:\pgsql\share\extension
   - mkdir c:\projects\plr
