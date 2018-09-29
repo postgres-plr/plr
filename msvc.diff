@@ -20,8 +20,8 @@ index a083ac7..fcf44b7 100644
 +		'contrib\plr','plr.c','pg_conversion.c','pg_backend_support.c','pg_userfuncs.c','pg_rsupport.c'
 +	);
 +	$plr->AddReference($postgres);
-+	$plr->AddLibrary('C:\R\R-3.5.1\bin\R.lib');
-+	$plr->AddIncludeDir('C:\R\R-3.5.1\include');
++	$plr->AddLibrary('C:\R-3.5.1\bin\R.lib');
++	$plr->AddIncludeDir('C:\R-3.5.1\include');
 +	my $mfplr = Project::read_file('contrib/plr/Makefile');
 +	GenerateContribSqlFiles('plr', $mfplr);
 +
