@@ -5,14 +5,17 @@ init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   
 install:
-  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-3.4.3-win.exe 
-  - R-3.4.3-win.exe /VERYSILENT /dir=C:\R-3.4.3
+  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-3.5.1-win.exe 
+  - R-3.5.1-win.exe /VERYSILENT /dir=C:\R-3.5.1
   - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
   - cd c:\projects\postgresql
-  - git checkout REL_10_0
-  - mv c:\projects\plr src\pl
+  - git checkout REL_11_STABLE
+  - cd c:\projects
+  - ren %APPVEYOR_PROJECT_SLUG% plr
+  - mv plr postgresql\contrib\
+  - cd c:\projects\postgresql
   - cinst winflexbison
-  - SET R_HOME=C:\R-3.4.3
+  - SET R_HOME=C:\R-3.5.1
   - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
   
 before_build:
@@ -20,13 +23,13 @@ before_build:
   - rename c:\ProgramData\chocolatey\bin\win_flex.exe flex.exe
   - rename c:\ProgramData\chocolatey\bin\win_bison.exe bison.exe
   - cd c:\projects\postgresql
-  - perl c:\projects\postgresql\src\pl\plr\buildsetup.pl
-  - dumpbin /EXPORTS C:\R-3.4.3\bin\x64\R.dll > c:\projects\postgresql\src\pl\plr\R.symbols
-  - tail -n +19 c:\projects\postgresql\src\pl\plr\R.symbols  | tr -s ' ' |cut -d ' ' -f 5 > c:\projects\postgresql\src\pl\plr\R.stripped
-  - cat c:\projects\postgresql\src\pl\plr\header.def c:\projects\postgresql\src\pl\plr\R.stripped > c:\projects\postgresql\src\pl\plr\R.def
-  - lib /def:c:\projects\postgresql\src\pl\plr\R.def /out:C:\R-3.4.3\bin\x64\R.lib
-  - SET PATH=%PATH%;C:\R-3.4.3\bin\x64\
-  - patch -p1 < src\pl\plr\msvc.diff
+  - perl c:\projects\postgresql\contrib\plr\buildsetup.pl
+  - dumpbin /EXPORTS C:\R-3.5.1\bin\x64\R.dll > c:\projects\postgresql\contrib\plr\R.symbols
+  - tail -n +19 c:\projects\postgresql\contrib\plr\R.symbols  | tr -s ' ' |cut -d ' ' -f 5 > c:\projects\postgresql\contrib\plr\R.stripped
+  - cat c:\projects\postgresql\contrib\plr\header.def c:\projects\postgresql\contrib\plr\R.stripped > c:\projects\postgresql\contrib\plr\R.def
+  - lib /def:c:\projects\postgresql\contrib\plr\R.def /out:C:\R-3.5.1\bin\x64\R.lib
+  - SET PATH=%PATH%;C:\R-3.5.1\bin\x64\
+  - patch -p1 < contrib\plr\msvc.diff
 
 build_script:
   - cd c:\projects\postgresql\src\tools\msvc
@@ -36,19 +39,19 @@ configuration:
   - Release
   
 test_script:
-  - SET R_HOME=C:\R-3.4.3
-  - SET PATH=%PATH%;C:\R-3.4.3\bin\x64
+  - SET R_HOME=C:\R-3.5.1
+  - SET PATH=%PATH%;C:\R-3.5.1\bin\x64
   - cd c:\projects\postgresql\src\tools\msvc
   - perl install.pl c:\pgsql
   - cd c:\pgsql
   - bin\initdb -D data
   - ps: Start-Process -FilePath .\bin\pg_ctl -ArgumentList "-D data -l logfile start"
-  - cd c:\projects\postgresql\src\pl\plr
+  - cd c:\projects\postgresql\contrib\plr
   - cp plr.control c:\pgsql\share\extension
-  - cp plr--8.3.0.17.sql c:\pgsql\share\extension
-  - mkdir c:\projects\plr
-  - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\plr\
-  - ps: Start-Process -FilePath ..\..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
+  - cp plr--8.3.0.18.sql c:\pgsql\share\extension
+  - mkdir c:\projects\%APPVEYOR_PROJECT_SLUG%
+  - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\%APPVEYOR_PROJECT_SLUG%\
+  - ps: Start-Process -FilePath ..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
         
 deploy:
    provider: GitHub

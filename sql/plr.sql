@@ -456,7 +456,7 @@ RETURNS float8 AS
 $BODY$
   slope <- NA
   y <- farg1
-  x <- farg2 
+  x <- farg2
   if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
   return(slope)
 $BODY$
@@ -482,3 +482,30 @@ SELECT routfloat4(10);
 
 SELECT count(rlargeint8out(15000));
 SELECT count(routfloat4(15000));
+
+CREATE table tbl(val integer);
+
+CREATE OR REPLACE FUNCTION test_create_procedure() RETURNS void
+  AS
+$BODY$
+  version_11plus  <- pg.spi.exec("select current_setting('server_version_num')::integer >= 110000;")
+  if(version_11plus[[1]]) {
+    pg.spi.exec("
+      CREATE OR REPLACE PROCEDURE insert_data(a int, b int)
+        AS
+      $$
+        pg.spi.exec('INSERT INTO tbl VALUES (1);')
+        pg.spi.exec('INSERT INTO tbl VALUES (2);')
+      $$ LANGUAGE plr;
+      ")
+    pg.spi.exec("CALL insert_data(1, 2);")
+  } else {
+    pg.spi.exec("INSERT INTO tbl VALUES (1);")
+    pg.spi.exec("INSERT INTO tbl VALUES (2);")
+  }
+$BODY$
+LANGUAGE plr;
+
+SELECT test_create_procedure();
+
+SELECT * FROM tbl;

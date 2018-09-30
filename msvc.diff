@@ -1,72 +1,59 @@
 diff --git a/src/tools/msvc/Mkvcbuild.pm b/src/tools/msvc/Mkvcbuild.pm
-index 686c7369f6..31b4dc799c 100644
+index a083ac7..fcf44b7 100644
 --- a/src/tools/msvc/Mkvcbuild.pm
 +++ b/src/tools/msvc/Mkvcbuild.pm
-@@ -45,7 +45,7 @@ my @contrib_excludes = (
+@@ -48,7 +48,7 @@ my @contrib_excludes = (
  	'ltree_plpython',  'pgcrypto',
  	'sepgsql',         'brin',
  	'test_extensions', 'test_pg_dump',
 -	'snapshot_too_old');
-+	'snapshot_too_old','plr');
++	'snapshot_too_old', 'plr');
  
  # Set of variables for frontend modules
  my $frontend_defines = { 'initdb' => 'FRONTEND' };
-@@ -454,6 +454,15 @@ sub mkvcbuild
- 	$pgcrypto->AddLibrary('ws2_32.lib');
+@@ -463,6 +463,16 @@ sub mkvcbuild
  	my $mf = Project::read_file('contrib/pgcrypto/Makefile');
  	GenerateContribSqlFiles('pgcrypto', $mf);
-+ 	my $plr = $solution->AddProject('plr','dll','plr');
-+     	$plr->AddFiles(
-+       	  'src\pl\plr','plr.c','pg_conversion.c','pg_backend_support.c','pg_userfuncs.c','pg_rsupport.c'
-+     	);
-+     	$plr->AddReference($postgres);
-+     	$plr->AddLibrary('C:\R-3.4.2\bin\x64\R.lib');
-+     	$plr->AddIncludeDir('C:\R-3.4.2\include');
-+     	my $mfplr = Project::read_file('src/pl/plr/Makefile');
-+     	GenerateContribSqlFiles('plr', $mfplr);
  
++	my $plr = $solution->AddProject('plr','dll','plr');
++	$plr->AddFiles(
++		'contrib\plr','plr.c','pg_conversion.c','pg_backend_support.c','pg_userfuncs.c','pg_rsupport.c'
++	);
++	$plr->AddReference($postgres);
++	$plr->AddLibrary('C:\R-3.5.1\bin\x64\R.lib');
++	$plr->AddIncludeDir('C:\R-3.5.1\include');
++	my $mfplr = Project::read_file('contrib/plr/Makefile');
++	GenerateContribSqlFiles('plr', $mfplr);
++
  	foreach my $subdir ('contrib', 'src/test/modules')
  	{
-@@ -862,16 +871,16 @@ sub GenerateContribSqlFiles
- 			my $in  = "$d.in";
- 			my $out = "$d";
- 
--			if (Solution::IsNewer("contrib/$n/$out", "contrib/$n/$in"))
-+			if (Solution::IsNewer("src/pl/$n/$out", "src/pl/$n/$in"))
- 			{
--				print "Building $out from $in (contrib/$n)...\n";
--				my $cont = Project::read_file("contrib/$n/$in");
-+				print "Building $out from $in (src/pl/$n)...\n";
-+				my $cont = Project::read_file("src/pl/$n/$in");
- 				my $dn   = $out;
- 				$dn   =~ s/\.sql$//;
- 				$cont =~ s/MODULE_PATHNAME/\$libdir\/$dn/g;
- 				my $o;
--				open($o, '>', "contrib/$n/$out")
--				  || croak "Could not write to contrib/$n/$d";
-+				open($o, '>', "src/pl/$n/$out")
-+				  || croak "Could not write to src/pl/$n/$d";
- 				print $o $cont;
- 				close($o);
+ 		opendir($D, $subdir) || croak "Could not opendir on $subdir!\n";
+@@ -1011,6 +1021,15 @@ sub GenerateContribSqlFiles
  			}
+ 		}
+ 	}
++	else
++	{
++		print "GenerateContribSqlFiles skipping $n\n";
++		if ($n eq 'plr')
++		{
++			print "mf: $mf\n";
++		}
++	}
++
+ 	return;
+ }
+ 
 diff --git a/src/tools/msvc/vcregress.pl b/src/tools/msvc/vcregress.pl
-index 2904679114..99ae40205d 100644
+index ce5c976..9d3e119 100644
 --- a/src/tools/msvc/vcregress.pl
 +++ b/src/tools/msvc/vcregress.pl
-@@ -248,7 +248,7 @@ sub plcheck
+@@ -429,7 +429,7 @@ sub contribcheck
  {
- 	chdir "../../pl";
- 
--	foreach my $pl (glob("*"))
-+	foreach my $pl (glob("plr"))
+ 	chdir "../../../contrib";
+ 	my $mstat = 0;
+-	foreach my $module (glob("*"))
++	foreach my $module (glob("plr"))
  	{
- 		next unless -d "$pl/sql" && -d "$pl/expected";
- 		my $lang = $pl eq 'tcl' ? 'pltcl' : $pl;
-@@ -286,6 +286,7 @@ sub plcheck
- 			"../../../$Config/pg_regress/pg_regress",
- 			"--bindir=../../../$Config/psql",
- 			"--dbname=pl_regression", @lang_args, @tests);
-+		print join(" ", @args) . "\n";
- 		system(@args);
- 		my $status = $? >> 8;
- 		exit $status if $status;
+ 		# these configuration-based exclusions must match Install.pm
+ 		next if ($module eq "uuid-ossp"  && !defined($config->{uuid}));
