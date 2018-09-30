@@ -49,8 +49,8 @@ test_script:
   - cd c:\projects\postgresql\contrib\plr
   - cp plr.control c:\pgsql\share\extension
   - cp plr--8.3.0.18.sql c:\pgsql\share\extension
-  - mkdir c:\projects\plr
-  - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\plr\
+  - mkdir c:\projects\%APPVEYOR_PROJECT_SLUG%
+  - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\%APPVEYOR_PROJECT_SLUG%\
   - ps: Start-Process -FilePath ..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
         
 deploy:
