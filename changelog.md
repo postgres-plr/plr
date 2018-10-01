@@ -1,4 +1,4 @@
-#### CHANGE LOG: 8.3.0.16 TO 8.3.0.17
+#### CHANGE LOG: 8.3.0.17 TO 8.3.0.18
 - Internal code changes to accommodate PostgreSQL V11 internal API Changes
 
 #### CHANGE LOG: 8.3.0.16 TO 8.3.0.17
