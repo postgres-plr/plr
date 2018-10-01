@@ -12,27 +12,23 @@
  http://www.omegahat.org/RSPostgres/
 
 ### License
-  GPL V2 see [LICENSE](LICENSE) for details
+- GPL V2 see [LICENSE](LICENSE) for details
 
-See [changelog](CHANGELOG.md) for release notes and [userguide](userguide.md)
-for latest docs
+### Changes
+- See [changelog](CHANGELOG.md) for release notes for latest docs
 
-Notes:
+#### Installation:
+- See [installation](userguide.md#installation) for the most up-to-date instructions.
+
+#### Documentation:
+- See [userguide](userguide.md) for complete documentation.
+
+### Notes:
  - R headers are required. Download and install R prior to building PL/R.
-
- - R must have been built with the --enable-R-shlib option when it was
+ - R must have been built with the ```--enable-R-shlib``` option when it was
       configured, in order for the libR shared object library to be available.
-
  - R_HOME must be defined in the environment of the user under which
       PostgreSQL is started, before the postmaster is started. Otherwise
       PL/R will refuse to load.
 
-#### Installation:
-  See [installation](userguide.md#installation)
-  for the most up-to-date instructions.
-
-#### Documentation:
-- see [userguide](userguide.md) for details
-
-======================================================================
 -- Joe Conway
