@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{CC739A29-855A-4FB0-B859-ECD0EBC538C5}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>plr</RootNamespace>
+    <PlatformToolset>v140</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CustomBuildBeforeTargets>Link</CustomBuildBeforeTargets>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+    <rbin Condition="$(Platform)=='Win32'">i386</rbin>
+    <rbin Condition="$(Platform)=='x64'">x64</rbin>
+    <pf>$(ProgramFiles)</pf>
+    <pf Condition="$(Platform)=='x64'">$(ProgramW6432)</pf>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros">
+    <pgversion Condition="$(pgversion) == ''">9.6</pgversion>
+    <mingw Condition="$(mingw) == ''">C:\RTools\mingw_</mingw>
+    <pgroot Condition="$(pgroot)==''">$(pf)\PostgreSQL\$(pgversion)</pgroot>
+    <rversion Condition="$(rversion)==''">3.5.1</rversion>
+    <r_home Condition="$(R_HOME)==''">C:\Program Files\R\R-$(rversion)</r_home>
+    <sed Condition="$(sed)==''">$(mingw)\..\bin\sed</sed>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <IncludePath>$(R_HOME)\include;$(pgroot)\include;$(pgroot)\include\server;$(pgroot)\include\server\port\win32;$(pgroot)\include\server\port\win32_msvc;$(IncludePath)</IncludePath>
+    <LibraryPath>$(pgroot)\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+      <ExceptionHandling>false</ExceptionHandling>
+      <EnableEnhancedInstructionSet Condition="$(PlatformToolset)!='Windows7.1SDK'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>Win32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(pgversion)=='9.3'">WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="$(Configuration)=='Release'">
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+    </ClCompile>
+    <ClCompile Condition="$(Configuration)=='Debug'">
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BrowseInformation Condition="$(CI)==''">true</BrowseInformation>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>R$(PlatformArchitecture).lib;postgres.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+    </Link>
+    <CustomBuildStep>
+      <Command>$(mingw)$(PlatformArchitecture)\bin\gendef.exe - "$(R_HOME)\bin\$(rbin)\R.dll" &gt; R$(PlatformArchitecture).def
+lib /def:R$(PlatformArchitecture).def /out:R$(PlatformArchitecture).lib /MACHINE:$(PlatformTarget)
+if "%CI%"=="" ( if not exist data "$(pgroot)\bin\initdb" -D data )
+if not exist plr.sql "$(sed)" -e "s#MODULE_PATHNAME#$libdir/plr#" plr.sql.in &gt; plr.sql
+</Command>
+      <Outputs>R$(PlatformArchitecture).lib</Outputs>
+      <Message>Generate R import library</Message>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="pg_backend_support.c" />
+    <ClCompile Include="pg_conversion.c" />
+    <ClCompile Include="pg_rsupport.c" />
+    <ClCompile Include="pg_userfuncs.c" />
+    <ClCompile Include="plr.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="plr.h" />
+  </ItemGroup>
+</Project>
