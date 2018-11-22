@@ -14,13 +14,13 @@ before_script:
   - sudo apt-get remove --purge postgresql\*
   - sudo apt-get install postgresql-11
   - sudo apt-get install postgresql-server-dev-11
-  - echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/10/main/pg_hba.conf > /dev/null
-  - sudo pg_ctlcluster 10 main reload
+  - echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/11/main/pg_hba.conf > /dev/null
+  - sudo pg_ctlcluster 11 main reload
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
   - make 
   - sudo  make install
-  - /usr/lib/postgresql/10/bin/pg_config
+  - /usr/lib/postgresql/11/bin/pg_config
   - psql --version 
-  - /usr/lib/postgresql/10/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --user=postgres --inputdir=./ --bindir='/usr/lib/postgresql/10/bin/' --dbname=contrib_regression plr
+  - /usr/lib/postgresql/11/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --user=postgres --inputdir=./ --bindir='/usr/lib/postgresql/11/bin/' --dbname=contrib_regression plr
