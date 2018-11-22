@@ -535,6 +535,8 @@ extern SEXP plr_SPI_cursor_fetch(SEXP cursor_in,SEXP forward_in, SEXP rows_in);
 extern void plr_SPI_cursor_close(SEXP cursor_in);
 extern void plr_SPI_cursor_move(SEXP cursor_in, SEXP forward_in, SEXP rows_in);
 extern SEXP plr_SPI_lastoid(void);
+extern SEXP plr_SPI_commit(void);
+extern SEXP plr_SPI_rollback(void);
 extern void throw_r_error(const char **msg);
 
 /* Postgres callable functions useful in conjunction with PL/R */

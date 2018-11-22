@@ -613,6 +613,30 @@ plr_SPI_lastoid(void)
 }
 
 /*
+ * plr_SPI_commit - commit transaction and start a new one.
+ */
+SEXP
+plr_SPI_commit(void)
+{
+	SPI_commit();
+	SPI_start_transaction();
+
+	return NULL;
+}
+
+/*
+ * plr_SPI_rollback - abort transaction and start a new one.
+ */
+SEXP
+plr_SPI_rollback(void)
+{
+	SPI_rollback();
+	SPI_start_transaction();
+
+	return NULL;
+}
+
+/*
  * Takes the prepared plan rsaved_plan and creates a cursor 
  * for it using the values specified in ragvalues.
  *

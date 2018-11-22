@@ -24,7 +24,7 @@ OBJS		:= $(SRCS:.c=.o)
 SHLIB_LINK	+= -L$(r_libdir1x) -L$(r_libdir2x) -lR
 DATA_built	= plr.sql
 DATA		= plr--8.3.0.18.sql plr--unpackaged--8.3.0.18.sql
-REGRESS		= plr
+REGRESS		= plr plr_transaction
 
 ifdef USE_PGXS
 ifndef PG_CONFIG

@@ -105,6 +105,12 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
 #define SPI_LASTOID_CMD \
 			"pg.spi.lastoid <-function() " \
 			"{.Call(\"plr_SPI_lastoid\")}"
+#define SPI_COMMIT_CMD \
+			"pg.spi.commit <-function() " \
+			"{.Call(\"plr_SPI_commit\")}"
+#define SPI_ROLLBACK_CMD \
+			"pg.spi.rollback <-function() " \
+			"{.Call(\"plr_SPI_rollback\")}"
 #define SPI_DBDRIVER_CMD \
 			"dbDriver <-function(db_name)\n" \
 			"{return(NA)}"
@@ -197,12 +203,17 @@ PG_FUNCTION_INFO_V1(plr_call_handler);
 Datum
 plr_call_handler(PG_FUNCTION_ARGS)
 {
+	bool			nonatomic;
 	Datum			retval;
+
+	nonatomic = fcinfo->context &&
+		IsA(fcinfo->context, CallContext) &&
+		!castNode(CallContext, fcinfo->context)->atomic;
 
 	/* save caller's context */
 	plr_caller_context = CurrentMemoryContext;
 
-	if (SPI_connect() != SPI_OK_CONNECT)
+	if (SPI_connect_ext(nonatomic ? SPI_OPT_NONATOMIC : 0) != SPI_OK_CONNECT)
 		elog(ERROR, "SPI_connect failed");
 	plr_SPI_context = CurrentMemoryContext;
 	MemoryContextSwitchTo(plr_caller_context);
@@ -439,6 +450,8 @@ plr_load_builtins(Oid funcid)
 		SPI_CURSOR_MOVE_CMD,
 		SPI_CURSOR_CLOSE_CMD,
 		SPI_LASTOID_CMD,
+		SPI_COMMIT_CMD,
+		SPI_ROLLBACK_CMD,
 		SPI_DBDRIVER_CMD,
 		SPI_DBCONN_CMD,
 		SPI_DBSENDQUERY_CMD,
