@@ -12,8 +12,8 @@ before_script:
   - sudo apt-get install -qq r-base-dev
   - sudo /etc/init.d/postgresql stop
   - sudo apt-get remove --purge postgresql\*
-  - sudo apt-get install postgresql-10
-  - sudo apt-get install postgresql-server-dev-10
+  - sudo apt-get install postgresql-11
+  - sudo apt-get install postgresql-server-dev-11
   - echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/10/main/pg_hba.conf > /dev/null
   - sudo pg_ctlcluster 10 main reload
 script:
