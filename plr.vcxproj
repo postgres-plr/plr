@@ -74,17 +74,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>R$(PlatformArchitecture).lib;postgres.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>R$(PlatformTarget).lib;postgres.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
     </Link>
     <CustomBuildStep>
-      <Command>$(mingw)$(PlatformArchitecture)\bin\gendef.exe - "$(R_HOME)\bin\$(rbin)\R.dll" &gt; R$(PlatformArchitecture).def
-lib /def:R$(PlatformArchitecture).def /out:R$(PlatformArchitecture).lib /MACHINE:$(PlatformTarget)
+      <Command>$(mingw)$(PlatformArchitecture)\bin\gendef.exe - "$(R_HOME)\bin\$(rbin)\R.dll" &gt; R$(PlatformTarget).def
+lib /def:R$(PlatformTarget).def /out:R$(PlatformTarget).lib /MACHINE:$(PlatformTarget)
 if "%CI%"=="" ( if not exist data "$(pgroot)\bin\initdb" -D data )
 if not exist plr.sql "$(sed)" -e "s#MODULE_PATHNAME#$libdir/plr#" plr.sql.in &gt; plr.sql
 </Command>
-      <Outputs>R$(PlatformArchitecture).lib</Outputs>
+      <Outputs>R$(PlatformTarget).lib</Outputs>
       <Message>Generate R import library</Message>
     </CustomBuildStep>
   </ItemDefinitionGroup>
