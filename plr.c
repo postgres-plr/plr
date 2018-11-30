@@ -339,8 +339,12 @@ plr_init(void)
 	if (plr_pm_init_done)
 		return;
 
+#ifdef WIN32
+	r_home = get_R_HOME();
+#else
 	/* refuse to start if R_HOME is not defined */
 	r_home = getenv("R_HOME");
+#endif
 	if (r_home == NULL)
 	{
 		size_t		rh_len = strlen(R_HOME_DEFAULT);
