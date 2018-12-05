@@ -1448,36 +1448,15 @@ plr_parse_func_body(const char *body)
 SEXP
 call_r_func(SEXP fun, SEXP rargs)
 {
-	int		i;
 	int		errorOccurred;
-	SEXP	obj,
-			args,
-			call,
+	SEXP	call,
 			ans;
-	long	n = length(rargs);
-
-	if(n > 0)
-	{
-		PROTECT(obj = args = allocList(n));
-		for (i = 0; i < n; i++)
-		{
-			SETCAR(obj, VECTOR_ELT(rargs, i));
-			obj = CDR(obj);
-		}
-		UNPROTECT(1);
         /*
          * NB: the headers of both R and Postgres define a function
          * called lcons, so use the full name to be precise about what
          * function we're calling.
          */
-		PROTECT(call = Rf_lcons(fun, args));
-	}
-	else
-	{
-		PROTECT(call = allocVector(LANGSXP,1));
-		SETCAR(call, fun);
-	}
-
+	PROTECT(call = Rf_lcons(fun, rargs));
 	ans = R_tryEval(call, R_GlobalEnv, &errorOccurred);
 	UNPROTECT(1);
 
@@ -1503,6 +1482,7 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 	int		m = 1;
 	int		c = 0;
 	SEXP	rargs,
+			t,
 			el;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
@@ -1518,10 +1498,10 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 #endif
 
 	/*
-	 * Create an array of R objects with the number of elements
+	 * Create an R pairlist with the number of elements
 	 * as a function of the number of arguments.
 	 */
-	PROTECT(rargs = allocVector(VECSXP, c + (m * function->nargs)));
+	PROTECT(t = rargs = allocList(c + (m * function->nargs)));
 
 	/*
 	 * iterate over the arguments, convert each of them and put them in
@@ -1563,7 +1543,8 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 
 				PROTECT(el = pg_array_get_r(dvalue, out_func, typlen, typbyval, typalign));
 			}
-			SET_VECTOR_ELT(rargs, i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 			UNPROTECT(1);
 #ifdef HAVE_WINDOW_FUNCTIONS
 		}
@@ -1607,7 +1588,8 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 				dvalue = (Datum) PG_DETOAST_DATUM(dvalue);
 				PROTECT(el = pg_array_get_r(dvalue, out_func, typlen, typbyval, typalign));
 			}
-			SET_VECTOR_ELT(rargs, i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 			UNPROTECT(1);
 		}
 #endif
@@ -1642,22 +1624,18 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 			 * We already set function->nargs arguments
 			 * so we must start with a function->nargs
 			 */
-			SET_VECTOR_ELT(rargs, function->nargs + i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 
 			UNPROTECT(1);
 		}
 
 		/* fnumrows */
-		PROTECT(el = NEW_NUMERIC(1));
-		NUMERIC_DATA(el)[0] = (double) numels;
-		SET_VECTOR_ELT(rargs, m * function->nargs + 0, el);
-		UNPROTECT(1);
+		SETCAR(t, ScalarInteger(numels));
+		t = CDR(t);
 
 		/* prownum */
-		PROTECT(el = NEW_NUMERIC(1));
-		NUMERIC_DATA(el)[0] = (double) WinGetCurrentPosition(winobj) + 1;;
-		SET_VECTOR_ELT(rargs, m * function->nargs + 1, el);
-		UNPROTECT(1);
+		SETCAR(t, ScalarInteger(WinGetCurrentPosition(winobj) + 1));
 	}
 #endif
 
