@@ -110,9 +110,11 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
 #define SPI_CURSOR_CLOSE_CMD \
 			"pg.spi.cursor_close<-function(cursor) " \
 			"{.Call(\"plr_SPI_cursor_close\",cursor)}"
+#if CATALOG_VERSION_NO < 201811201
 #define SPI_LASTOID_CMD \
 			"pg.spi.lastoid <-function() " \
 			"{.Call(\"plr_SPI_lastoid\")}"
+#endif
 #define SPI_DBDRIVER_CMD \
 			"dbDriver <-function(db_name)\n" \
 			"{return(NA)}"
@@ -436,7 +438,9 @@ plr_load_builtins(Oid funcid)
 		SPI_CURSOR_FETCH_CMD,
 		SPI_CURSOR_MOVE_CMD,
 		SPI_CURSOR_CLOSE_CMD,
+#if CATALOG_VERSION_NO < 201811201
 		SPI_LASTOID_CMD,
+#endif
 		SPI_DBDRIVER_CMD,
 		SPI_DBCONN_CMD,
 		SPI_DBSENDQUERY_CMD,
