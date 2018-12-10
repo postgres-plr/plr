@@ -48,10 +48,13 @@ REVOKE EXECUTE ON FUNCTION plr_environ() FROM PUBLIC;
 CREATE TYPE r_typename AS (typename text, typeoid oid);
 CREATE OR REPLACE FUNCTION r_typenames()
 RETURNS SETOF r_typename AS '
-  x <- ls(name = .GlobalEnv, pat = "OID")
-  y <- vector()
-  for (i in 1:length(x)) {y[i] <- eval(parse(text = x[i]))}
-  data.frame(typename = x, typeoid = y)
+  within(data.frame(
+    typename = ls(name = .GlobalEnv, pat = "OID"),
+    stringsAsFactors = FALSE
+  ),
+  {
+    typeoid <- sapply(typename, get)
+  })
 ' language 'plr';
 
 CREATE OR REPLACE FUNCTION load_r_typenames()
