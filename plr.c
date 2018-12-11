@@ -35,6 +35,14 @@
 PG_MODULE_MAGIC;
 
 /*
+ * Structure for wrapping R_ParseVector call into R_TopLevelExec
+ */
+typedef struct {
+	SEXP	in, out;
+	ParseStatus status;
+} ProtectedParseData;
+
+/*
  * Global data
  */
 MemoryContext plr_caller_context;
@@ -102,9 +110,11 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
 #define SPI_CURSOR_CLOSE_CMD \
 			"pg.spi.cursor_close<-function(cursor) " \
 			"{.Call(\"plr_SPI_cursor_close\",cursor)}"
+#if CATALOG_VERSION_NO < 201811201
 #define SPI_LASTOID_CMD \
 			"pg.spi.lastoid <-function() " \
 			"{.Call(\"plr_SPI_lastoid\")}"
+#endif
 #define SPI_DBDRIVER_CMD \
 			"dbDriver <-function(db_name)\n" \
 			"{return(NA)}"
@@ -171,6 +181,7 @@ static plr_function *compile_plr_function(FunctionCallInfo fcinfo);
 static plr_function *do_compile(FunctionCallInfo fcinfo,
 								HeapTuple procTup,
 								plr_func_hashkey *hashkey);
+static void plr_protected_parse(void* data);
 static SEXP plr_parse_func_body(const char *body);
 static SEXP plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo);
 static void plr_error_callback(void *arg);
@@ -221,8 +232,7 @@ plr_call_handler(PG_FUNCTION_ARGS)
 void
 load_r_cmd(const char *cmd)
 {
-	SEXP		cmdSexp,
-				cmdexpr;
+	SEXP		cmdexpr;
 	int			i,
 				status;
 
@@ -234,22 +244,7 @@ load_r_cmd(const char *cmd)
 	if (!plr_pm_init_done)
 		plr_init();
 
-	PROTECT(cmdSexp = NEW_CHARACTER(1));
-	SET_STRING_ELT(cmdSexp, 0, COPY_TO_USER_STRING(cmd));
-	PROTECT(cmdexpr = R_PARSEVECTOR(cmdSexp, -1, &status));
-	if (status != PARSE_OK) {
-		UNPROTECT(2);
-		if (last_R_error_msg)
-			ereport(ERROR,
-					(errcode(ERRCODE_DATA_EXCEPTION),
-					 errmsg("R interpreter parse error"),
-					 errdetail("%s", last_R_error_msg)));
-		else
-			ereport(ERROR,
-					(errcode(ERRCODE_DATA_EXCEPTION),
-					 errmsg("R interpreter parse error"),
-					 errdetail("R parse error caught in \"%s\".", cmd)));
-	}
+	PROTECT(cmdexpr = plr_parse_func_body(cmd));
 
 	/* Loop is needed here as EXPSEXP may be of length > 1 */
 	for(i = 0; i < length(cmdexpr); i++)
@@ -257,6 +252,7 @@ load_r_cmd(const char *cmd)
 		R_tryEval(VECTOR_ELT(cmdexpr, i), R_GlobalEnv, &status);
 		if(status != 0)
 		{
+			UNPROTECT(1);
 			if (last_R_error_msg)
 				ereport(ERROR,
 						(errcode(ERRCODE_DATA_EXCEPTION),
@@ -271,7 +267,7 @@ load_r_cmd(const char *cmd)
 		}
 	}
 
-	UNPROTECT(2);
+	UNPROTECT(1);
 }
 
 /*
@@ -339,8 +335,12 @@ plr_init(void)
 	if (plr_pm_init_done)
 		return;
 
+#ifdef WIN32
+	r_home = get_R_HOME();
+#else
 	/* refuse to start if R_HOME is not defined */
 	r_home = getenv("R_HOME");
+#endif
 	if (r_home == NULL)
 	{
 		size_t		rh_len = strlen(R_HOME_DEFAULT);
@@ -438,7 +438,9 @@ plr_load_builtins(Oid funcid)
 		SPI_CURSOR_FETCH_CMD,
 		SPI_CURSOR_MOVE_CMD,
 		SPI_CURSOR_CLOSE_CMD,
+#if CATALOG_VERSION_NO < 201811201
 		SPI_LASTOID_CMD,
+#endif
 		SPI_DBDRIVER_CMD,
 		SPI_DBCONN_CMD,
 		SPI_DBSENDQUERY_CMD,
@@ -1387,7 +1389,7 @@ do_compile(FunctionCallInfo fcinfo,
 		appendStringInfo(proc_internal_def, "%s(%s)}",
 						 function->proname,
 						 proc_internal_args->data);
-	function->fun = plr_parse_func_body(proc_internal_def->data);
+	function->fun = VECTOR_ELT(plr_parse_func_body(proc_internal_def->data), 0);
 
 	R_PreserveObject(function->fun);
 
@@ -1415,25 +1417,22 @@ do_compile(FunctionCallInfo fcinfo,
 	return function;
 }
 
+static void
+plr_protected_parse(void* data)
+{
+	ProtectedParseData *ppd = (ProtectedParseData*) data;
+	ppd->out = R_PARSEVECTOR(ppd->in, -1, &ppd->status);
+}
+
 static SEXP
 plr_parse_func_body(const char *body)
 {
-	SEXP	rbody;
-	SEXP	fun;
-    SEXP	tmp;
-	int		status;
+	ProtectedParseData ppd = { mkString(body), NULL, PARSE_NULL };
 
-	PROTECT(rbody = mkString(body));
-	PROTECT(tmp = R_PARSEVECTOR(rbody, -1, &status));
+	R_ToplevelExec(plr_protected_parse, &ppd);
 
-	if (tmp != R_NilValue)
-		PROTECT(fun = VECTOR_ELT(tmp, 0));
-	else
-		PROTECT(fun = R_NilValue);
-
-	if (status != PARSE_OK)
+	if (ppd.status != PARSE_OK)
 	{
-		UNPROTECT(3);
 		if (last_R_error_msg)
 			ereport(ERROR,
 					(errcode(ERRCODE_DATA_EXCEPTION),
@@ -1447,43 +1446,21 @@ plr_parse_func_body(const char *body)
 							   "in \"%s\".", body)));
 	}
 
-	UNPROTECT(3);
-	return(fun);
+	return ppd.out;
 }
 
 SEXP
 call_r_func(SEXP fun, SEXP rargs)
 {
-	int		i;
 	int		errorOccurred;
-	SEXP	obj,
-			args,
-			call,
+	SEXP	call,
 			ans;
-	long	n = length(rargs);
-
-	if(n > 0)
-	{
-		PROTECT(obj = args = allocList(n));
-		for (i = 0; i < n; i++)
-		{
-			SETCAR(obj, VECTOR_ELT(rargs, i));
-			obj = CDR(obj);
-		}
-		UNPROTECT(1);
         /*
          * NB: the headers of both R and Postgres define a function
          * called lcons, so use the full name to be precise about what
          * function we're calling.
          */
-		PROTECT(call = Rf_lcons(fun, args));
-	}
-	else
-	{
-		PROTECT(call = allocVector(LANGSXP,1));
-		SETCAR(call, fun);
-	}
-
+	PROTECT(call = Rf_lcons(fun, rargs));
 	ans = R_tryEval(call, R_GlobalEnv, &errorOccurred);
 	UNPROTECT(1);
 
@@ -1509,6 +1486,7 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 	int		m = 1;
 	int		c = 0;
 	SEXP	rargs,
+			t,
 			el;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
@@ -1524,10 +1502,10 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 #endif
 
 	/*
-	 * Create an array of R objects with the number of elements
+	 * Create an R pairlist with the number of elements
 	 * as a function of the number of arguments.
 	 */
-	PROTECT(rargs = allocVector(VECSXP, c + (m * function->nargs)));
+	PROTECT(t = rargs = allocList(c + (m * function->nargs)));
 
 	/*
 	 * iterate over the arguments, convert each of them and put them in
@@ -1569,7 +1547,8 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 
 				PROTECT(el = pg_array_get_r(dvalue, out_func, typlen, typbyval, typalign));
 			}
-			SET_VECTOR_ELT(rargs, i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 			UNPROTECT(1);
 #ifdef HAVE_WINDOW_FUNCTIONS
 		}
@@ -1613,7 +1592,8 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 				dvalue = (Datum) PG_DETOAST_DATUM(dvalue);
 				PROTECT(el = pg_array_get_r(dvalue, out_func, typlen, typbyval, typalign));
 			}
-			SET_VECTOR_ELT(rargs, i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 			UNPROTECT(1);
 		}
 #endif
@@ -1648,22 +1628,18 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 			 * We already set function->nargs arguments
 			 * so we must start with a function->nargs
 			 */
-			SET_VECTOR_ELT(rargs, function->nargs + i, el);
+			SETCAR(t, el);
+			t = CDR(t);
 
 			UNPROTECT(1);
 		}
 
 		/* fnumrows */
-		PROTECT(el = NEW_NUMERIC(1));
-		NUMERIC_DATA(el)[0] = (double) numels;
-		SET_VECTOR_ELT(rargs, m * function->nargs + 0, el);
-		UNPROTECT(1);
+		SETCAR(t, ScalarInteger(numels));
+		t = CDR(t);
 
 		/* prownum */
-		PROTECT(el = NEW_NUMERIC(1));
-		NUMERIC_DATA(el)[0] = (double) WinGetCurrentPosition(winobj) + 1;;
-		SET_VECTOR_ELT(rargs, m * function->nargs + 1, el);
-		UNPROTECT(1);
+		SETCAR(t, ScalarInteger(WinGetCurrentPosition(winobj) + 1));
 	}
 #endif
 

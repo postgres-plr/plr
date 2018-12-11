@@ -1,5 +1,5 @@
-
 ### PL/R - PostgreSQL support for R as a procedural language (PL)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/postgres-plr/plr)](https://ci.appveyor.com/project/davecramer/plr-daun5) [![Travis build Status](https://travis-ci.org/postgres-plr/plr.png)](https://travis-ci.org/postgres-plr/plr) [![Code coverage](https://img.shields.io/codecov/c/github/postgres-plr/plr.svg?maxAge=2592000)](https://codecov.io/github/postgres-plr/plr)
 
  Copyright (c) 2003-2018 by Joseph E. Conway ALL RIGHTS RESERVED
 

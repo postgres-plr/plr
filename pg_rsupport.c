@@ -597,6 +597,7 @@ plr_SPI_execp(SEXP rsaved_plan, SEXP rargvalues)
 	return result;
 }
 
+#if CATALOG_VERSION_NO < 201811201
 /*
  * plr_SPI_lastoid - return the last oid. To be used after insert queries.
  */
@@ -611,6 +612,7 @@ plr_SPI_lastoid(void)
 
 	return result;
 }
+#endif
 
 /*
  * Takes the prepared plan rsaved_plan and creates a cursor 

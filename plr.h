@@ -33,7 +33,7 @@
 #ifndef PLR_H
 #define PLR_H
 
-#define PLR_VERSION		"08.03.00.18"
+#define PLR_VERSION		"08.04"
 
 #include "postgres.h"
 
@@ -506,60 +506,60 @@ typedef struct plr_hashent
 extern int Rf_initEmbeddedR(int argc, char **argv);
 
 /* PL/R language handler */
-extern Datum plr_call_handler(PG_FUNCTION_ARGS);
-extern void PLR_CLEANUP;
-extern void plr_init(void);
-extern void plr_load_modules(void);
-extern void load_r_cmd(const char *cmd);
-extern SEXP call_r_func(SEXP fun, SEXP rargs);
+PGDLLEXPORT Datum plr_call_handler(PG_FUNCTION_ARGS);
+PGDLLEXPORT void PLR_CLEANUP;
+PGDLLEXPORT void plr_init(void);
+PGDLLEXPORT void plr_load_modules(void);
+PGDLLEXPORT void load_r_cmd(const char *cmd);
+PGDLLEXPORT SEXP call_r_func(SEXP fun, SEXP rargs);
 
 /* argument and return value conversion functions */
-extern SEXP pg_scalar_get_r(Datum dvalue, Oid arg_typid, FmgrInfo arg_out_func);
-extern SEXP pg_array_get_r(Datum dvalue, FmgrInfo out_func, int typlen, bool typbyval, char typalign);
-extern SEXP pg_datum_array_get_r(Datum *elem_values, bool *elem_nulls, int numels, bool has_nulls,
+PGDLLEXPORT SEXP pg_scalar_get_r(Datum dvalue, Oid arg_typid, FmgrInfo arg_out_func);
+PGDLLEXPORT SEXP pg_array_get_r(Datum dvalue, FmgrInfo out_func, int typlen, bool typbyval, char typalign);
+PGDLLEXPORT SEXP pg_datum_array_get_r(Datum *elem_values, bool *elem_nulls, int numels, bool has_nulls,
 								 Oid element_type, FmgrInfo out_func, bool typbyval);
-extern SEXP pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc);
-extern Datum r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo);
-extern Datum get_datum(SEXP rval, Oid typid, Oid typelem, FmgrInfo in_func, bool *isnull);
-extern Datum get_scalar_datum(SEXP rval, Oid result_typ, FmgrInfo result_in_func, bool *isnull);
+PGDLLEXPORT SEXP pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc);
+PGDLLEXPORT Datum r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo);
+PGDLLEXPORT Datum get_datum(SEXP rval, Oid typid, Oid typelem, FmgrInfo in_func, bool *isnull);
+PGDLLEXPORT Datum get_scalar_datum(SEXP rval, Oid result_typ, FmgrInfo result_in_func, bool *isnull);
 
 /* Postgres support functions installed into the R interpreter */
-extern void throw_pg_notice(const char **msg);
-extern SEXP plr_quote_literal(SEXP rawstr);
-extern SEXP plr_quote_ident(SEXP rawstr);
-extern SEXP plr_SPI_exec(SEXP rsql);
-extern SEXP plr_SPI_prepare(SEXP rsql, SEXP rargtypes);
-extern SEXP plr_SPI_execp(SEXP rsaved_plan, SEXP rargvalues);
-extern SEXP plr_SPI_cursor_open(SEXP cursor_name_arg,SEXP rsaved_plan, SEXP rargvalues);
-extern SEXP plr_SPI_cursor_fetch(SEXP cursor_in,SEXP forward_in, SEXP rows_in);
-extern void plr_SPI_cursor_close(SEXP cursor_in);
-extern void plr_SPI_cursor_move(SEXP cursor_in, SEXP forward_in, SEXP rows_in);
-extern SEXP plr_SPI_lastoid(void);
-extern void throw_r_error(const char **msg);
+PGDLLEXPORT void throw_pg_notice(const char **msg);
+PGDLLEXPORT SEXP plr_quote_literal(SEXP rawstr);
+PGDLLEXPORT SEXP plr_quote_ident(SEXP rawstr);
+PGDLLEXPORT SEXP plr_SPI_exec(SEXP rsql);
+PGDLLEXPORT SEXP plr_SPI_prepare(SEXP rsql, SEXP rargtypes);
+PGDLLEXPORT SEXP plr_SPI_execp(SEXP rsaved_plan, SEXP rargvalues);
+PGDLLEXPORT SEXP plr_SPI_cursor_open(SEXP cursor_name_arg,SEXP rsaved_plan, SEXP rargvalues);
+PGDLLEXPORT SEXP plr_SPI_cursor_fetch(SEXP cursor_in,SEXP forward_in, SEXP rows_in);
+PGDLLEXPORT void plr_SPI_cursor_close(SEXP cursor_in);
+PGDLLEXPORT void plr_SPI_cursor_move(SEXP cursor_in, SEXP forward_in, SEXP rows_in);
+PGDLLEXPORT SEXP plr_SPI_lastoid(void);
+PGDLLEXPORT void throw_r_error(const char **msg);
 
 /* Postgres callable functions useful in conjunction with PL/R */
-extern Datum plr_version(PG_FUNCTION_ARGS);
-extern Datum reload_plr_modules(PG_FUNCTION_ARGS);
-extern Datum install_rcmd(PG_FUNCTION_ARGS);
-extern Datum plr_array_push(PG_FUNCTION_ARGS);
-extern Datum plr_array(PG_FUNCTION_ARGS);
-extern Datum plr_array_accum(PG_FUNCTION_ARGS);
-extern Datum plr_environ(PG_FUNCTION_ARGS);
-extern Datum plr_set_rhome(PG_FUNCTION_ARGS);
-extern Datum plr_unset_rhome(PG_FUNCTION_ARGS);
-extern Datum plr_set_display(PG_FUNCTION_ARGS);
-extern Datum plr_get_raw(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_version(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum reload_plr_modules(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum install_rcmd(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_array_push(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_array(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_array_accum(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_environ(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_set_rhome(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_unset_rhome(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_set_display(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_get_raw(PG_FUNCTION_ARGS);
 
 /* Postgres backend support functions */
-extern void compute_function_hashkey(FunctionCallInfo fcinfo,
+PGDLLEXPORT void compute_function_hashkey(FunctionCallInfo fcinfo,
 									 Form_pg_proc procStruct,
 									 plr_func_hashkey *hashkey);
-extern void plr_HashTableInit(void);
-extern plr_function *plr_HashTableLookup(plr_func_hashkey *func_key);
-extern void plr_HashTableInsert(plr_function *function,
+PGDLLEXPORT void plr_HashTableInit(void);
+PGDLLEXPORT plr_function *plr_HashTableLookup(plr_func_hashkey *func_key);
+PGDLLEXPORT void plr_HashTableInsert(plr_function *function,
 								plr_func_hashkey *func_key);
-extern void plr_HashTableDelete(plr_function *function);
-extern char *get_load_self_ref_cmd(Oid funcid);
-extern void perm_fmgr_info(Oid functionId, FmgrInfo *finfo);
+PGDLLEXPORT void plr_HashTableDelete(plr_function *function);
+PGDLLEXPORT char *get_load_self_ref_cmd(Oid funcid);
+PGDLLEXPORT void perm_fmgr_info(Oid functionId, FmgrInfo *finfo);
 
 #endif   /* PLR_H */

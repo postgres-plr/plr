@@ -316,6 +316,7 @@ expand_dynamic_library_name(const char *name)
 
 	have_slash = (strchr(name, '/') != NULL);
 
+#ifndef WIN32
 	if (!have_slash)
 	{
 		full = find_in_dynamic_libpath(name);
@@ -329,6 +330,7 @@ expand_dynamic_library_name(const char *name)
 			return full;
 		pfree(full);
 	}
+#endif
 
 	new = palloc(strlen(name) + strlen(DLSUFFIX) + 1);
 	strcpy(new, name);

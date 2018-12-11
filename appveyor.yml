@@ -1,69 +1,158 @@
-#  appveyor.yml
+image: Visual Studio 2015
+configuration: Release
+platform:
+  - x86
+  - x64
+clone_depth: 1
+environment:
+  PGUSER: postgres
+  PGPASSWORD: Password12!
+  rversion: 3.5.1
+  matrix:
+  - pg: master
+    PlatformToolset: v141
+    configuration: Debug
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - pg: 9.3.24-1
+    PlatformToolset: Windows7.1SDK
+  - pg: 9.4.19-1
+    PlatformToolset: v120
+  - pg: 9.5.15-1
+    PlatformToolset: v120
+  - pg: 9.6.11-1
+    PlatformToolset: v120
+  - pg: 10.6-1
+    PlatformToolset: v120
+  - pg: 11.1-1
+    PlatformToolset: v140
+matrix:
+  allow_failures:
+    - pg: master
+  exclude:
+    - platform: x86
+      pg: 11.1-1
+      PlatformToolset: v140
+    - platform: x86
+      pg: master
 
+init: # Make %x64% available for caching
+- if %PLATFORM%==x64 ( set pf=%ProgramFiles%&& set x64=-x64) else set pf=%ProgramFiles(x86)%
+- set exe=postgresql-%pg%-windows%x64%.exe
+- setx /m exe %exe%
 
-init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  
 install:
-  - appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-3.5.1-win.exe 
-  - R-3.5.1-win.exe /VERYSILENT /dir=C:\R-3.5.1
-  - git clone https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
-  - cd c:\projects\postgresql
-  - git checkout REL_11_STABLE
-  - cd c:\projects
-  - ren %APPVEYOR_PROJECT_SLUG% plr
-  - mv plr postgresql\contrib\
-  - cd c:\projects\postgresql
-  - cinst winflexbison
-  - SET R_HOME=C:\R-3.5.1
-  - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
-  
-before_build:
-  - net user testuser Blurfl9426! /add
-  - rename c:\ProgramData\chocolatey\bin\win_flex.exe flex.exe
-  - rename c:\ProgramData\chocolatey\bin\win_bison.exe bison.exe
-  - cd c:\projects\postgresql
-  - perl c:\projects\postgresql\contrib\plr\buildsetup.pl
-  - dumpbin /EXPORTS C:\R-3.5.1\bin\x64\R.dll > c:\projects\postgresql\contrib\plr\R.symbols
-  - tail -n +19 c:\projects\postgresql\contrib\plr\R.symbols  | tr -s ' ' |cut -d ' ' -f 5 > c:\projects\postgresql\contrib\plr\R.stripped
-  - cat c:\projects\postgresql\contrib\plr\header.def c:\projects\postgresql\contrib\plr\R.stripped > c:\projects\postgresql\contrib\plr\R.def
-  - lib /def:c:\projects\postgresql\contrib\plr\R.def /out:C:\R-3.5.1\bin\x64\R.lib
-  - SET PATH=%PATH%;C:\R-3.5.1\bin\x64\
-  - patch -p1 < contrib\plr\msvc.diff
+- if not exist R-%rversion%-win.exe appveyor downloadfile https://cran.rstudio.com/bin/windows/base/R-%rversion%-win.exe
+- R-%rversion%-win.exe /VERYSILENT
+# We could have used RTools many R users have, but let's use msys64 existing on Appveyor intead
+#- if not exist Rtools35.exe appveyor downloadfile https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe
+#- Rtools35.exe /VERYSILENT
+- Set mingw=C:\msys64\mingw
+# http://www.databasesoup.com/2016/05/changing-postgresql-version-numbering.html
+- for /f "tokens=1 delims=-" %%A in ("%pg%") do set pgversion=%%~nA
+- echo pgversion=%pgversion%
+- set pgroot=%pf%\PostgreSQL\%pgversion%
+- echo %pgroot%
+- SET R_HOME=%ProgramFiles%\R\R-%rversion%
+- set RBIN=%PLATFORM:x86=i386%
+- SET sed=C:\msys64\usr\bin\sed
+- ps: |
+    if ("$env:pg" -eq "master") {
+      $env:Path += ";C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64"
+      git clone -q --depth 1 https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+      gendef - "$env:R_HOME\bin\$env:rbin\R.dll" > "R$env:PLATFORM.def" 2> $null
+      lib "/def:R$env:PLATFORM.def" "/out:R$env:PLATFORM.lib" "/MACHINE:$env:PLATFORM"
+      pushd c:\projects\postgresql
+      cmd /c mklink /J contrib\plr $env:APPVEYOR_BUILD_FOLDER
+      patch -p1 -i "$env:APPVEYOR_BUILD_FOLDER\msvc.diff"
+      perl contrib\plr\buildsetup.pl
+      popd
+      $env:PROJ="C:\projects\postgresql\pgsql.sln"
+      $env:dll="c:\projects\postgresql\$env:CONFIGURATION\plr\plr.dll"
+    } else {
+      $env:PROJ="plr.vcxproj"
+      $env:dll="$($env:PLATFORM.replace('x86', '.'))\$env:CONFIGURATION\plr.dll"
+      if (-not (Test-Path "$env:pgroot\bin")) {
+        if (-not (Test-Path "$env:exe")) {
+          Start-FileDownload "http://get.enterprisedb.com/postgresql/$env:exe"
+        }
+        & ".\$env:exe" --unattendedmodeui none --mode unattended --superpassword "$env:PGPASSWORD" --servicepassword "$env:PGPASSWORD" | Out-Null
+        Stop-Service "postgresql$env:x64-$env:pgversion"
+      }
+    }
+
+cache:
+- '%exe%'
+- R-%rversion%-win.exe
 
 build_script:
-  - cd c:\projects\postgresql\src\tools\msvc
-  - build.bat
-  
-configuration:
-  - Release
-  
+- msbuild /p:PlatformToolset=%PlatformToolset% /p:configuration=%CONFIGURATION% /p:platform=%PLATFORM%
+          %PROJ%
+          /verbosity:minimal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+after_build:
+- appveyor AddMessage Packing -Category Information
+- md tmp\share\extension
+- copy *.sql tmp\share\extension\
+- copy *.control tmp\share\extension\
+- copy LICENSE tmp\PLR_LICENSE
+- md tmp\lib
+- md tmp\symbols
+- copy %dll% tmp\lib
+- copy %dll:.dll=.pdb% tmp\symbols
+- set zip=plr-%APPVEYOR_REPO_COMMIT:~0,8%-pg%pgversion%-R%rversion%-%PLATFORM%-%CONFIGURATION%.zip
+- 7z a -r %zip% .\tmp\* > nul
+- ps: |
+    if ("$env:pg" -eq "master") {
+      pushd c:\projects\postgresql\src\tools\msvc
+      perl install.pl "$env:pgroot"
+      popd
+    }
+
 test_script:
-  - SET R_HOME=C:\R-3.5.1
-  - SET PATH=%PATH%;C:\R-3.5.1\bin\x64
-  - cd c:\projects\postgresql\src\tools\msvc
-  - perl install.pl c:\pgsql
-  - cd c:\pgsql
-  - bin\initdb -D data
-  - ps: Start-Process -FilePath .\bin\pg_ctl -ArgumentList "-D data -l logfile start"
-  - cd c:\projects\postgresql\contrib\plr
-  - cp plr.control c:\pgsql\share\extension
-  - cp plr--8.3.0.18.sql c:\pgsql\share\extension
-  - mkdir c:\projects\%APPVEYOR_PROJECT_SLUG%
-  - cp c:\projects\postgresql\Release\plr\plr.dll c:\projects\%APPVEYOR_PROJECT_SLUG%\
-  - ps: Start-Process -FilePath ..\..\Release\pg_regress\pg_regress -ArgumentList "--bindir=c:\pgsql\bin --dbname=pl_regression plr"
-        
+- path %pgroot%\bin;%PATH%
+- ps: |
+    if ("$env:pg" -eq "master") {
+      Set-Content -path pg.pass -value "$env:pgpassword" -encoding ascii
+      initdb -A md5 -U "$env:PGUSER" --pwfile=pg.pass C:\pgdata
+      pg_ctl register -S demand -N "postgresql$env:x64-$env:pgversion" -D c:\pgdata
+    } else {
+      Add-AppveyorMessage "Copying the extension files to the PostgreSQL directories." -Category Information
+      7z x "$env:zip" "-o$env:pgroot"
+    }
+- appveyor AddMessage "Starting the database server." -Category Information
+- setx /M PATH "%R_HOME%\bin\%RBIN%;%PATH%"
+- net start postgresql%x64%-%pgversion%
+
+- ps: |
+    Add-AppveyorTest Regression -Framework pg_regress -FileName sql\ -Outcome Running
+    if (("9.3", "9.4").Contains("$env:pgversion")) {
+      $env:psqlopt="--psqldir"
+    } else {
+      $env:psqlopt="--bindir"
+    }
+    $env:Outcome="Passed"
+    $elapsed=(Measure-Command {
+      pg_regress "$env:psqlopt=$env:pgroot\bin" --dbname=pl_regression plr bad_fun 2>&1 |
+        %{ if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
+          Out-Default
+      if ($LASTEXITCODE -ne 0) {
+        $env:Outcome="Failed"
+      }
+    }).TotalMilliseconds
+    Update-AppVeyorTest Regression -Framework pg_regress -FileName sql\ -Outcome "$env:Outcome" -Duration $elapsed
+    if ("$env:Outcome" -ne "Passed") {
+      type regression.diffs
+    }
+
+artifacts:
+- path: '*.zip'
+
 deploy:
    provider: GitHub
    release: $(appveyor_repo_tag_name)
-   artifact: plr.dll
    draft: false
    prerelease: false
    auth_token:
       secure: v+5LgZlgiwCjr45eTclZ2s7YJIvRi+DeRPQO0HWbkCKj8iIjlXEDw27P3jkMrqiD
    on:
       appveyor_repo_tag: true
-         
-artifacts:
-  - path: '.\plr.dll'
-    name: plr.dll

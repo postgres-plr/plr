@@ -3,24 +3,36 @@ os:
 
 language: c
 sudo : required 
+env:
+  - PG=11
+  - PG=10
+  - PG=9.6
+  - PG=9.5
+  - PG=9.4
+  - PG=9.3
 
 before_script:
-  - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
+  - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
   - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo apt-get update -qq
-  - sudo apt-get install -qq r-base
-  - sudo apt-get install -qq r-base-dev
+  - sudo apt-get install -qq r-base-dev acl
   - sudo /etc/init.d/postgresql stop
   - sudo apt-get remove --purge postgresql\*
-  - sudo apt-get install postgresql-10
-  - sudo apt-get install postgresql-server-dev-10
-  - echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/10/main/pg_hba.conf > /dev/null
-  - sudo pg_ctlcluster 10 main reload
+  - sudo rm -rf /etc/postgresql /var/lib/postgresql
+  - sudo apt-get install postgresql-$PG
+  - sudo apt-get install postgresql-server-dev-$PG
+  - echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/$PG/main/pg_hba.conf > /dev/null
+  - setfacl -Rm u:postgres:rwx,d:u:travis:rwx $HOME
+  - sudo pg_ctlcluster $PG main reload
+
 script:
   - sudo pg_lsclusters
   - export USE_PGXS=1
-  - make 
+  - SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
   - sudo  make install
-  - /usr/lib/postgresql/10/bin/pg_config
+  - /usr/lib/postgresql/$PG/bin/pg_config
   - psql --version 
-  - /usr/lib/postgresql/10/lib/pgxs/src/makefiles/../../src/test/regress/pg_regress --user=postgres --inputdir=./ --bindir='/usr/lib/postgresql/10/bin/' --dbname=contrib_regression plr
+  - make installcheck PGUSER=postgres || (cat regression.diffs && false)
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

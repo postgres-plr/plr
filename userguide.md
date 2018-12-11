@@ -162,6 +162,11 @@ ldconfig. Refer toman ldconfigor its equivalent for your system.
 beforethe postmaster is started. Otherwise PL/R will refuse to load. See plr_environ(), which allows
 examination of the environment available to the PostgreSQL postmaster process.
 
+**Tip:** On Win32 platform, R will consider a registry entry created by R installer if
+it fails to find R_HOME environment variable. If you accepted installer defaults,
+there is no need to set R_HOME on this platform. Be careful removing older version of R as it may take
+away InstallPath entry away from HKLM\SOFTWARE\R-core\R.
+
 
 ## Functions and Arguments <a name="functions"></a>
 
