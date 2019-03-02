@@ -1673,7 +1673,7 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 			else if (function->arg_is_rel[i])
 			{
 				/* for tuple args, convert to a one row data.frame */
-				CONVERT_TUPLE_TO_DATAFRAME;
+				CONVERT_TUPLE_TO_DATAFRAME(GET_ARG_VALUE(i));
 			}
 			else if (function->arg_elem[i] == InvalidOid)
 			{
@@ -1716,11 +1716,9 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 			}
 			else if (function->arg_is_rel[i])
 			{
-				/* keep compiler quiet */
-				el = R_NilValue;
-
-				elog(ERROR, "Tuple arguments not supported in PL/R Window Functions");
-			}
+				/* for tuple args, convert to a one row data.frame */
+				CONVERT_TUPLE_TO_DATAFRAME(dvalue);
+ 			}
 			else if (function->arg_elem[i] == InvalidOid)
 			{
 				/* for scalar args, convert to a one row vector */
@@ -1757,16 +1755,16 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 
 		if (plr_is_unbound_frame(winobj))
 		{
-
 			SEXP lst;
 			if (0 == current_row)
 			{
 				lst = PROTECT(allocVector(VECSXP, function->nargs));
 				for (i = 0; i < function->nargs; i++, t = CDR(t))
 				{
-					el = get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
-						R_NilValue : pg_window_frame_get_r(winobj, i, function);
+					PROTECT(el = /* get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
+						R_NilValue : */ pg_window_frame_get_r(winobj, i, function));
 					SET_VECTOR_ELT(lst, i, el);
+					UNPROTECT(1);
 					SETCAR(t, el);
 				}
 				defineVar(install(PLR_WINDOW_FRAME_NAME), lst, rho);
@@ -1787,15 +1785,15 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 		else
 			for (i = 0; i < function->nargs; i++, t = CDR(t))
 			{
-				if (get_fn_expr_arg_stable(fcinfo->flinfo, i))
-					el = R_NilValue;
-				else
-				{
-					el = pg_window_frame_get_r(winobj, i, function);
-					numels = LENGTH(el);
-				}
+				PROTECT(el = /* get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
+					R_NilValue : */ pg_window_frame_get_r(winobj, i, function));
+
 				SETCAR(t, el);
+				UNPROTECT(1);
 			}
+
+		/* below only works if last el <> R_NilValue (see commented out above) */
+		numels = function->nargs > 0 ? GET_LENGTH(el) : 0;
 
 		/* fnumrows */
 		SETCAR(t, ScalarInteger(numels));
