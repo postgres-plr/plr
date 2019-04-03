@@ -2031,7 +2031,11 @@ get_frame_tuplestore(SEXP rval,
 						}
 						else
 						{
+#if (PG_VERSION_NUM >= 120000)
 							FunctionCallInfoBaseData	fake_fcinfo;
+#else
+							FunctionCallInfoData fake_fcinfo;
+#endif
 							FmgrInfo				flinfo;
 							Datum					dvalue;
 							
@@ -2043,8 +2047,13 @@ get_frame_tuplestore(SEXP rval,
 							fake_fcinfo.resultinfo = NULL;
 							fake_fcinfo.isnull = false;
 							fake_fcinfo.nargs = 1;
+#if (PG_VERSION_NUM >= 120000)
 							fake_fcinfo.args[0].value = arr_datum;
 							fake_fcinfo.args[0].isnull = false;
+#else
+							fake_fcinfo.arg[0] = arr_datum;
+							fake_fcinfo.argnull[0] = false;
+#endif
 							dvalue = (*array_out)(&fake_fcinfo);
 							if (fake_fcinfo.isnull)
 								values[j] = NULL;
