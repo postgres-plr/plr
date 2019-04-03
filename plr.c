@@ -723,7 +723,7 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 #if (PG_VERSION_NUM >= 120000)
 	PROTECT(rargs = plr_convertargs(function, args, fcinfo));
 #else
-	PROTECT(rargs = plr_convertargs(function, arg, argnull fcinfo));
+	PROTECT(rargs = plr_convertargs(function, arg, argnull, fcinfo));
 #endif
 	/* Call the R function */
 	PROTECT(rvalue = call_r_func(fun, rargs));

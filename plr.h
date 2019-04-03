@@ -335,7 +335,7 @@ extern void R_RunExitFinalizers(void);
 #define SET_ARG(val, null, index) \
 	do { \
 	arg[index]=val; \
-	argull[index]=null; \
+	argnull[index]=null; \
 	} while (0)
 
 #define IS_ARG_NULL(i) argnull[i]
@@ -391,7 +391,7 @@ extern void R_RunExitFinalizers(void);
 		int32		tupTypmod; \
 		TupleDesc	tupdesc; \
 		HeapTuple	tuple = palloc(sizeof(HeapTupleData)); \
-		HeapTupleHeader	tuple_hdr = DatumGetHeapTupleHeader(args[i].value); \
+		HeapTupleHeader	tuple_hdr = DatumGetHeapTupleHeader(GET_ARG_VALUE(i)); \
 		tupType = HeapTupleHeaderGetTypeId(tuple_hdr); \
 		tupTypmod = HeapTupleHeaderGetTypMod(tuple_hdr); \
 		tupdesc = lookup_rowtype_tupdesc(tupType, tupTypmod); \
