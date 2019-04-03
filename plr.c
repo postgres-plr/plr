@@ -720,8 +720,11 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	PROTECT(fun = function->fun);
 
 	/* Convert all call arguments */
+#if (PG_VERSION_NUM >= 120000)
 	PROTECT(rargs = plr_convertargs(function, args, fcinfo));
-
+#else
+	PROTECT(rargs = plr_convertargs(function, arg, argnull fcinfo));
+#endif
 	/* Call the R function */
 	PROTECT(rvalue = call_r_func(fun, rargs));
 
@@ -758,8 +761,12 @@ plr_func_handler(PG_FUNCTION_ARGS)
 	PROTECT(fun = function->fun);
 
 	/* Convert all call arguments */
+#if (PG_VERSION_NUM >= 120000)
 	PROTECT(rargs = plr_convertargs(function, fcinfo->args, fcinfo));
+#else
+	PROTECT(rargs = plr_convertargs(function, fcinfo->arg, fcinfo->argnull,  fcinfo));
 
+#endif
 	/* Call the R function */
 	PROTECT(rvalue = call_r_func(fun, rargs));
 
