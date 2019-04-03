@@ -319,51 +319,51 @@ extern void R_RunExitFinalizers(void);
 	HeapTupleHeader	dtrigtup
 #define SET_INSERT_ARGS_567 \
 	do { \
-		arg[5] = DirectFunctionCall1(textin, CStringGetDatum("INSERT")); \
+		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("INSERT")); \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		arg[6] = PointerGetDatum(dtrigtup); \
-		argnull[6] = false; \
-		arg[7] = (Datum) 0; \
-		argnull[7] = true; \
+		args[6].value = PointerGetDatum(dtrigtup); \
+		args[6].isnull = false; \
+		args[7].value = (Datum) 0; \
+		args[7].isnull = true; \
 	} while (0)
 #define SET_DELETE_ARGS_567 \
 	do { \
-		arg[5] = DirectFunctionCall1(textin, CStringGetDatum("DELETE")); \
-		arg[6] = (Datum) 0; \
-		argnull[6] = true; \
+		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("DELETE")); \
+		args[6].value = (Datum) 0; \
+		args[6].isnull = true; \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		arg[7] = PointerGetDatum(dtrigtup); \
-		argnull[7] = false; \
+		args[7].value = PointerGetDatum(dtrigtup); \
+		args[7].isnull = false; \
 	} while (0)
 #define SET_UPDATE_ARGS_567 \
 	do { \
-		arg[5] = DirectFunctionCall1(textin, CStringGetDatum("UPDATE")); \
+		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("UPDATE")); \
 		tup = trigdata->tg_newtuple; \
 		dnewtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dnewtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dnewtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dnewtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dnewtup, tupdesc->tdtypmod); \
-		arg[6] = PointerGetDatum(dnewtup); \
-		argnull[6] = false; \
+		args[6].value = PointerGetDatum(dnewtup); \
+		args[6].isnull = false; \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		arg[7] = PointerGetDatum(dtrigtup); \
-		argnull[7] = false; \
+		args[7].value = PointerGetDatum(dtrigtup); \
+		args[7].isnull = false; \
 	} while (0)
 #define CONVERT_TUPLE_TO_DATAFRAME \
 	do { \
@@ -371,7 +371,7 @@ extern void R_RunExitFinalizers(void);
 		int32		tupTypmod; \
 		TupleDesc	tupdesc; \
 		HeapTuple	tuple = palloc(sizeof(HeapTupleData)); \
-		HeapTupleHeader	tuple_hdr = DatumGetHeapTupleHeader(arg[i]); \
+		HeapTupleHeader	tuple_hdr = DatumGetHeapTupleHeader(args[i].value); \
 		tupType = HeapTupleHeaderGetTypeId(tuple_hdr); \
 		tupTypmod = HeapTupleHeaderGetTypMod(tuple_hdr); \
 		tupdesc = lookup_rowtype_tupdesc(tupType, tupTypmod); \

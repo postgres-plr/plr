@@ -2031,7 +2031,7 @@ get_frame_tuplestore(SEXP rval,
 						}
 						else
 						{
-							FunctionCallInfoData	fake_fcinfo;
+							FunctionCallInfoBaseData	fake_fcinfo;
 							FmgrInfo				flinfo;
 							Datum					dvalue;
 							
@@ -2043,8 +2043,8 @@ get_frame_tuplestore(SEXP rval,
 							fake_fcinfo.resultinfo = NULL;
 							fake_fcinfo.isnull = false;
 							fake_fcinfo.nargs = 1;
-							fake_fcinfo.arg[0] = arr_datum;
-							fake_fcinfo.argnull[0] = false;
+							fake_fcinfo.args[0].value = arr_datum;
+							fake_fcinfo.args[0].isnull = false;
 							dvalue = (*array_out)(&fake_fcinfo);
 							if (fake_fcinfo.isnull)
 								values[j] = NULL;
