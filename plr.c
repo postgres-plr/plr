@@ -623,30 +623,26 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	 * are mostly hardwired in advance
 	 */
 	/* first is trigger name */
-	args[0].value = DirectFunctionCall1(textin,
-				 CStringGetDatum(trigdata->tg_trigger->tgname));
-	args[0].isnull = false;
+	SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum(trigdata->tg_trigger->tgname)),false,0);
 
 	/* second is trigger relation oid */
-	args[1].value = ObjectIdGetDatum(trigdata->tg_relation->rd_id);
-	args[1].isnull = false;
+	SET_ARG(ObjectIdGetDatum(trigdata->tg_relation->rd_id),false,1);
 
 	/* third is trigger relation name */
-	args[2].value = DirectFunctionCall1(textin,
-				 CStringGetDatum(get_rel_name(trigdata->tg_relation->rd_id)));
-	args[2].isnull = false;
+	SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum(get_rel_name(trigdata->tg_relation->rd_id))),false,2);
 
 	/* fourth is when trigger fired, i.e. BEFORE or AFTER */
 	if (TRIGGER_FIRED_BEFORE(trigdata->tg_event))
-		args[3].value = DirectFunctionCall1(textin,
-				 CStringGetDatum("BEFORE"));
+		SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum("BEFORE")),false,3);
 	else if (TRIGGER_FIRED_AFTER(trigdata->tg_event))
-		args[3].value = DirectFunctionCall1(textin,
-				 CStringGetDatum("AFTER"));
+		SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum("AFTER")),false,3);
 	else
 		/* internal error */
 		elog(ERROR, "unrecognized tg_event");
-	args[3].isnull = false;
 
 
 	/*
@@ -656,29 +652,27 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	 */
 	if (TRIGGER_FIRED_FOR_STATEMENT(trigdata->tg_event))
 	{
-		args[4].value = DirectFunctionCall1(textin,
-				 CStringGetDatum("STATEMENT"));
+		SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum("STATEMENT")),false,4);
 
 		if (TRIGGER_FIRED_BY_INSERT(trigdata->tg_event))
-			args[5].value = DirectFunctionCall1(textin, CStringGetDatum("INSERT"));
+			SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("INSERT")),false,5);
 		else if (TRIGGER_FIRED_BY_DELETE(trigdata->tg_event))
-			args[5].value = DirectFunctionCall1(textin, CStringGetDatum("DELETE"));
+			SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("DELETE")),false,5);
 		else if (TRIGGER_FIRED_BY_UPDATE(trigdata->tg_event))
-			args[5].value = DirectFunctionCall1(textin, CStringGetDatum("UPDATE"));
+			SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("UPDATE")),false,5);
 		else
 			/* internal error */
 			elog(ERROR, "unrecognized tg_event");
 
-		args[6].value = (Datum) 0;
-		args[6].isnull = true;
+		SET_ARG((Datum) 0,true,6);
+		SET_ARG((Datum) 0,true,7);
 
-		args[7].value = (Datum) 0;
-		args[7].isnull = true;
 	}
 	else if (TRIGGER_FIRED_FOR_ROW(trigdata->tg_event))
 	{
-		args[4].value = DirectFunctionCall1(textin,
-				 CStringGetDatum("ROW"));
+		SET_ARG(DirectFunctionCall1(textin,
+				 CStringGetDatum("ROW")),false,4);
 
 		if (TRIGGER_FIRED_BY_INSERT(trigdata->tg_event))
 			SET_INSERT_ARGS_567;
@@ -694,9 +688,6 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 		/* internal error */
 		elog(ERROR, "unrecognized tg_event");
 
-	args[4].isnull = false;
-	args[5].isnull = false;
-
 
 	/*
 	 * finally, ninth argument is a text array of trigger arguments
@@ -710,8 +701,7 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	array = construct_md_array(dvalues, NULL, ndims, dims, lbs,
 								TEXTOID, -1, false, 'i');
 
-	args[8].value = PointerGetDatum(array);
-	args[8].isnull = false;
+	SET_ARG(PointerGetDatum(array),false,8);
 
 	/*
 	 * All done building args; from this point it is just like
@@ -1518,7 +1508,7 @@ plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fc
 		if (!function->iswindow)
 		{
 #endif
-			if (args[i].isnull)
+			if (IS_ARG_NULL(i))
 			{
 				/* fast track for null arguments */
 				PROTECT(el = R_NilValue);
@@ -1531,7 +1521,7 @@ plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fc
 			else if (function->arg_elem[i] == InvalidOid)
 			{
 				/* for scalar args, convert to a one row vector */
-				Datum		dvalue = args[i].value;
+				Datum		dvalue = GET_ARG_VALUE(i);
 				Oid			arg_typid = function->arg_typid[i];
 				FmgrInfo	arg_out_func = function->arg_out_func[i];
 
@@ -1540,7 +1530,7 @@ plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fc
 			else
 			{
 				/* better be a pg array arg, convert to a multi-row vector */
-				Datum		dvalue = (Datum) PG_DETOAST_DATUM(args[i].value);
+				Datum		dvalue = (Datum) PG_DETOAST_DATUM(GET_ARG_VALUE(i));
 				FmgrInfo	out_func = function->arg_elem_out_func[i];
 				int			typlen = function->arg_elem_typlen[i];
 				bool		typbyval = function->arg_elem_typbyval[i];

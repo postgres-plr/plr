@@ -317,53 +317,73 @@ extern void R_RunExitFinalizers(void);
 	HeapTuple		tup; \
 	HeapTupleHeader	dnewtup; \
 	HeapTupleHeader	dtrigtup
+
+
+#if (PG_VERSION_NUM >= 120000)
+
+#define SET_ARG(val, null, index) \
+    do { \
+	args[index].value=val; \
+	args[index].isnull =null; \
+    } while (0)
+
+#define IS_ARG_NULL(i) args[i].isnull
+#define GET_ARG_VALUE(i) args[i].value
+
+#else
+
+#define SET_ARG(val, null, index) \
+	do { \
+	arg[index]=val; \
+	isnull[index]=null; \
+	} while (0)
+
+#define IS_ARG_NULL(i) argnull[i]
+#define GET_ARG_VALUE(i) arg[i]
+
+#endif
+
 #define SET_INSERT_ARGS_567 \
 	do { \
-		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("INSERT")); \
+		SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("INSERT")),false,5); \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		args[6].value = PointerGetDatum(dtrigtup); \
-		args[6].isnull = false; \
-		args[7].value = (Datum) 0; \
-		args[7].isnull = true; \
+		SET_ARG(PointerGetDatum(dtrigtup),false,6); \
+		SET_ARG((Datum)0,true,7); \
 	} while (0)
 #define SET_DELETE_ARGS_567 \
 	do { \
-		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("DELETE")); \
-		args[6].value = (Datum) 0; \
-		args[6].isnull = true; \
+		SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("DELETE")),false,5); \
+		SET_ARG((Datum) 0,true,6); \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		args[7].value = PointerGetDatum(dtrigtup); \
-		args[7].isnull = false; \
+		SET_ARG(PointerGetDatum(dtrigtup),false,7); \
 	} while (0)
 #define SET_UPDATE_ARGS_567 \
 	do { \
-		args[5].value = DirectFunctionCall1(textin, CStringGetDatum("UPDATE")); \
+		SET_ARG(DirectFunctionCall1(textin, CStringGetDatum("UPDATE")),false,5); \
 		tup = trigdata->tg_newtuple; \
 		dnewtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dnewtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dnewtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dnewtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dnewtup, tupdesc->tdtypmod); \
-		args[6].value = PointerGetDatum(dnewtup); \
-		args[6].isnull = false; \
+		SET_ARG(PointerGetDatum(dnewtup),false,6); \
 		tup = trigdata->tg_trigtuple; \
 		dtrigtup = (HeapTupleHeader) palloc(tup->t_len); \
 		memcpy((char *) dtrigtup, (char *) tup->t_data, tup->t_len); \
 		HeapTupleHeaderSetDatumLength(dtrigtup, tup->t_len); \
 		HeapTupleHeaderSetTypeId(dtrigtup, tupdesc->tdtypeid); \
 		HeapTupleHeaderSetTypMod(dtrigtup, tupdesc->tdtypmod); \
-		args[7].value = PointerGetDatum(dtrigtup); \
-		args[7].isnull = false; \
+		SET_ARG(PointerGetDatum(dtrigtup),false,7); \
 	} while (0)
 #define CONVERT_TUPLE_TO_DATAFRAME \
 	do { \
