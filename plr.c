@@ -183,7 +183,11 @@ static plr_function *do_compile(FunctionCallInfo fcinfo,
 								plr_func_hashkey *hashkey);
 static void plr_protected_parse(void* data);
 static SEXP plr_parse_func_body(const char *body);
+#if (PG_VERSION_NUM >= 120000)
 static SEXP plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo);
+#else
+static SEXP plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo);
+#endif
 static void plr_error_callback(void *arg);
 static Oid getNamespaceOidFromFunctionOid(Oid fnOid);
 static bool haveModulesTable(Oid nspOid);
@@ -593,7 +597,12 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	SEXP			rargs;
 	SEXP			rvalue;
 	Datum			retval;
+#if (PG_VERSION_NUM >= 120000)
 	NullableDatum  args[sizeof(NullableDatum) * FUNC_MAX_ARGS];
+#else
+	Datum arg[FUNC_MAX_ARGS];
+    bool argnull[FUNC_MAX_ARGS];
+#endif
 	TriggerData	   *trigdata = (TriggerData *) fcinfo->context;
 	TupleDesc		tupdesc = trigdata->tg_relation->rd_att;
 	Datum		   *dvalues;
@@ -1470,8 +1479,13 @@ call_r_func(SEXP fun, SEXP rargs)
 	return ans;
 }
 
+#if (PG_VERSION_NUM >= 120000)
 static SEXP
 plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo)
+#else
+static SEXP
+plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo)
+#endif
 {
 	int		i;
 	int		m = 1;

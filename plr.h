@@ -335,7 +335,7 @@ extern void R_RunExitFinalizers(void);
 #define SET_ARG(val, null, index) \
 	do { \
 	arg[index]=val; \
-	isnull[index]=null; \
+	argull[index]=null; \
 	} while (0)
 
 #define IS_ARG_NULL(i) argnull[i]
