@@ -129,7 +129,7 @@ select sprintf('%s is %s feet tall', 'Sven', '7');
 --
 -- test aggregates
 --
-create table foo(f0 int, f1 text, f2 float8) with oids;
+create table foo(f0 int, f1 text, f2 float8); 
 insert into foo values(1,'cat1',1.21);
 insert into foo values(2,'cat1',1.24);
 insert into foo values(3,'cat1',1.18);
@@ -139,6 +139,7 @@ insert into foo values(6,'cat2',1.15);
 insert into foo values(7,'cat2',1.26);
 insert into foo values(8,'cat2',1.32);
 insert into foo values(9,'cat2',1.30);
+insert into foo values(10,'cat2',1.31);
 
 create or replace function r_median(_float8) returns float as 'median(arg1)' language 'plr';
 select r_median('{1.23,1.31,1.42,1.27}'::_float8);
@@ -259,9 +260,6 @@ select test_spi_prep('select oid, typname from pg_type where typname = $1 or typ
 
 create or replace function test_spi_execp(text, text, text) returns setof record as 'pg.spi.execp(pg.reval(arg1), list(arg2,arg3))' language 'plr';
 select * from test_spi_execp('sp','oid','text') as t(typeid oid, typename name);
-
-create or replace function test_spi_lastoid(text) returns text as 'pg.spi.exec(arg1); pg.spi.lastoid()/pg.spi.lastoid()' language 'plr';
-select test_spi_lastoid('insert into foo values(10,''cat3'',3.333)') as "ONE";
 
 --
 -- test NULL handling

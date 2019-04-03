@@ -267,7 +267,7 @@ select sprintf('%s is %s feet tall', 'Sven', '7');
 --
 -- test aggregates
 --
-create table foo(f0 int, f1 text, f2 float8) with oids;
+create table foo(f0 int, f1 text, f2 float8); 
 insert into foo values(1,'cat1',1.21);
 insert into foo values(2,'cat1',1.24);
 insert into foo values(3,'cat1',1.18);
@@ -277,6 +277,7 @@ insert into foo values(6,'cat2',1.15);
 insert into foo values(7,'cat2',1.26);
 insert into foo values(8,'cat2',1.32);
 insert into foo values(9,'cat2',1.30);
+insert into foo values(10,'cat2',1.31);
 create or replace function r_median(_float8) returns float as 'median(arg1)' language 'plr';
 select r_median('{1.23,1.31,1.42,1.27}'::_float8);
  r_median 
@@ -289,7 +290,7 @@ select f1, median(f2) from foo group by f1 order by f1;
   f1  | median 
 ------+--------
  cat1 |   1.21
- cat2 |   1.28
+ cat2 |    1.3
 (2 rows)
 
 create or replace function r_gamma(_float8) returns float as 'gamma(arg1)' language 'plr';
@@ -412,7 +413,7 @@ select test_dta2();
 -- generates expected error
 create or replace function test_dia1() returns int[] as 'as.data.frame(array(letters[1:10], c(2,5)))' language 'plr';
 select test_dia1() as error;
-ERROR:  invalid input syntax for integer: "a"
+ERROR:  invalid input syntax for type integer: "a"
 CONTEXT:  In PL/R function test_dia1
 create or replace function test_dtup() returns setof record as 'data.frame(letters[1:10],1:10)' language 'plr';
 select * from test_dtup() as t(f1 text, f2 int);
@@ -613,13 +614,6 @@ select * from test_spi_execp('sp','oid','text') as t(typeid oid, typename name);
      25 | text
      26 | oid
 (2 rows)
-
-create or replace function test_spi_lastoid(text) returns text as 'pg.spi.exec(arg1); pg.spi.lastoid()/pg.spi.lastoid()' language 'plr';
-select test_spi_lastoid('insert into foo values(10,''cat3'',3.333)') as "ONE";
- ONE 
------
- 1
-(1 row)
 
 --
 -- test NULL handling
