@@ -36,7 +36,7 @@
 
 static void pg_get_one_r(char *value, Oid arg_out_fn_oid, SEXP *obj,
 																int elnum);
-static SEXP get_r_vector(Oid typtype, int numels);
+static SEXP get_r_vector(Oid typtype, int64 numels);
 static Datum get_trigger_tuple(SEXP rval, plr_function *function,
 									FunctionCallInfo fcinfo, bool *isnull);
 static Datum get_tuplestore(SEXP rval, plr_function *function,
@@ -324,130 +324,93 @@ pg_array_get_r(Datum dvalue, FmgrInfo out_func, int typlen, bool typbyval, char 
 	return result;
 }
 
+#ifdef HAVE_WINDOW_FUNCTIONS
 /*
- * Given an array pg datums, convert to a multi-row R vector.
+ * Evaluate a window function's argument expression on a specified
+ *		window frame, returning R array for the argno column in the frame
+ *
+ * winobj: PostgreSQL window object handle
+ * argno: argument number to evaluate (counted from 0)
+ * function: contains necessary info on how to output Datum as string for general case conversion
  */
 SEXP
-pg_datum_array_get_r(Datum *elem_values, bool *elem_nulls, int numels, bool has_nulls,
-					 Oid element_type, FmgrInfo out_func, bool typbyval)
+pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 {
 	/*
 	 * Loop through and convert each scalar value.
 	 * Use the converted values to build an R vector.
 	 */
 	SEXP		result;
-	int			i;
-	bool		fast_track_type;
-
-	switch (element_type)
-	{
-		case INT4OID:
-		case FLOAT8OID:
-			fast_track_type = true;
-			break;
-		default:
-			fast_track_type = false;
-	}
+	int			numels = 0;
+	Oid			element_type = function->arg_typid[argno];
+	FmgrInfo	out_func = function->arg_out_func[argno];
+	int64		totalrows = WinGetPartitionRowCount(winobj);
 
 	/*
-	 * Special case for pass-by-value data types, if the following conditions are met:
-	 * 		designated fast_track_type
-	 * 		no NULL elements
-	 * 		1 dimensional array only
-	 * 		at least one element
+	 * Get new vector of the appropriate type.
+	 * We presume unbound frame as a common use case in R.
+	 * If not, we will trim vector later.
 	 */
-	if (fast_track_type &&
-		 typbyval &&
-		 !has_nulls &&
-		 (numels > 0))
+	PROTECT(result = get_r_vector(element_type, totalrows));
+
+	/* Convert all values to their R form and build the vector */
+	for (;; numels++)
 	{
-		SEXP	matrix_dims;
+		char	   *value;
+		bool		isnull;
+		Datum		dvalue;
+		bool		isout = false;
+		bool		set_mark = (0 == numels);
 
-		/* get new vector of the appropriate type and length */
-		PROTECT(result = get_r_vector(element_type, numels));
+		dvalue = WinGetFuncArgInFrame(winobj, argno, numels, WINDOW_SEEK_HEAD,
+			set_mark, &isnull, &isout);
 
-		/* keep this in sync with switch above -- fast_track_type only */
+		if (isout)
+			break;
+
 		switch (element_type)
 		{
+			case BOOLOID:
+				LOGICAL_DATA(result)[numels] = isnull ? NA_LOGICAL : DatumGetBool(dvalue);
+				break;
+			case INT8OID:
+				NUMERIC_DATA(result)[numels] = isnull ? NA_REAL : (double)DatumGetInt64(dvalue);
+				break;
+			case INT2OID:
 			case INT4OID:
-				Assert(sizeof(int) == 4);
-				memcpy(INTEGER_DATA(result), elem_values, numels * sizeof(int));
+			case OIDOID:
+				INTEGER_DATA(result)[numels] = isnull ? NA_INTEGER : DatumGetInt32(dvalue);
+				break;
+			case FLOAT4OID:
+				NUMERIC_DATA(result)[numels] = isnull ? NA_REAL : DatumGetFloat4(dvalue);
 				break;
 			case FLOAT8OID:
-				Assert(sizeof(double) == 8);
-				memcpy(NUMERIC_DATA(result), elem_values, numels * sizeof(double));
+				NUMERIC_DATA(result)[numels] = isnull ? NA_REAL : DatumGetFloat8(dvalue);
 				break;
 			default:
-				/* Everything else is error */
-				ereport(ERROR,
-						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-						 errmsg("direct array passthrough attempted for unsupported type")));
+				value = isnull ? NULL : DatumGetCString(FunctionCall3(&out_func,
+															dvalue,
+															(Datum) 0,
+															Int32GetDatum(-1)));
+
+				/*
+					* Note that pg_get_one_r() replaces NULL values with
+					* the NA value appropriate for the data type.
+					*/
+				pg_get_one_r(value, element_type, &result, numels);
+				if (value != NULL)
+					pfree(value);
 		}
-
-		/* attach dimensions */
-		PROTECT(matrix_dims = allocVector(INTSXP, 1));
-		INTEGER_DATA(matrix_dims)[0] = numels;
-		setAttrib(result, R_DimSymbol, matrix_dims);
-		UNPROTECT(1);
-
-		UNPROTECT(1);	/* result */
 	}
-	else
-	{
-		SEXP	matrix_dims;
 
-		/* array is empty */
-		if (numels == 0)
-		{
-			PROTECT(result = get_r_vector(element_type, 0));
-			UNPROTECT(1);
+	if (numels != totalrows)
+		SET_LENGTH(result, numels);
 
-			return result;
-		}
-
-		/* get new vector of the appropriate type and length */
-		PROTECT(result = get_r_vector(element_type, numels));
-
-		/* Convert all values to their R form and build the vector */
-		for (i = 0; i < numels; i++)
-		{
-			char	   *value;
-			Datum		itemvalue;
-			bool		isnull;
-
-			isnull = elem_nulls[i];
-			itemvalue = elem_values[i];
-
-			if (!isnull)
-			{
-				value = DatumGetCString(FunctionCall3(&out_func,
-													  itemvalue,
-													  (Datum) 0,
-													  Int32GetDatum(-1)));
-			}
-			else
-				value = NULL;
-
-			/*
-			 * Note that pg_get_one_r() replaces NULL values with
-			 * the NA value appropriate for the data type.
-			 */
-			pg_get_one_r(value, element_type, &result, i);
-			if (value != NULL)
-				pfree(value);
-		}
-
-		/* attach dimensions */
-		PROTECT(matrix_dims = allocVector(INTSXP, 1));
-		INTEGER_DATA(matrix_dims)[0] = numels;
-		setAttrib(result, R_DimSymbol, matrix_dims);
-		UNPROTECT(1);
-
-		UNPROTECT(1);	/* result */
-	}
+	UNPROTECT(1);	/* result */
 
 	return result;
 }
+#endif
 
 /*
  * Given an array of pg tuples, convert to an R list
@@ -586,7 +549,7 @@ pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc)
  * create an R vector of a given type and size based on pg output function oid
  */
 static SEXP
-get_r_vector(Oid typtype, int numels)
+get_r_vector(Oid typtype, int64 numels)
 {
 	SEXP	result;
 
