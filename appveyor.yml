@@ -28,6 +28,7 @@ environment:
 matrix:
   allow_failures:
     - pg: master
+    - pg: 9.3.25-1
   exclude:
     - platform: x86
       pg: 11.2-1
@@ -132,7 +133,8 @@ test_script:
     }
     $env:Outcome="Passed"
     $elapsed=(Measure-Command {
-      pg_regress "$env:psqlopt=$env:pgroot\bin" --dbname=pl_regression plr bad_fun opt_window 2>&1 |
+      pg_regress "$env:psqlopt=$env:pgroot\bin" --dbname=pl_regression plr `
+        bad_fun opt_window 2>&1 |
         %{ if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
           Out-Default
       if ($LASTEXITCODE -ne 0) {
@@ -142,6 +144,7 @@ test_script:
     Update-AppVeyorTest Regression -Framework pg_regress -FileName sql\ -Outcome "$env:Outcome" -Duration $elapsed
     if ("$env:Outcome" -ne "Passed") {
       type regression.diffs
+      $host.SetShouldExit($LastExitCode)
     }
 
 artifacts:
