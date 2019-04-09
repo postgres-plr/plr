@@ -30,7 +30,7 @@ matrix:
     - pg: master
   exclude:
     - platform: x86
-      pg: 12.1-1
+      pg: 11.2-1
       PlatformToolset: v140
     - platform: x86
       pg: master
