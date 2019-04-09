@@ -408,7 +408,6 @@ drop trigger footrig on foo;
 create or replace function foonotice() returns trigger as '
 msg <- paste(pg.tg.name,pg.tg.relname,pg.tg.when,pg.tg.level,pg.tg.op,pg.tg.args[1],pg.tg.args[2])
 pg.thrownotice(msg)
-return(NULL)
 ' language plr;
 
 create trigger footrig after insert or update or delete on foo for each row execute procedure foonotice();

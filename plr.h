@@ -543,7 +543,7 @@ PGDLLEXPORT Datum get_datum(SEXP rval, Oid typid, Oid typelem, FmgrInfo in_func,
 PGDLLEXPORT Datum get_scalar_datum(SEXP rval, Oid result_typ, FmgrInfo result_in_func, bool *isnull);
 
 /* Postgres support functions installed into the R interpreter */
-PGDLLEXPORT void throw_pg_notice(const char **msg);
+PGDLLEXPORT void throw_pg_log(int* elevel, const char **msg);
 PGDLLEXPORT SEXP plr_quote_literal(SEXP rawstr);
 PGDLLEXPORT SEXP plr_quote_ident(SEXP rawstr);
 PGDLLEXPORT SEXP plr_SPI_exec(SEXP rsql);

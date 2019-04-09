@@ -76,9 +76,15 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
 			"}"
 #define OPTIONS_THROWRERROR_CMD \
 			"options(error = expression(pg.throwrerror(geterrmessage())))"
+#define THROWLOG_CMD \
+			"pg.throwlog <-function(msg) " \
+			"{.C(\"throw_pg_log\", as.integer(" CppAsString2(LOG) "), as.character(msg));invisible()}"
+#define THROWWARNING_CMD \
+			"pg.throwwarning <-function(msg) " \
+			"{.C(\"throw_pg_log\", as.integer(" CppAsString2(WARNING) "), as.character(msg));invisible()}"
 #define THROWNOTICE_CMD \
 			"pg.thrownotice <-function(msg) " \
-			"{.C(\"throw_pg_notice\", as.character(msg))}"
+			"{.C(\"throw_pg_log\", as.integer(" CppAsString2(NOTICE) "), as.character(msg));invisible()}"
 #define THROWERROR_CMD \
 			"pg.throwerror <-function(msg) " \
 			"{stop(msg, call. = FALSE)}"
@@ -456,7 +462,9 @@ plr_load_builtins(Oid funcid)
 		/* set up the postgres error handler in R */
 		THROWRERROR_CMD,
 		OPTIONS_THROWRERROR_CMD,
+		THROWLOG_CMD,
 		THROWNOTICE_CMD,
+		THROWWARNING_CMD,
 		THROWERROR_CMD,
 		OPTIONS_THROWWARN_CMD,
 

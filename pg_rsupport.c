@@ -52,15 +52,15 @@ typedef struct saved_plan_desc
  * Functions used in R
  *****************************************************************************/
 void
-throw_pg_notice(const char **msg)
+throw_pg_log(int* elevel, const char **msg)
 {
 	/* skip error CONTEXT for explicitly called messages */
 	SAVE_PLERRCONTEXT;
 
 	if (msg && *msg)
-		elog(NOTICE, "%s", *msg);
+		elog(*elevel, "%s", *msg);
 	else
-		elog(NOTICE, "%s", "");
+		elog(*elevel, "%s", "");
 
 	RESTORE_PLERRCONTEXT;
 }
