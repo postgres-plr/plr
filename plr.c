@@ -179,8 +179,8 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
  * static declarations
  */
 static void plr_atexit(void);
-static void plr_load_builtins(Oid funcid);
-static void plr_init_all(Oid funcid);
+static void plr_load_builtins(Oid langOid);
+static void plr_init_all(Oid langOid);
 static Datum plr_trigger_handler(PG_FUNCTION_ARGS);
 static Datum plr_func_handler(PG_FUNCTION_ARGS);
 static plr_function *compile_plr_function(FunctionCallInfo fcinfo);
@@ -195,7 +195,8 @@ static SEXP plr_convertargs(plr_function *function, NullableDatum *args, Functio
 static SEXP plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo, SEXP rho);
 #endif
 static void plr_error_callback(void *arg);
-static Oid getNamespaceOidFromFunctionOid(Oid fnOid);
+static void remove_carriage_return(char* p);
+static Oid getNamespaceOidFromLanguageOid(Oid langOid);
 static bool haveModulesTable(Oid nspOid);
 static char *getModulesSql(Oid nspOid);
 #ifdef HAVE_WINDOW_FUNCTIONS
@@ -238,7 +239,25 @@ plr_call_handler(PG_FUNCTION_ARGS)
 	MemoryContextSwitchTo(plr_caller_context);
 
 	/* initialize R if needed */
-	plr_init_all(fcinfo->flinfo->fn_oid);
+	if (!plr_be_init_done) {
+		HeapTuple			procedureTuple;
+		Form_pg_proc		procedureStruct;
+		Oid					language;
+		/* get the pg_proc entry */
+		procedureTuple = SearchSysCache(PROCOID,
+			ObjectIdGetDatum(fcinfo->flinfo->fn_oid),
+			0, 0, 0);
+		if (!HeapTupleIsValid(procedureTuple))
+			/* internal error */
+			elog(ERROR, "cache lookup failed for function %u", fcinfo->flinfo->fn_oid);
+		procedureStruct = (Form_pg_proc)GETSTRUCT(procedureTuple);
+
+		/* now get the pg_language entry */
+		language = procedureStruct->prolang;
+		ReleaseSysCache(procedureTuple);
+
+		plr_init_all(language);
+	}
 
 	if (CALLED_AS_TRIGGER(fcinfo))
 		retval = plr_trigger_handler(fcinfo);
@@ -246,6 +265,34 @@ plr_call_handler(PG_FUNCTION_ARGS)
 		retval = plr_func_handler(fcinfo);
 
 	return retval;
+}
+
+PG_FUNCTION_INFO_V1(plr_inline_handler);
+
+Datum
+plr_inline_handler(PG_FUNCTION_ARGS)
+{
+	const InlineCodeBlock * const icb = (InlineCodeBlock *)PG_GETARG_POINTER(0);
+	char * src = icb->source_text;
+	Oid langOid = icb->langOid;
+
+	/* initialize R if needed */
+	/* save caller's context */
+	plr_caller_context = CurrentMemoryContext;
+
+	if (SPI_connect() != SPI_OK_CONNECT)
+		elog(ERROR, "SPI_connect failed");
+	plr_SPI_context = CurrentMemoryContext;
+	MemoryContextSwitchTo(plr_caller_context);
+
+	plr_init_all(langOid);
+
+	remove_carriage_return(src);
+	load_r_cmd(src);
+
+	if (SPI_finish() != SPI_OK_FINISH)
+		elog(ERROR, "SPI_finish failed");
+	PG_RETURN_VOID();
 }
 
 void
@@ -450,7 +497,7 @@ plr_is_unbound_frame(WindowObject winobj)
  * plr_load_builtins() - load "builtin" PL/R functions into R interpreter
  */
 static void
-plr_load_builtins(Oid funcid)
+plr_load_builtins(Oid langOid)
 {
 	int			j;
 	char	   *cmd;
@@ -506,7 +553,7 @@ plr_load_builtins(Oid funcid)
 	load_r_cmd(cmds[0]);
 
 	/* next load the plr library into R */
-	load_r_cmd(get_load_self_ref_cmd(funcid));
+	load_r_cmd(get_load_self_ref_cmd(langOid));
 
 	/*
 	 * run the rest of the R bootstrap commands, being careful to start
@@ -592,7 +639,7 @@ plr_load_modules(void)
 }
 
 static void
-plr_init_all(Oid funcid)
+plr_init_all(Oid langOid)
 {
 	MemoryContext		oldcontext;
 
@@ -610,10 +657,10 @@ plr_init_all(Oid funcid)
 	if (!plr_be_init_done)
 	{
 		/* load "builtin" R functions */
-		plr_load_builtins(funcid);
+		plr_load_builtins(langOid);
 
 		/* obtain & store namespace OID of PL/R language handler */
-		plr_nspOid = getNamespaceOidFromFunctionOid(funcid);
+		plr_nspOid = getNamespaceOidFromLanguageOid(langOid);
 
 		/* try to load procedures from plr_modules */
 		plr_load_modules();
@@ -1004,7 +1051,6 @@ do_compile(FunctionCallInfo fcinfo,
 	StringInfo				proc_internal_args = makeStringInfo();
 	char				   *proc_source;
 	MemoryContext			oldcontext;
-	char				   *p;
 
 	/* grab the function name */
 	proname = NameStr(procStruct->proname);
@@ -1442,25 +1488,7 @@ do_compile(FunctionCallInfo fcinfo,
 		elog(ERROR, "null prosrc");
 	proc_source = DatumGetCString(DirectFunctionCall1(textout, prosrcdatum));
 
-	/*
-	 * replace any carriage returns with either a space or a newline,
-	 * as appropriate
-	 */
-	p = proc_source;
-	while (*p != '\0')
-	{
-		if (p[0] == '\r')
-		{
-			if (p[1] == '\n')
-				/* for crlf sequence, write over the cr with a space */
-				*p++ = ' ';
-			else
-				/* otherwise write over the cr with a nl */
-				*p++ = '\n';
-		}
-		else
-			p++;
-	}
+	remove_carriage_return(proc_source);
 
 	/* parse or find the R function */
 	if(proc_source && proc_source[0])
@@ -1755,31 +1783,38 @@ plr_error_callback(void *arg)
 }
 
 /*
- * getNamespaceOidFromFunctionOid - Returns the OID of the namespace for the
- * language handler function for the postgresql function with the OID equal
- * to the input argument.
+ * Sanitize R code by removing \r
+ */
+static void remove_carriage_return(char* p)
+{
+	while (*p != '\0')
+	{
+		if (p[0] == '\r')
+		{
+			if (p[1] == '\n')
+				/* for crlf sequence, write over the lf with a space */
+				*p++ = ' ';
+			else
+				/* otherwise write over the lf with a cr */
+				*p++ = '\n';
+		}
+		else
+			p++;
+	}
+}
+/*
+ * getNamespaceOidFromLanguageOid - Returns the OID of the namespace for the
+ * language with the OID equal to the input argument.
  */
 static Oid
-getNamespaceOidFromFunctionOid(Oid fnOid)
+getNamespaceOidFromLanguageOid(Oid langOid)
 {
 	HeapTuple			procTuple;
 	HeapTuple			langTuple;
 	Form_pg_proc		procStruct;
 	Form_pg_language	langStruct;
-	Oid					langOid;
 	Oid					hfnOid;
 	Oid					nspOid;
-
-	/* Lookup the pg_proc tuple for the called function by OID */
-	procTuple = SearchSysCache(PROCOID, ObjectIdGetDatum(fnOid), 0, 0, 0);
-
-	if (!HeapTupleIsValid(procTuple))
-		/* internal error */
-		elog(ERROR, "cache lookup failed for function %u", fnOid);
-
-	procStruct = (Form_pg_proc) GETSTRUCT(procTuple);
-	langOid = procStruct->prolang;
-	ReleaseSysCache(procTuple);
 
 	/* Lookup the pg_language tuple by OID */
 	langTuple = SearchSysCache(LANGOID, ObjectIdGetDatum(langOid), 0, 0, 0);

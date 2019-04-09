@@ -33,7 +33,7 @@
 #ifndef PLR_H
 #define PLR_H
 
-#define PLR_VERSION		"08.04"
+#define PLR_VERSION		"08.05"
 
 #include "postgres.h"
 
@@ -527,6 +527,7 @@ extern int Rf_initEmbeddedR(int argc, char **argv);
 
 /* PL/R language handler */
 PGDLLEXPORT Datum plr_call_handler(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_inline_handler(PG_FUNCTION_ARGS);
 PGDLLEXPORT void PLR_CLEANUP;
 PGDLLEXPORT void plr_init(void);
 PGDLLEXPORT void plr_load_modules(void);
@@ -578,7 +579,7 @@ PGDLLEXPORT plr_function *plr_HashTableLookup(plr_func_hashkey *func_key);
 PGDLLEXPORT void plr_HashTableInsert(plr_function *function,
 								plr_func_hashkey *func_key);
 PGDLLEXPORT void plr_HashTableDelete(plr_function *function);
-PGDLLEXPORT char *get_load_self_ref_cmd(Oid funcid);
+PGDLLEXPORT char *get_load_self_ref_cmd(Oid langOid);
 PGDLLEXPORT void perm_fmgr_info(Oid functionId, FmgrInfo *finfo);
 
 #endif   /* PLR_H */

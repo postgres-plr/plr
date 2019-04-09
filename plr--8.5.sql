@@ -1,4 +1,4 @@
--- keep this in sync with the plr--X.Y.Z.N.sql extension install file
+-- keep this in sync with the plr.sql.in legacy install file
 
 CREATE FUNCTION plr_call_handler()
 RETURNS LANGUAGE_HANDLER
@@ -36,7 +36,7 @@ LANGUAGE C STRICT;
 CREATE OR REPLACE FUNCTION plr_array_push (_float8, float8)
 RETURNS float8[]
 AS 'MODULE_PATHNAME','plr_array_push'
-LANGUAGE C STRICT; 
+LANGUAGE C STRICT;
 
 CREATE OR REPLACE FUNCTION plr_array_accum (_float8, float8)
 RETURNS float8[]
