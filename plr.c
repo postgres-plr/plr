@@ -184,16 +184,25 @@ static plr_function *do_compile(FunctionCallInfo fcinfo,
 static void plr_protected_parse(void* data);
 static SEXP plr_parse_func_body(const char *body);
 #if (PG_VERSION_NUM >= 120000)
-static SEXP plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo);
+static SEXP plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo, SEXP rho);
 #else
-static SEXP plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo);
+static SEXP plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo, SEXP rho);
 #endif
 static void plr_error_callback(void *arg);
 static Oid getNamespaceOidFromFunctionOid(Oid fnOid);
 static bool haveModulesTable(Oid nspOid);
 static char *getModulesSql(Oid nspOid);
 #ifdef HAVE_WINDOW_FUNCTIONS
-static void WinGetFrameData(WindowObject winobj, int argno, Datum *dvalues, bool *isnull, int *numels, bool *has_nulls);
+// See full definition in src/backend/executor/nodeWindowAgg.c
+typedef struct WindowObjectData
+{
+	NodeTag		type;
+	WindowAggState *winstate;	/* parent WindowAggState */
+} WindowObjectData;
+static const char PLR_WINDOW_FRAME_NAME[] = "plr_window_frame";
+#define PLR_WINDOW_ENV_NAME_MAX_LENGTH 30
+static const char PLR_WINDOW_ENV_PATTERN[] = "window_env_%p";
+static bool plr_is_unbound_frame(WindowObject winobj);
 #endif
 static void plr_resolve_polymorphic_argtypes(int numargs,
 											 Oid *argtypes, char *argmodes,
@@ -411,6 +420,25 @@ plr_init(void)
 
 	plr_pm_init_done = true;
 }
+
+#ifdef HAVE_WINDOW_FUNCTIONS
+/*
+ * plr_is_unbound_frame - return true if window function frame is unbound, i.e. whole partition
+ */
+static bool
+plr_is_unbound_frame(WindowObject winobj)
+{
+	WindowAgg*			node		 = (WindowAgg *)winobj->winstate->ss.ps.plan;
+	int					frameOptions = winobj->winstate->frameOptions;
+	static const int	unbound_mask = FRAMEOPTION_START_UNBOUNDED_PRECEDING | FRAMEOPTION_END_UNBOUNDED_FOLLOWING;
+
+	return
+#if PG_VERSION_NUM >= 110000
+		0 == (frameOptions & (FRAMEOPTION_GROUPS | FRAMEOPTION_EXCLUDE_CURRENT_ROW | FRAMEOPTION_EXCLUDE_GROUP | FRAMEOPTION_EXCLUDE_TIES)) &&
+#endif
+		((0 == node->ordNumCols && frameOptions & FRAMEOPTION_RANGE) || unbound_mask == (frameOptions & unbound_mask));
+}
+#endif
 
 /*
  * plr_load_builtins() - load "builtin" PL/R functions into R interpreter
@@ -721,12 +749,12 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 
 	/* Convert all call arguments */
 #if (PG_VERSION_NUM >= 120000)
-	PROTECT(rargs = plr_convertargs(function, args, fcinfo));
+	PROTECT(rargs = plr_convertargs(function, args, fcinfo, R_NilValue));
 #else
-	PROTECT(rargs = plr_convertargs(function, arg, argnull, fcinfo));
+	PROTECT(rargs = plr_convertargs(function, arg, argnull, fcinfo, R_NilValue));
 #endif
 	/* Call the R function */
-	PROTECT(rvalue = call_r_func(fun, rargs));
+	PROTECT(rvalue = call_r_func(fun, rargs, R_GlobalEnv));
 
 	/*
 	 * Convert the return value from an R object to a Datum.
@@ -747,9 +775,16 @@ plr_func_handler(PG_FUNCTION_ARGS)
 {
 	plr_function  *function;
 	SEXP			fun;
+	SEXP			env = R_GlobalEnv;
 	SEXP			rargs;
 	SEXP			rvalue;
 	Datum			retval;
+#ifdef HAVE_WINDOW_FUNCTIONS
+	WindowObject	winobj;
+	char			internal_env[PLR_WINDOW_ENV_NAME_MAX_LENGTH];
+	int64			current_row;
+	int				check_err;
+#endif
 	ERRORCONTEXTCALLBACK;
 
 	/* Find or compile the function */
@@ -760,15 +795,45 @@ plr_func_handler(PG_FUNCTION_ARGS)
 
 	PROTECT(fun = function->fun);
 
+#ifdef HAVE_WINDOW_FUNCTIONS
+	if (function->iswindow)
+	{
+		winobj = PG_WINDOW_OBJECT();
+		current_row = WinGetCurrentPosition(winobj);
+
+		sprintf(internal_env, PLR_WINDOW_ENV_PATTERN, winobj);
+		if (0 == current_row)
+		{
+			env = R_tryEval(lang2(install("new.env"), R_GlobalEnv), R_GlobalEnv, &check_err);
+			if (check_err)
+				elog(ERROR, "Failed to create new environment \"%s\" for window function calls.", internal_env);
+			defineVar(install(internal_env), env, R_GlobalEnv);
+		}
+		else
+		{
+			env = findVar(install(internal_env), R_GlobalEnv);
+			if (R_UnboundValue == env)
+				elog(ERROR, "%s window frame environment cannot be found in R_GlobalEnv", internal_env);
+		}
+	}
+#endif
+
 	/* Convert all call arguments */
 #if (PG_VERSION_NUM >= 120000)
-	PROTECT(rargs = plr_convertargs(function, fcinfo->args, fcinfo));
+	PROTECT(rargs = plr_convertargs(function, fcinfo->args, fcinfo, env));
 #else
-	PROTECT(rargs = plr_convertargs(function, fcinfo->arg, fcinfo->argnull,  fcinfo));
+	PROTECT(rargs = plr_convertargs(function, fcinfo->arg, fcinfo->argnull,  fcinfo, env));
 
 #endif
 	/* Call the R function */
-	PROTECT(rvalue = call_r_func(fun, rargs));
+	PROTECT(rvalue = call_r_func(fun, rargs, env));
+
+#ifdef HAVE_WINDOW_FUNCTIONS
+	/* We should remove window_env_XXX environment along with frame data list after last call */
+	if (function->iswindow && plr_is_unbound_frame(winobj)
+		&& WinGetPartitionRowCount(winobj) == current_row + 1)
+		R_tryEval(lang2(install("rm"), install(internal_env)), R_GlobalEnv, &check_err);
+#endif
 
 	/*
 	 * Convert the return value from an R object to a Datum.
@@ -1457,7 +1522,7 @@ plr_parse_func_body(const char *body)
 }
 
 SEXP
-call_r_func(SEXP fun, SEXP rargs)
+call_r_func(SEXP fun, SEXP rargs, SEXP rho)
 {
 	int		errorOccurred;
 	SEXP	call,
@@ -1468,7 +1533,7 @@ call_r_func(SEXP fun, SEXP rargs)
          * function we're calling.
          */
 	PROTECT(call = Rf_lcons(fun, rargs));
-	ans = R_tryEval(call, R_GlobalEnv, &errorOccurred);
+	ans = R_tryEval(call, rho, &errorOccurred);
 	UNPROTECT(1);
 
 	if(errorOccurred)
@@ -1488,10 +1553,10 @@ call_r_func(SEXP fun, SEXP rargs)
 
 #if (PG_VERSION_NUM >= 120000)
 static SEXP
-plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo)
+plr_convertargs(plr_function *function, NullableDatum *args, FunctionCallInfo fcinfo, SEXP rho)
 #else
 static SEXP
-plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo)
+plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallInfo fcinfo, SEXP rho)
 #endif
 {
 	int		i;
@@ -1616,42 +1681,54 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 	if (function->iswindow)
 	{
 		WindowObject	winobj = PG_WINDOW_OBJECT();
-		int64			totalrows = WinGetPartitionRowCount(winobj);
-		int				numels = 0;
+		int64			current_row = WinGetCurrentPosition(winobj);
+		int				numels;
 
-		for (i = 0; i < function->nargs; i++)
+		if (plr_is_unbound_frame(winobj))
 		{
-			Datum		   *dvalues = palloc0(totalrows * sizeof(Datum));
-			bool		   *isnulls = palloc0(totalrows * sizeof(bool));
-			Oid				datum_typid;
-			FmgrInfo		datum_out_func;
-			bool			datum_typbyval;
-			bool			has_nulls;
 
-			WinGetFrameData(winobj, i, dvalues, isnulls, &numels, &has_nulls);
-
-			datum_typid = function->arg_typid[i];
-			datum_out_func = function->arg_out_func[i];
-			datum_typbyval = function->arg_typbyval[i];
-			PROTECT(el = pg_datum_array_get_r(dvalues, isnulls, numels, has_nulls,
-											  datum_typid, datum_out_func, datum_typbyval));
-
-			/*
-			 * We already set function->nargs arguments
-			 * so we must start with a function->nargs
-			 */
-			SETCAR(t, el);
-			t = CDR(t);
-
-			UNPROTECT(1);
+			SEXP lst;
+			if (0 == current_row)
+			{
+				lst = PROTECT(allocVector(VECSXP, function->nargs));
+				for (i = 0; i < function->nargs; i++, t = CDR(t))
+				{
+					el = get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
+						R_NilValue : pg_window_frame_get_r(winobj, i, function);
+					SET_VECTOR_ELT(lst, i, el);
+					SETCAR(t, el);
+				}
+				defineVar(install(PLR_WINDOW_FRAME_NAME), lst, rho);
+				UNPROTECT(1);
+			}
+			else
+			{
+				lst = findVar(install(PLR_WINDOW_FRAME_NAME), rho);
+				if (R_UnboundValue == lst)
+					elog(ERROR, "%s list with window frame data cannot be found in R_GlobalEnv", PLR_WINDOW_FRAME_NAME);
+				for (i = 0; i < function->nargs; i++, t = CDR(t))
+				{
+					el = VECTOR_ELT(lst, i);
+					SETCAR(t, el);
+				}
+			}
 		}
+		else
+			for (i = 0; i < function->nargs; i++, t = CDR(t))
+			{
+				el = get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
+					R_NilValue : pg_window_frame_get_r(winobj, i, function);
+				SETCAR(t, el);
+			}
+
+		numels = function->nargs > 0 ? GET_LENGTH(el) : 0;
 
 		/* fnumrows */
 		SETCAR(t, ScalarInteger(numels));
 		t = CDR(t);
 
 		/* prownum */
-		SETCAR(t, ScalarInteger(WinGetCurrentPosition(winobj) + 1));
+		SETCAR(t, ScalarInteger((int)current_row + 1));
 	}
 #endif
 
@@ -1782,54 +1859,6 @@ pg_unprotect(int n, char *fn, int ln)
 	unprotect(n);
 }
 #endif /* DEBUGPROTECT */
-
-#ifdef HAVE_WINDOW_FUNCTIONS
-/*
- * WinGetFrameData
- *		Evaluate a window function's argument expression on a specified
- *		window frame, returning an array of Datums for the frame
- *
- * argno: argument number to evaluate (counted from 0)
- * isnull: output argument, receives isnull status of result
- */
-static void
-WinGetFrameData(WindowObject winobj, int argno, Datum *dvalues, bool *isnulls, int *numels, bool *has_nulls)
-{
-	int64		i = 0;
-
-	*has_nulls = false;
-	for(;;)
-	{
-		Datum	lcl_dvalue;
-		bool	lcl_isnull;
-		bool	isout;
-		bool	set_mark;
-
-		if (i > 0)
-			set_mark = false;
-		else
-			set_mark = true;
-
-		lcl_dvalue = WinGetFuncArgInFrame(winobj, argno, i, WINDOW_SEEK_HEAD,
-										  set_mark, &lcl_isnull, &isout);
-
-		if (!isout)
-		{
-			dvalues[i] = lcl_dvalue;
-			isnulls[i] = lcl_isnull;
-			if (lcl_isnull)
-				*has_nulls = true;
-		}
-		else
-		{
-			*numels = i;
-			break;
-		}
-
-		i++;
-	};
-}
-#endif
 
 /*
  * swiped out of plpgsql pl_comp.c
