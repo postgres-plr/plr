@@ -14,6 +14,9 @@ r_includespec := $(shell pkg-config --cflags-only-I libR)
 rhomedef := $(shell pkg-config --variable=rhome libR)
 endif
 
+PG_CONFIG = pg_config
+PG12 = $(shell $(PG_CONFIG) --version | egrep " 12\.| 12devel" > /dev/null && echo yes || echo no)
+
 ifneq (,${R_HOME})
 
 EXTENSION	= plr
@@ -24,7 +27,12 @@ OBJS		:= $(SRCS:.c=.o)
 SHLIB_LINK	+= -L$(r_libdir1x) -L$(r_libdir2x) -lR
 DATA_built	= plr.sql
 DATA		= plr--8.4.sql plr--8.3.0.18--8.4.sql plr--unpackaged--8.4.sql
+
+ifeq ($(PG12),yes)
+REGRESS		= plr12 bad_fun
+else
 REGRESS		= plr bad_fun
+endif
 
 ifdef USE_PGXS
 ifndef PG_CONFIG
