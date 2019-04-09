@@ -29,9 +29,9 @@ DATA_built	= plr.sql
 DATA		= plr--8.4.sql plr--8.3.0.18--8.4.sql plr--unpackaged--8.4.sql
 
 ifeq ($(PG12),yes)
-REGRESS		= plr12 bad_fun opt_window
+REGRESS		= plr12 bad_fun
 else
-REGRESS		= plr bad_fun opt_window
+REGRESS		= plr bad_fun
 endif
 
 ifdef USE_PGXS

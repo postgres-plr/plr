@@ -1027,27 +1027,6 @@ FROM test_data ORDER BY fyear, eps;
 
 In this example, use of the variable `prownum` is illustrated.
 
-For optimization reasons, constant expressions are not expanded, and corresponding `farg2` in the example above
-is passes with NULL value for compatibility reasons not to shift other arguments in functions users created
-with previous versions of PL/R.
-
-If the frame is unbound and no row exclusion like below and in *winsorize* example,
-window function calls are optimized as an entire partition is passed on the first call
-and saved into a dedicated R environment that can be used to store user data.
-Do not use `.GlobalEnv` for that if you reuse you window function in the same query.
-
-```postgresql
-CREATE OR REPLACE FUNCTION PLR_ClusterDBSCAN(x double precision, y double precision, eps double precision, minpoints integer)
-RETURNS int
-AS $$
-    if (1 == prownum) {
-        c <- dbscan(cbind(farg1, farg2), eps=eps, MinPts=minpoints)
-        assign("cluster", c$cluster, env = parent.frame())
-    }
-    return(cluster[prownum])
-$$ WINDOW LANGUAGE PLR;
-SELECT x, y, PLR_ClusterDBSCAN(x, y, 300, 15) OVER() AS cid FROM mtl_crimes
-```
 
 ## Loading R Modules at Startup <a name='startup'></a>
 
