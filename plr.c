@@ -295,6 +295,44 @@ plr_inline_handler(PG_FUNCTION_ARGS)
 	PG_RETURN_VOID();
 }
 
+PG_FUNCTION_INFO_V1(plr_validator);
+
+Datum
+plr_validator(PG_FUNCTION_ARGS)
+{
+	Datum			prosrcdatum;
+	HeapTuple		procTup;
+	bool			isnull;
+	char*			proc_source;
+	Oid funcoid = PG_GETARG_OID(0);
+
+	if (!check_function_bodies || !CheckFunctionValidatorAccess(fcinfo->flinfo->fn_oid, funcoid))
+		PG_RETURN_VOID();
+
+	procTup = SearchSysCache1(PROCOID, ObjectIdGetDatum(funcoid));
+	if (!HeapTupleIsValid(procTup))
+		elog(ERROR, "cache lookup failed for function %u", funcoid);
+
+	/* Add user's function definition to proc body */
+	prosrcdatum = SysCacheGetAttr(PROCOID, procTup,
+		Anum_pg_proc_prosrc, &isnull);
+	if (isnull)
+		elog(ERROR, "null prosrc");
+	proc_source = DatumGetCString(DirectFunctionCall1(textout, prosrcdatum));
+	ReleaseSysCache(procTup);
+
+	remove_carriage_return(proc_source);
+
+	if (!plr_pm_init_done)
+		plr_init();
+
+	plr_parse_func_body(proc_source);
+
+	pfree(proc_source);
+
+	PG_RETURN_VOID();
+}
+
 void
 load_r_cmd(const char *cmd)
 {

@@ -6,6 +6,7 @@ ALTER EXTENSION plr ADD type r_version_type;
 
 ALTER EXTENSION plr ADD function plr_call_handler();
 ALTER EXTENSION plr ADD function plr_inline_handler(internal);
+ALTER EXTENSION plr ADD function plr_validator(oid);
 ALTER EXTENSION plr ADD function plr_version();
 ALTER EXTENSION plr ADD function reload_plr_modules();
 ALTER EXTENSION plr ADD function install_rcmd(text);

@@ -8,9 +8,14 @@ CREATE FUNCTION plr_inline_handler(internal)
 RETURNS VOID
 AS 'MODULE_PATHNAME' LANGUAGE C STRICT;
 
+CREATE FUNCTION plr_validator(oid)
+RETURNS VOID
+AS 'MODULE_PATHNAME' LANGUAGE C STRICT;
+
 CREATE LANGUAGE plr
 HANDLER plr_call_handler
-INLINE plr_inline_handler;
+INLINE plr_inline_handler
+VALIDATOR plr_validator;
 
 CREATE OR REPLACE FUNCTION plr_version ()
 RETURNS text

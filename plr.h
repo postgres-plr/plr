@@ -528,6 +528,7 @@ extern int Rf_initEmbeddedR(int argc, char **argv);
 /* PL/R language handler */
 PGDLLEXPORT Datum plr_call_handler(PG_FUNCTION_ARGS);
 PGDLLEXPORT Datum plr_inline_handler(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_validator(PG_FUNCTION_ARGS);
 PGDLLEXPORT void PLR_CLEANUP;
 PGDLLEXPORT void plr_init(void);
 PGDLLEXPORT void plr_load_modules(void);

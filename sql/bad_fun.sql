@@ -7,5 +7,3 @@ $BODY$
   42
 $BODY$
 LANGUAGE plr;
-
-SELECT r_bad_fun();
