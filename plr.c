@@ -1218,18 +1218,13 @@ do_compile(FunctionCallInfo fcinfo,
 			char			typalign;
 			TupleDesc		tupdesc;
 			int				i;
-			ReturnSetInfo  *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
-			
-			/* check to see if caller supports us returning a tuplestore */
-			if (!rsinfo || !(rsinfo->allowedModes & SFRM_Materialize) || rsinfo->expectedDesc == NULL)
-				ereport(ERROR,
-						(errcode(ERRCODE_SYNTAX_ERROR),
-				 		errmsg("materialize mode required, but it is not "
-								"allowed in this context")));
+			Oid				oid;
 
-			tupdesc = rsinfo->expectedDesc;
+			if (TYPEFUNC_COMPOSITE != get_call_result_type(fcinfo, &oid, &tupdesc))
+				elog(ERROR, "return type must be a row type");
+
 			function->result_natts = tupdesc->natts;
-			
+
 			function->result_fld_elem_typid = (Oid *)
 											palloc0(function->result_natts * sizeof(Oid));
 			function->result_fld_elem_in_func = (FmgrInfo *)
@@ -1243,7 +1238,7 @@ do_compile(FunctionCallInfo fcinfo,
 	
 			for (i = 0; i < function->result_natts; i++)
 			{
-				function->result_fld_elem_typid[i] = get_element_type(TUPLE_DESC_ATTR(tupdesc,i)->atttypid);
+				function->result_fld_elem_typid[i] = TUPLE_DESC_ATTR(tupdesc, i)->atttypid;
 				if (OidIsValid(function->result_fld_elem_typid[i]))
 				{
 					get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
@@ -1310,7 +1305,7 @@ do_compile(FunctionCallInfo fcinfo,
 	 */
 	if (!is_trigger)
 	{
-		int		i;
+		int			i, j;
 		bool		forValidator = false;
 		int			numargs;
 		Oid		   *argtypes;
@@ -1325,11 +1320,9 @@ do_compile(FunctionCallInfo fcinfo,
 											 forValidator,
 											 function->proname);
 
-
-		function->nargs = procStruct->pronargs;
-		for (i = 0; i < function->nargs; i++)
+		for (i = 0, j = 0; j < numargs; j++)
 		{
-			char		argmode = argmodes ? argmodes[i] : PROARGMODE_IN;
+			char		argmode = argmodes ? argmodes[j] : PROARGMODE_IN;
 
 			if (argmode != PROARGMODE_IN &&
 				argmode != PROARGMODE_INOUT &&
@@ -1393,7 +1386,14 @@ do_compile(FunctionCallInfo fcinfo,
 
 			if (i > 0)
 				appendStringInfo(proc_internal_args, ",");
-			SET_ARG_NAME;
+
+			if (argnames && argnames[j] && argnames[j][0])
+			{
+				appendStringInfo(proc_internal_args, "%s", argnames[j]);
+				pfree(argnames[i]);
+			}
+			else
+				appendStringInfo(proc_internal_args, "arg%d", i + 1);
 
 			ReleaseSysCache(typeTup);
 
@@ -1418,8 +1418,10 @@ do_compile(FunctionCallInfo fcinfo,
 				function->arg_elem_typlen[i] = typlen;
 				function->arg_elem_typalign[i] = typalign;
 			}
+			i++;
 		}
 		FREE_ARG_NAMES;
+		function->nargs = i;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
 		if (function->iswindow)

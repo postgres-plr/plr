@@ -52,19 +52,17 @@ static Datum get_generic_array_datum(SEXP rval, plr_function *function, int col,
 static Tuplestorestate *get_frame_tuplestore(SEXP rval,
 											 plr_function *function,
 											 AttInMetadata *attinmeta,
-											 MemoryContext per_query_ctx,
-											 bool retset);
+											 MemoryContext per_query_ctx);
 static Tuplestorestate *get_matrix_tuplestore(SEXP rval,
 											 plr_function *function,
 											 AttInMetadata *attinmeta,
-											 MemoryContext per_query_ctx,
-											 bool retset);
+											 MemoryContext per_query_ctx);
 static Tuplestorestate *get_generic_tuplestore(SEXP rval,
 											 plr_function *function,
 											 AttInMetadata *attinmeta,
-											 MemoryContext per_query_ctx,
-											 bool retset);
+											 MemoryContext per_query_ctx);
 static SEXP coerce_to_char(SEXP rval);
+static Datum r_get_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo);
 
 extern char *last_R_error_msg;
 
@@ -657,8 +655,10 @@ r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo)
 
 	if (CALLED_AS_TRIGGER(fcinfo))
 		result = get_trigger_tuple(rval, function, fcinfo, &isnull);
-	else if (function->result_istuple || fcinfo->flinfo->fn_retset)
+	else if (fcinfo->flinfo->fn_retset)
 		result = get_tuplestore(rval, function, fcinfo, &isnull);
+	else if (function->result_istuple)
+		result = r_get_tuple(rval, function, fcinfo);
 	else
 	{
 		/* short circuit if return value is Null */
@@ -679,6 +679,53 @@ r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo)
 		fcinfo->isnull = true;
 
 	return result;
+}
+
+/*
+ * Given an R value (data frame or list), coerce it to list
+ * and get a tuple representing first elements of each list element.
+ *
+ * This is used to return a single RECORD (not SETOF)
+ */
+Datum
+r_get_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo)
+{
+	Oid			oid;
+	TupleDesc	tupdesc;
+	HeapTuple	tuple;
+	Datum	   *values;
+	bool	   *isnull;
+	int			i, min_length;
+
+	if (!(isFrame(rval) || isNewList(rval) || isList(rval)))
+		elog(ERROR, "Only list alike is expected");
+
+	if (TYPEFUNC_COMPOSITE != get_call_result_type(fcinfo, &oid, &tupdesc))
+		elog(ERROR, "return type must be a row type");
+
+	min_length = Min(function->result_natts, length(rval));
+
+	//if (tupdesc->natts != length(rval))
+	//	elog(ERROR, "same length expected");
+
+	BlessTupleDesc(tupdesc);
+
+	values = palloc0(sizeof(Datum) * tupdesc->natts);
+	isnull = palloc0(sizeof(bool) * tupdesc->natts);
+
+	for (i = 0; i < min_length; i++)
+	{
+		SEXP el = VECTOR_ELT(rval, i);
+		if (function->result_fld_typid[i] != function->result_fld_elem_typid[i])
+			values[i] = get_array_datum(el, function, i, isnull + i);
+		else
+			values[i] = get_scalar_datum(el, function->result_fld_elem_typid[i], function->result_fld_elem_in_func[i], isnull + i);
+	}
+
+	tuple = heap_form_tuple(tupdesc, values, isnull);
+	pfree(values);
+	pfree(isnull);
+	return HeapTupleGetDatum(tuple);
 }
 
 /*
@@ -889,7 +936,6 @@ get_trigger_tuple(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bo
 static Datum
 get_tuplestore(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bool *isnull)
 {
-	bool			retset = fcinfo->flinfo->fn_retset;
 	ReturnSetInfo  *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
 	TupleDesc		tupdesc;
 	AttInMetadata  *attinmeta;
@@ -938,14 +984,12 @@ get_tuplestore(SEXP rval, plr_function *function, FunctionCallInfo fcinfo, bool 
 	/* OK, go to work */
 	rsinfo->returnMode = SFRM_Materialize;
 
-	if (isFrame(rval))
-		rsinfo->setResult = get_frame_tuplestore(rval, function, attinmeta, per_query_ctx, retset);
-	else if (isList(rval) || isNewList(rval))
-		rsinfo->setResult = get_frame_tuplestore(rval, function, attinmeta, per_query_ctx, retset);
+	if (isFrame(rval) || isList(rval) || isNewList(rval))
+		rsinfo->setResult = get_frame_tuplestore(rval, function, attinmeta, per_query_ctx);
 	else if (isMatrix(rval))
-		rsinfo->setResult = get_matrix_tuplestore(rval, function, attinmeta, per_query_ctx, retset);
+		rsinfo->setResult = get_matrix_tuplestore(rval, function, attinmeta, per_query_ctx);
 	else
-		rsinfo->setResult = get_generic_tuplestore(rval, function, attinmeta, per_query_ctx, retset);
+		rsinfo->setResult = get_generic_tuplestore(rval, function, attinmeta, per_query_ctx);
 
 	/*
 	 * SFRM_Materialize mode expects us to return a NULL Datum. The actual
@@ -1833,8 +1877,7 @@ static Tuplestorestate *
 get_frame_tuplestore(SEXP rval,
 					 plr_function *function,
 					 AttInMetadata *attinmeta,
-					 MemoryContext per_query_ctx,
-					 bool retset)
+					 MemoryContext per_query_ctx)
 {
 	Tuplestorestate	   *tupstore;
 	char			  **values;
@@ -1867,18 +1910,13 @@ get_frame_tuplestore(SEXP rval,
 	 * If we return a set, get number of rows by examining the first column.
 	 * Otherwise, stop at one row.
 	 */
-	if (retset)
+	if (isFrame(rval))
 	{
-		if (isFrame(rval))
-		{
-			PROTECT(dfcol = VECTOR_ELT(rval, 0));
-			nr = length(dfcol);
-			UNPROTECT(1);
-		}
-		else if (isList(rval) || isNewList(rval))
-			nr = 1;
+		PROTECT(dfcol = VECTOR_ELT(rval, 0));
+		nr = length(dfcol);
+		UNPROTECT(1);
 	}
-	else
+	else if (isList(rval) || isNewList(rval))
 		nr = 1;
 
 	/* coerce columns to character in advance */
@@ -1893,25 +1931,6 @@ get_frame_tuplestore(SEXP rval,
 			SEXP	obj;
 
 			PROTECT(obj = coerce_to_char(dfcol));
-			SET_VECTOR_ELT(result, j, obj);
-			UNPROTECT(1);
-		}
-		else if(TUPLE_DESC_ATTR(tupdesc,j)->attndims != 0)	/* array data type */
-		{
-			SEXP	obj;
-
-			PROTECT(obj = NEW_LIST(nr));
-			for(i = 0; i < nr; i++)
-			{
-				SEXP	dfcolcell;
-				SEXP	objcell;
-
-				PROTECT(dfcolcell = VECTOR_ELT(dfcol, i));
-				PROTECT(objcell = coerce_to_char(dfcolcell));
-				SET_VECTOR_ELT(obj, i, objcell);
-				UNPROTECT(2);
-			}
-
 			SET_VECTOR_ELT(result, j, obj);
 			UNPROTECT(1);
 		}
@@ -1970,64 +1989,10 @@ get_frame_tuplestore(SEXP rval,
 				else
 					values[j] = NULL;
 			}
+			else if (STRING_ELT(dfcol, i) != NA_STRING)
+				values[j] = pstrdup(CHAR(STRING_ELT(dfcol, i)));
 			else
-			{
-				if ((TUPLE_DESC_ATTR(tupdesc,j)->attndims != 0) || (STRING_ELT(dfcol, i) != NA_STRING))
-				{
-					if (TUPLE_DESC_ATTR(tupdesc,j)->attndims == 0)
-					{
-						values[j] = pstrdup(CHAR(STRING_ELT(dfcol, i)));
-					}
-					else	/* array data type */
-					{
-						bool	isnull = false;
-						Datum	arr_datum;
-
-						if (TYPEOF(dfcol) != VECSXP)
-							arr_datum = get_array_datum(dfcol, function, j, &isnull);
-						else
-							arr_datum = get_array_datum(VECTOR_ELT(dfcol,i), function, j, &isnull);
-
-						if (isnull)
-						{
-							values[j] = NULL;
-						}
-						else
-						{
-#if (PG_VERSION_NUM >= 120000)
-							FunctionCallInfoBaseData	fake_fcinfo;
-#else
-							FunctionCallInfoData fake_fcinfo;
-#endif
-							FmgrInfo				flinfo;
-							Datum					dvalue;
-							
-							MemSet(&fake_fcinfo, 0, sizeof(fake_fcinfo));
-							MemSet(&flinfo, 0, sizeof(flinfo));
-							fake_fcinfo.flinfo = &flinfo;
-							flinfo.fn_mcxt = CurrentMemoryContext;
-							fake_fcinfo.context = NULL;
-							fake_fcinfo.resultinfo = NULL;
-							fake_fcinfo.isnull = false;
-							fake_fcinfo.nargs = 1;
-#if (PG_VERSION_NUM >= 120000)
-							fake_fcinfo.args[0].value = arr_datum;
-							fake_fcinfo.args[0].isnull = false;
-#else
-							fake_fcinfo.arg[0] = arr_datum;
-							fake_fcinfo.argnull[0] = false;
-#endif
-							dvalue = (*array_out)(&fake_fcinfo);
-							if (fake_fcinfo.isnull)
-								values[j] = NULL;
-							else
-								values[j] = DatumGetCString(dvalue);
-						}
-					}
-				}
-				else
-					values[j] = NULL;
-			}
+				values[j] = NULL;
 
 			UNPROTECT(1);
 		}
@@ -2061,8 +2026,7 @@ static Tuplestorestate *
 get_matrix_tuplestore(SEXP rval,
 					 plr_function *function,
 					 AttInMetadata *attinmeta,
-					 MemoryContext per_query_ctx,
-					 bool retset)
+					 MemoryContext per_query_ctx)
 {
 	Tuplestorestate	   *tupstore;
 	char			  **values;
@@ -2080,10 +2044,7 @@ get_matrix_tuplestore(SEXP rval,
 	 * If we return a set, get number of rows.
 	 * Otherwise, stop at one row.
 	 */
-	if (retset)
-		nr = nrows(rval);
-	else
-		nr = 1;
+	nr = nrows(rval);
 
 	/* initialize our tuplestore */
 	tupstore = TUPLESTORE_BEGIN_HEAP;
@@ -2128,8 +2089,7 @@ static Tuplestorestate *
 get_generic_tuplestore(SEXP rval,
 					 plr_function *function,
 					 AttInMetadata *attinmeta,
-					 MemoryContext per_query_ctx,
-					 bool retset)
+					 MemoryContext per_query_ctx)
 {
 	Tuplestorestate	   *tupstore;
 	char			  **values;
@@ -2147,10 +2107,7 @@ get_generic_tuplestore(SEXP rval,
 	 * If we return a set, get number of rows.
 	 * Otherwise, stop at one row.
 	 */
-	if (retset)
-		nr = length(rval);
-	else
-		nr = 1;
+	nr = length(rval);
 
 	/* initialize our tuplestore */
 	tupstore = TUPLESTORE_BEGIN_HEAP;

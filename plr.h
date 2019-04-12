@@ -406,16 +406,6 @@ extern void R_RunExitFinalizers(void);
 #define GET_ARG_NAMES \
 		char  **argnames; \
 		argnames = fetchArgNames(procTup, procStruct->pronargs)
-#define SET_ARG_NAME \
-	do { \
-		if (argnames && argnames[i] && argnames[i][0]) \
-		{ \
-			appendStringInfo(proc_internal_args, "%s", argnames[i]); \
-			pfree(argnames[i]); \
-		} \
-		else \
-			appendStringInfo(proc_internal_args, "arg%d", i + 1); \
-	} while (0)
 #define SET_FRAME_ARG_NAME \
 	do { \
 		appendStringInfo(proc_internal_args, "farg%d", i + 1); \
