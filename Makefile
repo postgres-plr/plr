@@ -24,7 +24,7 @@ OBJS		:= $(SRCS:.c=.o)
 SHLIB_LINK	+= -L$(r_libdir1x) -L$(r_libdir2x) -lR
 DATA_built	= plr.sql
 DATA		= plr--8.5.sql plr--8.3.0.18--8.4.sql plr--8.4--8.5.sql plr--unpackaged--8.5.sql
-REGRESS		= plr bad_fun opt_window do
+REGRESS		= plr bad_fun opt_window do out_args
 
 ifdef USE_PGXS
 ifndef PG_CONFIG

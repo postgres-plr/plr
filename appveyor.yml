@@ -134,7 +134,7 @@ test_script:
     $env:Outcome="Passed"
     $elapsed=(Measure-Command {
       pg_regress "$env:psqlopt=$env:pgroot\bin" --dbname=pl_regression plr `
-        bad_fun opt_window do 2>&1 |
+        bad_fun opt_window do out_args 2>&1 |
         %{ if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
           Out-Default
       if ($LASTEXITCODE -ne 0) {
