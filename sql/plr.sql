@@ -65,17 +65,17 @@ select rbool('f');
 select rbool(NULL);
 
 
-CREATE OR REPLACE FUNCTION rfloat4(f float4) RETURNS float4 AS $$
-return (as.numeric(f))
+CREATE OR REPLACE FUNCTION rfloat(inout f anyelement, out isnull boolean, out isna boolean, out isnan boolean) AS $$
+  list(as.numeric(f), is.null(f), is.na(f), is.nan(f))
 $$ LANGUAGE plr;
-select rfloat4(1::int4);
-select rfloat4(NULL);
-
-CREATE OR REPLACE FUNCTION rfloat8(f float8) RETURNS float8 AS $$
-return (as.numeric(f))
-$$ LANGUAGE plr;
-select rfloat8(1::float8);
-select rfloat8(NULL);
+select rfloat(1::int4);
+select rfloat(1::float4);
+select rfloat(NULL::float4);
+select rfloat('NaN'::float4);
+select rfloat(1::float8);
+select rfloat(NULL::float8);
+select rfloat('NaN'::float8);
+select rfloat(1); -- numeric
 
 
 --
