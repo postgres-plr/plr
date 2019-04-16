@@ -1496,7 +1496,7 @@ get_md_array_datum(SEXP rval, int ndims, plr_function *function, int col, bool *
 					else
 					{
 						nulls[arridx] = FALSE;
-						dvalues[arridx] = Float8GetDatum((double) REAL(rval)[idx]);
+						dvalues[arridx] = DirectFunctionCall1(float8_numeric, Float8GetDatum((double)REAL(rval)[idx]));
 					}
 				}
 			}
@@ -1768,7 +1768,7 @@ get_generic_array_datum(SEXP rval, plr_function *function, int col, bool *isnull
 				else
 				{
 					nulls[i] = FALSE;
-					dvalues[i] = Float8GetDatum((double) REAL(rval)[i]);
+					dvalues[i] = DirectFunctionCall1(float8_numeric, Float8GetDatum((double)REAL(rval)[i]));
 				}
 			}
 		}
