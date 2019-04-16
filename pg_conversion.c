@@ -642,22 +642,11 @@ r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo)
 	bool	isnull = false;
 	Datum	result;
 
-	if (function->result_typid != BYTEAOID &&
-		(TYPEOF(rval) == CLOSXP ||
-		 TYPEOF(rval) == PROMSXP ||
-		 TYPEOF(rval) == LANGSXP ||
-		 TYPEOF(rval) == ENVSXP))
-		ereport(ERROR,
-				(errcode(ERRCODE_DATA_EXCEPTION),
-				 errmsg("incorrect function return type"),
-				 errdetail("R return value type cannot be mapped to PostgreSQL return type."),
-				 errhint("Try BYTEA as the PostgreSQL return type.")));
-
 	if (CALLED_AS_TRIGGER(fcinfo))
 		result = get_trigger_tuple(rval, function, fcinfo, &isnull);
 	else if (fcinfo->flinfo->fn_retset)
 		result = get_tuplestore(rval, function, fcinfo, &isnull);
-	else if (function->result_istuple)
+	else if (function->result_natts > 1)
 		result = r_get_tuple(rval, function, fcinfo);
 	else
 	{
@@ -668,8 +657,8 @@ r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo)
 			return (Datum) 0;
 		}
 
-		if (function->result_elem == 0)
-			result = get_scalar_datum(rval, function->result_typid, function->result_in_func, &isnull);
+		if (function->result_fld_elem_typid[0] == function->result_fld_typid[0])
+			result = get_scalar_datum(rval, function->result_fld_typid[0], function->result_fld_elem_in_func[0], &isnull);
 		else
 			result = get_array_datum(rval, function, 0, &isnull);
 
@@ -1137,7 +1126,7 @@ get_array_datum(SEXP rval, plr_function *function, int col, bool *isnull)
 	else
 	{
 		/* create an empty array */
-		return PointerGetDatum(construct_empty_array(function->result_elem));
+		return PointerGetDatum(construct_empty_array(function->result_fld_elem_typid[col]));
 	}
 }
 
@@ -1172,22 +1161,11 @@ get_frame_array_datum(SEXP rval, plr_function *function, int col, bool *isnull)
 		/* internal error */
 		elog(ERROR, "plr: bad internal representation of data.frame");
 
-	if (function->result_istuple)
-	{
-		result_elem = function->result_fld_elem_typid[col];
-		in_func = function->result_fld_elem_in_func[col];
-		typlen = function->result_fld_elem_typlen[col];
-		typbyval = function->result_fld_elem_typbyval[col];
-		typalign = function->result_fld_elem_typalign[col];
-	}
-	else
-	{
-		result_elem = function->result_elem;
-		in_func = function->result_elem_in_func;
-		typlen = function->result_elem_typlen;
-		typbyval = function->result_elem_typbyval;
-		typalign = function->result_elem_typalign;
-	}
+	result_elem = function->result_fld_elem_typid[col];
+	in_func = function->result_fld_elem_in_func[col];
+	typlen = function->result_fld_elem_typlen[col];
+	typbyval = function->result_fld_elem_typbyval[col];
+	typalign = function->result_fld_elem_typalign[col];
 	
 	for (j = 0; j < nc; j++)
 	{
@@ -1374,7 +1352,7 @@ get_md_array_datum(SEXP rval, int ndims, plr_function *function, int col, bool *
 	int			cntr = 0;
 	bool	   *nulls;
 	bool		have_nulls = FALSE;
-	Oid 		return_type_oid = function->result_elem;
+	Oid 		return_type_oid = function->result_fld_elem_typid[col];
 
 	if (ndims > 0)
 	{
@@ -1387,22 +1365,11 @@ get_md_array_datum(SEXP rval, int ndims, plr_function *function, int col, bool *
 		lbs = NULL;
 	}
 	
-	if (function->result_istuple)
-	{
-		result_elem = function->result_fld_elem_typid[col];
-		in_func = function->result_fld_elem_in_func[col];
-		typlen = function->result_fld_elem_typlen[col];
-		typbyval = function->result_fld_elem_typbyval[col];
-		typalign = function->result_fld_elem_typalign[col];
-	}
-	else
-	{
-		result_elem = function->result_elem;
-		in_func = function->result_elem_in_func;
-		typlen = function->result_elem_typlen;
-		typbyval = function->result_elem_typbyval;
-		typalign = function->result_elem_typalign;
-	}
+	result_elem = function->result_fld_elem_typid[col];
+	in_func = function->result_fld_elem_in_func[col];
+	typlen = function->result_fld_elem_typlen[col];
+	typbyval = function->result_fld_elem_typbyval[col];
+	typalign = function->result_fld_elem_typalign[col];
 
 	PROTECT(rdims = getAttrib(rval, R_DimSymbol));
 	for(i = 0; i < ndims; i++)
@@ -1653,22 +1620,11 @@ get_generic_array_datum(SEXP rval, plr_function *function, int col, bool *isnull
 	bool		fast_track_type;
 	bool		has_na = false;
 
-	if (function->result_istuple)
-	{
-		result_elem = function->result_fld_elem_typid[col];
-		in_func = function->result_fld_elem_in_func[col];
-		typlen = function->result_fld_elem_typlen[col];
-		typbyval = function->result_fld_elem_typbyval[col];
-		typalign = function->result_fld_elem_typalign[col];
-	}
-	else
-	{
-		result_elem = function->result_elem;
-		in_func = function->result_elem_in_func;
-		typlen = function->result_elem_typlen;
-		typbyval = function->result_elem_typbyval;
-		typalign = function->result_elem_typalign;
-	}
+	result_elem = function->result_fld_elem_typid[col];
+	in_func = function->result_fld_elem_in_func[col];
+	typlen = function->result_fld_elem_typlen[col];
+	typbyval = function->result_fld_elem_typbyval[col];
+	typalign = function->result_fld_elem_typalign[col];
 
 	/*
 	 * Special case for pass-by-value data types, if the following conditions are met:

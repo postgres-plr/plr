@@ -1089,6 +1089,9 @@ do_compile(FunctionCallInfo fcinfo,
 	StringInfo				proc_internal_args = makeStringInfo();
 	char				   *proc_source;
 	MemoryContext			oldcontext;
+	Oid						oid; // FIXME same as result_typid ???
+	TupleDesc				tupdesc;
+	TypeFuncClass			tfc;
 
 	/* grab the function name */
 	proname = NameStr(procStruct->proname);
@@ -1155,15 +1158,53 @@ do_compile(FunctionCallInfo fcinfo,
 	else
 		result_typid = procStruct->prorettype;
 
-	/*
-	 * Get the required information for input conversion of the
-	 * return value.
-	 */
+	tfc = get_call_result_type(fcinfo, &oid, &tupdesc);
+	switch (tfc)
+	{
+		case TYPEFUNC_SCALAR:
+			function->result_natts = 1;
+			break;
+		case TYPEFUNC_COMPOSITE:
+			function->result_natts = tupdesc->natts;
+			break;
+		case TYPEFUNC_OTHER: // trigger
+			function->result_natts = 0;
+			break;
+		default:
+			elog(ERROR, "unknown function type %u", tfc);
+	}
+
+	if (function->result_natts > 0)
+	{
+		function->result_fld_typid = (Oid *)
+			palloc0(function->result_natts * sizeof(Oid));
+		function->result_fld_elem_typid = (Oid *)
+			palloc0(function->result_natts * sizeof(Oid));
+		function->result_fld_elem_in_func = (FmgrInfo *)
+			palloc0(function->result_natts * sizeof(FmgrInfo));
+		function->result_fld_elem_typlen = (int16 *)
+			palloc0(function->result_natts * sizeof(int));
+		function->result_fld_elem_typbyval = (bool *)
+			palloc0(function->result_natts * sizeof(bool));
+		function->result_fld_elem_typalign = (char *)
+			palloc0(function->result_natts * sizeof(char));
+	}
+
 	if (!is_trigger)
 	{
-		function->result_typid = result_typid;
+		int			i, j;
+		bool		forValidator = false;
+		int			numargs;
+		Oid		   *argtypes;
+		char	  **argnames;
+		char	   *argmodes;
+
+		/*
+		 * Get the required information for input conversion of the
+		 * return value.
+		 */
 		typeTup = SearchSysCache(TYPEOID,
-								 ObjectIdGetDatum(function->result_typid),
+								 ObjectIdGetDatum(result_typid),
 								 0, 0, 0);
 		if (!HeapTupleIsValid(typeTup))
 		{
@@ -1201,116 +1242,37 @@ do_compile(FunctionCallInfo fcinfo,
 			}
 		}
 
-		if (typeStruct->typrelid != InvalidOid ||
-			procStruct->prorettype == RECORDOID)
-			function->result_istuple = true;
-
-		perm_fmgr_info(typeStruct->typinput, &(function->result_in_func));
-
-		if (function->result_istuple)
+		for (i = 0; i < function->result_natts; i++)
 		{
-			int16			typlen;
-			bool			typbyval;
-			char			typdelim;
-			Oid				typinput,
-							typelem;
-			FmgrInfo		inputproc;
-			char			typalign;
-			TupleDesc		tupdesc;
-			int				i;
-			Oid				oid;
-
-			if (TYPEFUNC_COMPOSITE != get_call_result_type(fcinfo, &oid, &tupdesc))
-				elog(ERROR, "return type must be a row type");
-
-			function->result_natts = tupdesc->natts;
-
-			function->result_fld_elem_typid = (Oid *)
-											palloc0(function->result_natts * sizeof(Oid));
-			function->result_fld_elem_in_func = (FmgrInfo *)
-											palloc0(function->result_natts * sizeof(FmgrInfo));
-			function->result_fld_elem_typlen = (int *)
-											palloc0(function->result_natts * sizeof(int));
-			function->result_fld_elem_typbyval = (bool *)
-											palloc0(function->result_natts * sizeof(bool));
-			function->result_fld_elem_typalign = (char *)
-											palloc0(function->result_natts * sizeof(char));
-	
-			for (i = 0; i < function->result_natts; i++)
+			if (TYPEFUNC_COMPOSITE == tfc)
+				function->result_fld_typid[i] = TUPLE_DESC_ATTR(tupdesc, i)->atttypid;
+			else
+				function->result_fld_typid[i] = result_typid;
+			function->result_fld_elem_typid[i] = get_element_type(function->result_fld_typid[i]);
+			if (InvalidOid == function->result_fld_elem_typid[i])
+				function->result_fld_elem_typid[i] = function->result_fld_typid[i];
+			if (OidIsValid(function->result_fld_elem_typid[i]))
 			{
-				function->result_fld_elem_typid[i] = TUPLE_DESC_ATTR(tupdesc, i)->atttypid;
-				if (OidIsValid(function->result_fld_elem_typid[i]))
-				{
-					get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
-										&typlen, &typbyval, &typalign,
-										&typdelim, &typelem, &typinput);
-		
-					perm_fmgr_info(typinput, &inputproc);
-		
-					function->result_fld_elem_in_func[i] = inputproc;
-					function->result_fld_elem_typbyval[i] = typbyval;
-					function->result_fld_elem_typlen[i] = typlen;
-					function->result_fld_elem_typalign[i] = typalign;
-				}
+				char			typdelim;
+				Oid				typinput, typelem;
+
+				get_type_io_data(function->result_fld_elem_typid[i], IOFunc_input,
+					function->result_fld_elem_typlen + i,
+					function->result_fld_elem_typbyval + i,
+					function->result_fld_elem_typalign + i,
+					&typdelim, &typelem, &typinput);
+
+				perm_fmgr_info(typinput, function->result_fld_elem_in_func + i);
 			}
-		}
-		else
-		{
-			/*
-			 * Is return type an array? get_element_type will return InvalidOid
-			 * instead of actual element type if the type is not a varlena array.
-			 */
-			if (OidIsValid(get_element_type(function->result_typid)))
-				function->result_elem = typeStruct->typelem;
-			else	/* not an array */
-				function->result_elem = InvalidOid;
-			
-			/*
-			 * if we have an array type, get the element type's in_func
-			 */
-			if (function->result_elem != InvalidOid)
-			{
-				int16		typlen;
-				bool		typbyval;
-				char		typdelim;
-				Oid			typinput,
-							typelem;
-				FmgrInfo	inputproc;
-				char		typalign;
-	
-				get_type_io_data(function->result_elem, IOFunc_input,
-										&typlen, &typbyval, &typalign,
-										&typdelim, &typelem, &typinput);
-	
-				perm_fmgr_info(typinput, &inputproc);
-	
-				function->result_elem_in_func = inputproc;
-				function->result_elem_typbyval = typbyval;
-				function->result_elem_typlen = typlen;
-				function->result_elem_typalign = typalign;
-			}
+			else
+				elog(ERROR, "Invalid type for return attribute #%u", i);
 		}
 		ReleaseSysCache(typeTup);
-	}
-	else /* trigger */
-	{
-		function->result_typid = TRIGGEROID;
-		function->result_istuple = true;
-		function->result_elem = InvalidOid;
-	}
 
-	/*
-	 * Get the required information for output conversion
-	 * of all procedure arguments
-	 */
-	if (!is_trigger)
-	{
-		int			i, j;
-		bool		forValidator = false;
-		int			numargs;
-		Oid		   *argtypes;
-		char	  **argnames;
-		char	   *argmodes;
+		/*
+		 * Get the required information for output conversion
+		 * of all procedure arguments
+		 */
 
 		numargs = get_func_arg_info(procTup,
 									&argtypes, &argnames, &argmodes);

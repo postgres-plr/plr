@@ -471,18 +471,11 @@ typedef struct plr_function
 	ItemPointerData		fn_tid;
 	plr_func_hashkey   *fn_hashkey; /* back-link to hashtable key */
 	bool				lanpltrusted;
-	Oid					result_typid;
-	bool				result_istuple;
-	FmgrInfo			result_in_func;
-	Oid					result_elem;
-	FmgrInfo			result_elem_in_func;
-	int					result_elem_typlen;
-	bool				result_elem_typbyval;
-	char				result_elem_typalign;
 	int					result_natts;
+	Oid				   *result_fld_typid;
 	Oid				   *result_fld_elem_typid;
 	FmgrInfo		   *result_fld_elem_in_func;
-	int				   *result_fld_elem_typlen;
+	int16			   *result_fld_elem_typlen;
 	bool			   *result_fld_elem_typbyval;
 	char			   *result_fld_elem_typalign;
 	int					nargs;
