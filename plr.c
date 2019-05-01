@@ -1720,7 +1720,7 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 	{
 		WindowObject	winobj = PG_WINDOW_OBJECT();
 		int64			current_row = WinGetCurrentPosition(winobj);
-		int				numels;
+		int				numels = 0;
 
 		if (plr_is_unbound_frame(winobj))
 		{
@@ -1754,12 +1754,15 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 		else
 			for (i = 0; i < function->nargs; i++, t = CDR(t))
 			{
-				el = get_fn_expr_arg_stable(fcinfo->flinfo, i) ?
-					R_NilValue : pg_window_frame_get_r(winobj, i, function);
+				if (get_fn_expr_arg_stable(fcinfo->flinfo, i))
+					el = R_NilValue;
+				else
+				{
+					el = pg_window_frame_get_r(winobj, i, function);
+					numels = LENGTH(el);
+				}
 				SETCAR(t, el);
 			}
-
-		numels = function->nargs > 0 ? GET_LENGTH(el) : 0;
 
 		/* fnumrows */
 		SETCAR(t, ScalarInteger(numels));
