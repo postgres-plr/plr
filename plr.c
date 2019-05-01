@@ -626,7 +626,7 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	SEXP			rvalue;
 	Datum			retval;
 #if (PG_VERSION_NUM >= 120000)
-	NullableDatum  args[sizeof(NullableDatum) * FUNC_MAX_ARGS];
+	NullableDatum  args[FUNC_MAX_ARGS];
 #else
 	Datum arg[FUNC_MAX_ARGS];
     bool argnull[FUNC_MAX_ARGS];
