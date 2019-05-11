@@ -614,7 +614,12 @@ pg_get_one_r(char *value, Oid typtype, SEXP *obj, int elnum)
 			 * because R INTEGER is only 4 byte
 			 */
 			if (value)
-				NUMERIC_DATA(*obj)[elnum] = atof(value);
+			{
+				/* fixup for Visual Studio 2013, _MSC_VER == 1916*/
+				char *endptr = NULL;
+				const double el = strtod(value, &endptr);
+				NUMERIC_DATA(*obj)[elnum] = value==endptr ? R_NaN : el;
+			}
 			else
 				NUMERIC_DATA(*obj)[elnum] = NA_REAL;
 			break;
