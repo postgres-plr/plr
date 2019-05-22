@@ -1,5 +1,4 @@
-create type tt as (x int, y int[]);
-create or replace function fast_win_frame(r int, t tt) returns bool AS $$
+create or replace function fast_win_frame(r int, t record) returns bool AS $$
   identical(parent.frame(), .GlobalEnv) && pg.throwerror('Parent env is global')
   exists('plr_window_frame', parent.frame(), inherits=FALSE) || pg.throwerror('No window frame data found')
   r == farg2[[prownum,2]][3]

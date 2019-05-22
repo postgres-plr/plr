@@ -1345,22 +1345,7 @@ do_compile(FunctionCallInfo fcinfo,
 			}
 			typeStruct = (Form_pg_type) GETSTRUCT(typeTup);
 
-			/* Disallow pseudotype argument
-			 * note we already replaced ANYARRAY/ANYELEMENT
-			 */
-			if (typeStruct->typtype == 'p')
-			{
-				Oid		arg_typid = function->arg_typid[i];
-
-				xpfree(function->proname);
-				xpfree(function);
-				ereport(ERROR,
-						(errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-						 errmsg("plr functions cannot take type %s",
-								format_type_be(arg_typid))));
-			}
-
-			if (typeStruct->typrelid != InvalidOid)
+			if (typeStruct->typrelid != InvalidOid || typeStruct->typtype == 'p')
 				function->arg_is_rel[i] = 1;
 			else
 				function->arg_is_rel[i] = 0;
