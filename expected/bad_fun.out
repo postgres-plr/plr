@@ -7,7 +7,8 @@ $BODY$
   42
 $BODY$
 LANGUAGE plr;
-SELECT r_bad_fun();
 ERROR:  R interpreter parse error
-DETAIL:  Error: bad value
-CONTEXT:  In PL/R function r_bad_fun
+DETAIL:  R parse error caught in "
+  deadbeef <- function(,bad) {}
+  42
+".

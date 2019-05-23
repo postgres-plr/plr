@@ -33,7 +33,7 @@
 #ifndef PLR_H
 #define PLR_H
 
-#define PLR_VERSION		"08.04"
+#define PLR_VERSION		"08.05"
 
 #include "postgres.h"
 
@@ -406,16 +406,6 @@ extern void R_RunExitFinalizers(void);
 #define GET_ARG_NAMES \
 		char  **argnames; \
 		argnames = fetchArgNames(procTup, procStruct->pronargs)
-#define SET_ARG_NAME \
-	do { \
-		if (argnames && argnames[i] && argnames[i][0]) \
-		{ \
-			appendStringInfo(proc_internal_args, "%s", argnames[i]); \
-			pfree(argnames[i]); \
-		} \
-		else \
-			appendStringInfo(proc_internal_args, "arg%d", i + 1); \
-	} while (0)
 #define SET_FRAME_ARG_NAME \
 	do { \
 		appendStringInfo(proc_internal_args, "farg%d", i + 1); \
@@ -481,18 +471,11 @@ typedef struct plr_function
 	ItemPointerData		fn_tid;
 	plr_func_hashkey   *fn_hashkey; /* back-link to hashtable key */
 	bool				lanpltrusted;
-	Oid					result_typid;
-	bool				result_istuple;
-	FmgrInfo			result_in_func;
-	Oid					result_elem;
-	FmgrInfo			result_elem_in_func;
-	int					result_elem_typlen;
-	bool				result_elem_typbyval;
-	char				result_elem_typalign;
 	int					result_natts;
+	Oid				   *result_fld_typid;
 	Oid				   *result_fld_elem_typid;
 	FmgrInfo		   *result_fld_elem_in_func;
-	int				   *result_fld_elem_typlen;
+	int16			   *result_fld_elem_typlen;
 	bool			   *result_fld_elem_typbyval;
 	char			   *result_fld_elem_typalign;
 	int					nargs;
@@ -522,28 +505,29 @@ typedef struct plr_hashent
  * external declarations
  */
 
-/* libR interpreter initialization */
-extern int Rf_initEmbeddedR(int argc, char **argv);
-
 /* PL/R language handler */
 PGDLLEXPORT Datum plr_call_handler(PG_FUNCTION_ARGS);
-PGDLLEXPORT void PLR_CLEANUP;
-PGDLLEXPORT void plr_init(void);
-PGDLLEXPORT void plr_load_modules(void);
-PGDLLEXPORT void load_r_cmd(const char *cmd);
-PGDLLEXPORT SEXP call_r_func(SEXP fun, SEXP rargs, SEXP rho);
+PGDLLEXPORT Datum plr_inline_handler(PG_FUNCTION_ARGS);
+PGDLLEXPORT Datum plr_validator(PG_FUNCTION_ARGS);
+extern void PLR_CLEANUP;
+extern void plr_init(void);
+extern void plr_load_modules(void);
+extern void load_r_cmd(const char *cmd);
+extern SEXP call_r_func(SEXP fun, SEXP rargs, SEXP rho);
 
 /* argument and return value conversion functions */
-PGDLLEXPORT SEXP pg_scalar_get_r(Datum dvalue, Oid arg_typid, FmgrInfo arg_out_func);
-PGDLLEXPORT SEXP pg_array_get_r(Datum dvalue, FmgrInfo out_func, int typlen, bool typbyval, char typalign);
-PGDLLEXPORT SEXP pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function);
-PGDLLEXPORT SEXP pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc);
-PGDLLEXPORT Datum r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo);
-PGDLLEXPORT Datum get_datum(SEXP rval, Oid typid, Oid typelem, FmgrInfo in_func, bool *isnull);
-PGDLLEXPORT Datum get_scalar_datum(SEXP rval, Oid result_typ, FmgrInfo result_in_func, bool *isnull);
+extern SEXP pg_scalar_get_r(Datum dvalue, Oid arg_typid, FmgrInfo arg_out_func);
+extern SEXP pg_array_get_r(Datum dvalue, FmgrInfo out_func, int typlen, bool typbyval, char typalign);
+#ifdef HAVE_WINDOW_FUNCTIONS
+extern SEXP pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function);
+#endif
+extern SEXP pg_tuple_get_r_frame(int ntuples, HeapTuple *tuples, TupleDesc tupdesc);
+extern Datum r_get_pg(SEXP rval, plr_function *function, FunctionCallInfo fcinfo);
+extern Datum get_datum(SEXP rval, Oid typid, Oid typelem, FmgrInfo in_func, bool *isnull);
+extern Datum get_scalar_datum(SEXP rval, Oid result_typ, FmgrInfo result_in_func, bool *isnull);
 
 /* Postgres support functions installed into the R interpreter */
-PGDLLEXPORT void throw_pg_notice(const char **msg);
+PGDLLEXPORT void throw_pg_log(int* elevel, const char **msg);
 PGDLLEXPORT SEXP plr_quote_literal(SEXP rawstr);
 PGDLLEXPORT SEXP plr_quote_ident(SEXP rawstr);
 PGDLLEXPORT SEXP plr_SPI_exec(SEXP rsql);
@@ -570,15 +554,15 @@ PGDLLEXPORT Datum plr_set_display(PG_FUNCTION_ARGS);
 PGDLLEXPORT Datum plr_get_raw(PG_FUNCTION_ARGS);
 
 /* Postgres backend support functions */
-PGDLLEXPORT void compute_function_hashkey(FunctionCallInfo fcinfo,
+extern void compute_function_hashkey(FunctionCallInfo fcinfo,
 									 Form_pg_proc procStruct,
 									 plr_func_hashkey *hashkey);
-PGDLLEXPORT void plr_HashTableInit(void);
-PGDLLEXPORT plr_function *plr_HashTableLookup(plr_func_hashkey *func_key);
-PGDLLEXPORT void plr_HashTableInsert(plr_function *function,
+extern void plr_HashTableInit(void);
+extern plr_function *plr_HashTableLookup(plr_func_hashkey *func_key);
+extern void plr_HashTableInsert(plr_function *function,
 								plr_func_hashkey *func_key);
-PGDLLEXPORT void plr_HashTableDelete(plr_function *function);
-PGDLLEXPORT char *get_load_self_ref_cmd(Oid funcid);
-PGDLLEXPORT void perm_fmgr_info(Oid functionId, FmgrInfo *finfo);
+extern void plr_HashTableDelete(plr_function *function);
+extern char *get_load_self_ref_cmd(Oid langOid);
+extern void perm_fmgr_info(Oid functionId, FmgrInfo *finfo);
 
 #endif   /* PLR_H */

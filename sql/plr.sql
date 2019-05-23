@@ -65,17 +65,17 @@ select rbool('f');
 select rbool(NULL);
 
 
-CREATE OR REPLACE FUNCTION rfloat4(f float4) RETURNS float4 AS $$
-return (as.numeric(f))
+CREATE OR REPLACE FUNCTION rfloat(inout f anyelement, out isnull boolean, out isna boolean, out isnan boolean) AS $$
+  list(as.numeric(f), is.null(f), is.na(f), is.nan(f))
 $$ LANGUAGE plr;
-select rfloat4(1::int4);
-select rfloat4(NULL);
-
-CREATE OR REPLACE FUNCTION rfloat8(f float8) RETURNS float8 AS $$
-return (as.numeric(f))
-$$ LANGUAGE plr;
-select rfloat8(1::float8);
-select rfloat8(NULL);
+select rfloat(1::int4);
+select rfloat(1::float4);
+select rfloat(NULL::float4);
+select rfloat('NaN'::float4);
+select rfloat(1::float8);
+select rfloat(NULL::float8);
+select rfloat('NaN'::float8);
+select rfloat(1); -- numeric
 
 
 --
@@ -129,7 +129,18 @@ select sprintf('%s is %s feet tall', 'Sven', '7');
 --
 -- test aggregates
 --
-create table foo(f0 int, f1 text, f2 float8) with oids;
+do language plpgsql $body$
+declare
+  version_12plus bool;
+begin
+  select current_setting('server_version_num')::integer >= 120000 into version_12plus;
+  if(version_12plus) then
+    create table foo(f0 int, f1 text, f2 float8);
+  else
+    execute $$create table foo(f0 int, f1 text, f2 float8) with oids;$$;
+  end if;
+end
+$body$;
 insert into foo values(1,'cat1',1.21);
 insert into foo values(2,'cat1',1.24);
 insert into foo values(3,'cat1',1.18);
@@ -198,7 +209,16 @@ select test_dta2();
 
 -- generates expected error
 create or replace function test_dia1() returns int[] as 'as.data.frame(array(letters[1:10], c(2,5)))' language 'plr';
-select test_dia1() as error;
+create or replace function test_dia1_wrap() returns text as $body$
+begin
+  select test_dia1() as error;
+  return 'failed';
+exception
+  when invalid_text_representation then
+    return 'ok';
+end;
+$body$ language plpgsql;
+select test_dia1_wrap();
 
 create or replace function test_dtup() returns setof record as 'data.frame(letters[1:10],1:10)' language 'plr';
 select * from test_dtup() as t(f1 text, f2 int);
@@ -260,7 +280,11 @@ select test_spi_prep('select oid, typname from pg_type where typname = $1 or typ
 create or replace function test_spi_execp(text, text, text) returns setof record as 'pg.spi.execp(pg.reval(arg1), list(arg2,arg3))' language 'plr';
 select * from test_spi_execp('sp','oid','text') as t(typeid oid, typename name);
 
-create or replace function test_spi_lastoid(text) returns text as 'pg.spi.exec(arg1); pg.spi.lastoid()/pg.spi.lastoid()' language 'plr';
+create or replace function test_spi_lastoid(text) returns text as $$
+  version_12plus <- pg.spi.exec("select current_setting('server_version_num')::integer < 120000")
+  pg.spi.exec(arg1)
+  ifelse(version_12plus, pg.spi.lastoid()/pg.spi.lastoid(), 1)
+$$ language 'plr';
 select test_spi_lastoid('insert into foo values(10,''cat3'',3.333)') as "ONE";
 
 --
@@ -384,7 +408,6 @@ drop trigger footrig on foo;
 create or replace function foonotice() returns trigger as '
 msg <- paste(pg.tg.name,pg.tg.relname,pg.tg.when,pg.tg.level,pg.tg.op,pg.tg.args[1],pg.tg.args[2])
 pg.thrownotice(msg)
-return(NULL)
 ' language plr;
 
 create trigger footrig after insert or update or delete on foo for each row execute procedure foonotice();
