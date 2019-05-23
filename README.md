@@ -14,7 +14,7 @@
 - GPL V2 see [LICENSE](LICENSE) for details
 
 ### Changes
-- See [changelog](CHANGELOG.md) for release notes for latest docs
+- See [changelog](changelog.md) for release notes for latest docs
 
 #### Installation:
 - See [installation](userguide.md#installation) for the most up-to-date instructions.
