@@ -7,31 +7,28 @@ clone_depth: 1
 environment:
   PGUSER: postgres
   PGPASSWORD: Password12!
-  rversion: 3.5.3
+  rversion: 3.6.0
   matrix:
   - pg: master
     PlatformToolset: v141
     configuration: Debug
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - pg: 9.3.25-1
-    PlatformToolset: Windows7.1SDK
-  - pg: 9.4.21-1
+  - pg: 9.4.22-1
     PlatformToolset: v120
-  - pg: 9.5.16-1
+  - pg: 9.5.17-1
     PlatformToolset: v120
-  - pg: 9.6.12-1
+  - pg: 9.6.13-1
     PlatformToolset: v120
-  - pg: 10.7-1
+  - pg: 10.8-1
     PlatformToolset: v120
-  - pg: 11.2-1
+  - pg: 11.3-1
     PlatformToolset: v140
 matrix:
   allow_failures:
     - pg: master
-    - pg: 9.3.25-1
   exclude:
     - platform: x86
-      pg: 11.2-1
+      pg: 11.3-1
       PlatformToolset: v140
     - platform: x86
       pg: master
