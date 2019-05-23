@@ -1,3 +1,51 @@
+# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+
+## [Unreleased]
+### Added
+- Accept composite argument type. [@ikasou](https://github.com/ikasou)
+- R can pass to PG arrays of any dimensions.
+
+### Changed
+- Major duplicate code removal in R to PG conversion.
+- Use *Keep a Changelog* format
+
+## [8.5] - 2019-05-23
+### Added
+- PostgreSQL 12 support. [@davecramer](https://github.com/davecramer)
+- Inline language handler and basic syntax checking validator.
+- Multiple OUT arguments / return RECORD.
+- pg.throwlog & pg.throwwarning (#9).
+
+### Changed
+- Streamline arguments list building in plr_convertargs.
+- throw_pg_notice renamed to throw_pg_log that takes level as well.
+- Checked whether argument converts to float successfully, use NaN
+  otherwise. Affects PostgreSQL < 11 on Windows (platform toolset v120
+  and below).
+
+### Fixed
+- REALSXP vector/array to numeric[] conversion.
+
+## [8.4] - 2018-12-11 [Skipped]
+### Added
+- AppVeyor build artifacts & CodeCov coverage.
+- Changelog and readme in Markdown.
+
+### Changed
+- No need for R_HOME on Windows (provided registry setting is correct).
+- Special case optimization for window functions with unbounded frame (#18).
+- User guide minor cleanup.
+
+### Removed
+- SGML docs.
+
+### Fixed
+- Safeguard function body parsing to prevent possible backend crash.
+- r_typenames() tolerates non-canonical table names.
+
 #### CHANGE LOG: 8.3.0.17 TO 8.3.0.18
 - Internal code changes to accommodate PostgreSQL V11 internal API Changes
 
@@ -329,3 +377,7 @@ Documentation:
 - Improve docs by moving "overview" to first, and renaming and improving old "intro", new "install" chapter.
 - References to arg[] changed to _arg and tip added.
 - Updated documentation for 3D array support.
+
+[Unreleased]: https://github.com/postgres-plr/plr/compare/299794e..HEAD
+[8.5]: https://github.com/postgres-plr/plr/compare/c42eb9c..299794e
+[8.4]: https://github.com/postgres-plr/plr/compare/REL8_3_0_18...c42eb9c
