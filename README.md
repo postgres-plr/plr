@@ -1,5 +1,9 @@
 ### PL/R - PostgreSQL support for R as a procedural language (PL)
-[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/postgres-plr/plr)](https://ci.appveyor.com/project/davecramer/plr-daun5) [![Travis build Status](https://travis-ci.org/postgres-plr/plr.png)](https://travis-ci.org/postgres-plr/plr) [![Code coverage](https://img.shields.io/codecov/c/github/postgres-plr/plr.svg?maxAge=2592000)](https://codecov.io/github/postgres-plr/plr)
+[![GitHub license](https://img.shields.io/github/license/postgres-plr/plr.svg?cacheSeconds=2592000)](https://github.com/postgres-plr/plr/blob/master/LICENSE)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/postgres-plr/plr?svg=true)](https://ci.appveyor.com/project/davecramer/plr-daun5 "Get your fresh Windows build here!")
+[![Travis build Status](https://travis-ci.org/postgres-plr/plr.png)](https://travis-ci.org/postgres-plr/plr)
+[![Code coverage](https://img.shields.io/codecov/c/github/postgres-plr/plr.svg?logo=codecov&cacheSeconds=2592000)](https://codecov.io/github/postgres-plr/plr)
+[![Chat on Slack](https://img.shields.io/badge/Slack-chat-orange.svg?logo=slack&cacheSeconds=2592000)](https://postgresteam.slack.com/messages/CJQUZ1475/ "Join the conversation!")
 
  Copyright (c) 2003-2018 by Joseph E. Conway ALL RIGHTS RESERVED
 
