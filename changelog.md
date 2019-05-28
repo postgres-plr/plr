@@ -1,43 +1,35 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 ### Added
 - Accept composite argument type. [@ikasou](https://github.com/ikasou)
-- R can pass to PG arrays of any dimensions.
 
 ### Changed
+- R can pass to PG arrays of any dimensions.
 - Major duplicate code removal in R to PG conversion.
-- Use *Keep a Changelog* format
 
-## [8.5] - 2019-05-23
+## [8.4] - 2019-05-28
 ### Added
 - PostgreSQL 12 support. [@davecramer](https://github.com/davecramer)
 - Inline language handler and basic syntax checking validator.
 - Multiple OUT arguments / return RECORD.
 - pg.throwlog & pg.throwwarning (#9).
+- AppVeyor build artifacts & CodeCov coverage.
 
 ### Changed
+- No need for R_HOME on Windows (provided registry setting is correct).
+- Special case optimization for window functions with unbounded frame (#18).
+- User guide and changelog converted to Markdown.
 - Streamline arguments list building in plr_convertargs.
 - throw_pg_notice renamed to throw_pg_log that takes level as well.
 - Checked whether argument converts to float successfully, use NaN
   otherwise. Affects PostgreSQL < 11 on Windows (platform toolset v120
   and below).
-
-### Fixed
 - REALSXP vector/array to numeric[] conversion.
-
-## [8.4] - 2018-12-11 [Skipped]
-### Added
-- AppVeyor build artifacts & CodeCov coverage.
-- Changelog and readme in Markdown.
-
-### Changed
-- No need for R_HOME on Windows (provided registry setting is correct).
-- Special case optimization for window functions with unbounded frame (#18).
-- User guide minor cleanup.
 
 ### Removed
 - SGML docs.
@@ -378,6 +370,5 @@ Documentation:
 - References to arg[] changed to _arg and tip added.
 - Updated documentation for 3D array support.
 
-[Unreleased]: https://github.com/postgres-plr/plr/compare/299794e..HEAD
-[8.5]: https://github.com/postgres-plr/plr/compare/c42eb9c..299794e
-[8.4]: https://github.com/postgres-plr/plr/compare/REL8_3_0_18...c42eb9c
+[Unreleased]: https://github.com/postgres-plr/plr/compare/REL8_4..HEAD
+[8.4]: https://github.com/postgres-plr/plr/compare/REL8_3_0_18...REL8_4
