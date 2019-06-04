@@ -1,5 +1,3 @@
--- keep this in sync with the plr.sql.in legacy install file
-
 CREATE FUNCTION plr_call_handler()
 RETURNS LANGUAGE_HANDLER
 AS 'MODULE_PATHNAME' LANGUAGE C;

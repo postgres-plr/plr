@@ -82,7 +82,6 @@
       <Command>$(mingw)$(PlatformArchitecture)\bin\gendef.exe - "$(R_HOME)\bin\$(rbin)\R.dll" &gt; R$(PlatformTarget).def
 lib /def:R$(PlatformTarget).def /out:R$(PlatformTarget).lib /MACHINE:$(PlatformTarget)
 if "%CI%"=="" ( if not exist data "$(pgroot)\bin\initdb" -D data )
-if not exist plr.sql "$(sed)" -e "s#MODULE_PATHNAME#$libdir/plr#" plr.sql.in &gt; plr.sql
 </Command>
       <Outputs>R$(PlatformTarget).lib</Outputs>
       <Message>Generate R import library</Message>
