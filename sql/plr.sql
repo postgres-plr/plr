@@ -1,10 +1,5 @@
---
--- first, define the language and functions.  Turn off echoing so that expected file
--- does not depend on contents of plr.sql.
---
-\set ECHO none
-\i plr.sql
-\set ECHO all
+-- install extension
+create extension plr;
 
 -- make sure we get the notices
 set client_min_messages to notice;
