@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - R can pass to PG arrays of any dimensions.
 - Major duplicate code removal in R to PG conversion.
 
+##[8.5] - 2019-06-04
+- fix: create extension did not work due to an error the plr.control file.
+
 ## [8.4] - 2019-05-28
 ### Added
 - PostgreSQL 12 support. [@davecramer](https://github.com/davecramer)

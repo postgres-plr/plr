@@ -33,7 +33,7 @@
 #ifndef PLR_H
 #define PLR_H
 
-#define PLR_VERSION		"8.4"
+#define PLR_VERSION		"8.5"
 
 #include "postgres.h"
 
