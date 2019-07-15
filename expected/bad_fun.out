@@ -8,7 +8,7 @@ $BODY$
 $BODY$
 LANGUAGE plr;
 ERROR:  R interpreter parse error
-DETAIL:  R parse error caught in "
+DETAIL:  R parse error caught in "{
   deadbeef <- function(,bad) {}
   42
-".
+}".
