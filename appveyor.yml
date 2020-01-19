@@ -1,8 +1,6 @@
 image: Visual Studio 2015
 configuration: Release
-platform:
-  - x86
-  - x64
+platform: x64
 clone_depth: 1
 environment:
   PGUSER: postgres
@@ -13,10 +11,11 @@ environment:
     PlatformToolset: v141
     configuration: Debug
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - pg: 9.4.22-1
-    PlatformToolset: v120
   - pg: 9.5.17-1
     PlatformToolset: v120
+  - pg: 12.1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - pg: 9.6.13-1
     PlatformToolset: v120
   - pg: 10.8-1
@@ -26,12 +25,6 @@ environment:
 matrix:
   allow_failures:
     - pg: master
-  exclude:
-    - platform: x86
-      pg: 11.3-1
-      PlatformToolset: v140
-    - platform: x86
-      pg: master
 
 init: # Make %x64% available for caching
 - if %PLATFORM%==x64 ( set pf=%ProgramFiles%&& set x64=-x64) else set pf=%ProgramFiles(x86)%
