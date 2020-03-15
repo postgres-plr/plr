@@ -60,6 +60,55 @@ new data types.
 
 ## Installation
 
+All of the following presume that you have installed R before starting.
+From within R you can find R_HOME with ```R.home(component="home")```
+
+### Redhat/Centos Family
+
+This presumes you installed PostgreSQL using the PGDG repositories found [here](https://www.postgresql.org/download/linux/redhat/)
+
+```bash
+yum install plr-nn
+```
+
+Where nn is the major version number such as 10 for PostgreSQL version 10.x
+
+To set R_HOME for use by PostgreSQL.
+
+First we need to customize the systemd service
+
+```bash
+systemctl edit postgresql-nn.service
+```
+
+again where nn is the major version of PostgreSQL installed on the system
+
+Add the following to this file
+
+`
+[Service]
+Environment=R_HOME=<The location of R_HOME found using `R.home(component="home")` from within R>
+` 
+
+Now restart PostgreSQL using
+
+```bash
+systemctl restart postgresql-nn
+```
+
+### Debian deriviatives
+
+This presumes you installed PostgreSQL using the PGDG repositories found [here](https://www.postgresql.org/download/linux/debian/)
+
+```bash
+apt-get install postgresql-nn-plr
+```
+
+In the `/etc/postgresql/nn/main` directory there is a file named environment. Edit this file and add a line with
+`R_HOME=<The location of R_HOME found using R.home(component="home") from within R>`
+
+### Compiling from source
+
 If you are going to compile PostgreSQL from the source, use the following commands from the untared
 and unzipped file downloaded from [http://www.postgresql.org/ftp/source/](http://www.postgresql.org/ftp/source/):
 
