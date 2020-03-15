@@ -85,11 +85,10 @@ again where nn is the major version of PostgreSQL installed on the system
 
 Add the following to this file
 
-`
+```
 [Service]
-
-Environment=R_HOME=<The location of R_HOME found using `R.home(component="home")`>
-` 
+Environment=R_HOME=<The location of R_HOME found using R.home(component="home")>
+```
 
 Now restart PostgreSQL using
 
