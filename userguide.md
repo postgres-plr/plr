@@ -87,7 +87,8 @@ Add the following to this file
 
 `
 [Service]
-Environment=R_HOME=<The location of R_HOME found using `R.home(component="home")` from within R>
+
+Environment=R_HOME=<The location of R_HOME found using `R.home(component="home")`>
 ` 
 
 Now restart PostgreSQL using
@@ -104,8 +105,10 @@ This presumes you installed PostgreSQL using the PGDG repositories found [here](
 apt-get install postgresql-nn-plr
 ```
 
-In the `/etc/postgresql/nn/main` directory there is a file named environment. Edit this file and add a line with
-`R_HOME=<The location of R_HOME found using R.home(component="home") from within R>`
+In the `/etc/postgresql/nn/main` directory there is a file named environment.
+Edit this file and add the following:
+ 
+`R_HOME=<The location of R_HOME found using R.home(component="home")>`
 
 ### Compiling from source
 
