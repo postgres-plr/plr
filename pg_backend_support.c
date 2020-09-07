@@ -119,7 +119,7 @@ plr_HashTableInit(void)
 	ctl.entrysize = sizeof(plr_HashEnt);
 
 // specifying the hash function has been deprecated since 12
-#if (PG_VERSION_NUM >= 120000)
+#if (PG_VERSION_NUM <= 120000)
 	ctl.hash = tag_hash;
 #endif
 
