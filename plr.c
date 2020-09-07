@@ -873,9 +873,9 @@ plr_func_handler(PG_FUNCTION_ARGS)
 	SEXP			rvalue;
 	Datum			retval;
 #ifdef HAVE_WINDOW_FUNCTIONS
-	WindowObject	winobj;
+	WindowObject	winobj = NULL;   	//set to NULL to silence compiler warnings
 	char			internal_env[PLR_WINDOW_ENV_NAME_MAX_LENGTH];
-	int64			current_row;
+	int64			current_row = -1;
 	int				check_err;
 #endif
 	ERRORCONTEXTCALLBACK;
