@@ -13,23 +13,21 @@ environment:
     PlatformToolset: v141
     configuration: Debug
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - pg: 9.4.22-1
+  - pg: 9.5.23-1
     PlatformToolset: v120
-  - pg: 9.5.17-1
+  - pg: 9.6.19-1
     PlatformToolset: v120
-  - pg: 9.6.13-1
+  - pg: 10.14-1
     PlatformToolset: v120
-  - pg: 10.8-1
-    PlatformToolset: v120
-  - pg: 11.3-1
+  - pg: 11.9-1
     PlatformToolset: v140
+  - pg: 12.4-1
+    PlatformToolset: v141
+  
 matrix:
   allow_failures:
     - pg: master
   exclude:
-    - platform: x86
-      pg: 11.3-1
-      PlatformToolset: v140
     - platform: x86
       pg: master
 
