@@ -303,7 +303,8 @@ plr_validator(PG_FUNCTION_ARGS)
 	Datum			prosrcdatum;
 	HeapTuple		procTup;
 	bool			isnull;
-	char*			proc_source;
+	char		   *proc_source,
+				   *body;
 	Oid funcoid = PG_GETARG_OID(0);
 
 	if (!check_function_bodies || !CheckFunctionValidatorAccess(fcinfo->flinfo->fn_oid, funcoid))
@@ -326,9 +327,15 @@ plr_validator(PG_FUNCTION_ARGS)
 	if (!plr_pm_init_done)
 		plr_init();
 
-	plr_parse_func_body(proc_source);
-
+	body = (char *) palloc(strlen(proc_source) + 3); /* {}\x00 */
+	if (NULL == body)
+		ereport(ERROR,
+				(errcode(ERRCODE_OUT_OF_MEMORY),
+				 errmsg("out of memory")));
+	sprintf(body, "{%s}", proc_source);
 	pfree(proc_source);
+	plr_parse_func_body(body);
+	pfree(body);
 
 	PG_RETURN_VOID();
 }
