@@ -117,11 +117,21 @@ plr_HashTableInit(void)
 	memset(&ctl, 0, sizeof(ctl));
 	ctl.keysize = sizeof(plr_func_hashkey);
 	ctl.entrysize = sizeof(plr_HashEnt);
+
+// specifying the hash function has been deprecated since 12
+#if (PG_VERSION_NUM < 120000)
 	ctl.hash = tag_hash;
+
 	plr_HashTable = hash_create("PLR function cache",
 								FUNCS_PER_USER,
 								&ctl,
 								HASH_ELEM | HASH_FUNCTION);
+#else
+	plr_HashTable = hash_create("PLR function cache",
+								FUNCS_PER_USER,
+								&ctl,
+								HASH_ELEM | HASH_BLOBS);
+#endif
 }
 
 plr_function *
