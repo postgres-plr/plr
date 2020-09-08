@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [8.5]
 ### Added
 - Accept composite argument type. [@ikasou](https://github.com/ikasou)
 
@@ -13,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Major duplicate code removal in R to PG conversion.
 
 ## [8.4] - 2019-05-28
+### Fixed
+- pg12 deprecated setting the hash function directly, pg13 removed it. This was fixed
+- wrap functions in {} for validation only fixes issue #65
+
 ### Added
 - PostgreSQL 12 support. [@davecramer](https://github.com/davecramer)
 - Inline language handler and basic syntax checking validator.
