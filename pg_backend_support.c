@@ -121,12 +121,17 @@ plr_HashTableInit(void)
 // specifying the hash function has been deprecated since 12
 #if (PG_VERSION_NUM < 120000)
 	ctl.hash = tag_hash;
-#endif
 
 	plr_HashTable = hash_create("PLR function cache",
 								FUNCS_PER_USER,
 								&ctl,
 								HASH_ELEM | HASH_FUNCTION);
+#else
+	plr_HashTable = hash_create("PLR function cache",
+								FUNCS_PER_USER,
+								&ctl,
+								HASH_ELEM | HASH_BLOBS);
+#endif
 }
 
 plr_function *
