@@ -5,10 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [8.4.0.1]
 ### Added
 - Accept composite argument type. [@ikasou](https://github.com/ikasou)
 
 ### Changed
+- Internal change to postgres api required code change. No noticeable change to users
 - R can pass to PG arrays of any dimensions.
 - Major duplicate code removal in R to PG conversion.
 
