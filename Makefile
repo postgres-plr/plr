@@ -1,8 +1,8 @@
 # location of R library
 
 ifdef R_HOME
-r_libdir1x = ${R_HOME}/bin
-r_libdir2x = ${R_HOME}/lib
+r_libdir1x = ${R_HOME}/bin${R_ARCH}
+r_libdir2x = ${R_HOME}/lib${R_ARCH}
 # location of R includes
 r_includespec = -I${R_HOME}/include
 rhomedef = ${R_HOME}
