@@ -1,0 +1,59 @@
+name: plr CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PG: ${{ matrix.pg }}
+    strategy:
+      matrix:
+        pg: [13, 12, 11, 10, 9.6, 9.5]
+        include:
+          - pg: 13
+          - pg: 12
+          - pg: 11
+          - pg: 10
+          - pg: 9.6
+          - pg: 9.5
+
+    steps:
+      - name: Echo site details
+        run: echo PG $PG
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Before Script
+        run: |
+          echo Building plr with PostgreSQL $PG
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update -qq
+          sudo apt-get install -qq r-base-dev acl
+          sudo /etc/init.d/postgresql stop
+          sudo apt-get remove --purge postgresql\*
+          sudo rm -rf /etc/postgresql /var/lib/postgresql
+          sudo apt-get install postgresql-$PG
+          sudo apt-get install postgresql-server-dev-$PG
+          echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/$PG/main/pg_hba.conf > /dev/null
+          # Builds under "runner"
+          # Github Actions require elevated priviledges
+          sudo setfacl -Rm u:postgres:rwx,d:u:runner:rwx /home/runner
+          sudo pg_ctlcluster $PG main reload
+
+      - name: Script
+        run: |
+          sudo pg_lsclusters
+          export USE_PGXS=1
+          SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
+          # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
+          sudo USE_PGXS=1 make install
+          /usr/lib/postgresql/$PG/bin/pg_config
+          psql --version
+          make installcheck PGUSER=postgres || (cat regression.diffs && false)
+
+      - name: After Success
+        # success() returns true, when none of the previous steps have failed or been canceled.
+        if: ${{ success() }}
+        # Uploads code coverage to codecov.io
+        run: bash <(curl -s https://codecov.io/bash)
