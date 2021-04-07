@@ -1,17 +1,18 @@
 diff --git a/src/tools/msvc/Mkvcbuild.pm b/src/tools/msvc/Mkvcbuild.pm
-index a083ac7..fcf44b7 100644
+index a184404e21..bedbd93ed2 100644
 --- a/src/tools/msvc/Mkvcbuild.pm
 +++ b/src/tools/msvc/Mkvcbuild.pm
-@@ -48,7 +48,7 @@ my @contrib_excludes = (
- 	'ltree_plpython',  'pgcrypto',
- 	'sepgsql',         'brin',
- 	'test_extensions', 'test_pg_dump',
--	'snapshot_too_old');
-+	'snapshot_too_old', 'plr');
+@@ -51,7 +51,8 @@ my @contrib_excludes = (
+	'pgcrypto',         'sepgsql',
+	'brin',             'test_extensions',
+	'test_misc',        'test_pg_dump',
+-	'snapshot_too_old', 'unsafe_tests');
++	'snapshot_too_old', 'unsafe_tests',
++	'plr');
  
  # Set of variables for frontend modules
  my $frontend_defines = { 'initdb' => 'FRONTEND' };
-@@ -463,6 +463,16 @@ sub mkvcbuild
+@@ -479,6 +480,16 @@ sub mkvcbuild
  	my $mf = Project::read_file('contrib/pgcrypto/Makefile');
  	GenerateContribSqlFiles('pgcrypto', $mf);
  
@@ -28,7 +29,7 @@ index a083ac7..fcf44b7 100644
  	foreach my $subdir ('contrib', 'src/test/modules')
  	{
  		opendir($D, $subdir) || croak "Could not opendir on $subdir!\n";
-@@ -1011,6 +1021,15 @@ sub GenerateContribSqlFiles
+@@ -1035,6 +1046,15 @@ sub GenerateContribSqlFiles
  			}
  		}
  	}
@@ -45,10 +46,10 @@ index a083ac7..fcf44b7 100644
  }
  
 diff --git a/src/tools/msvc/vcregress.pl b/src/tools/msvc/vcregress.pl
-index ce5c976..9d3e119 100644
+index d9bac6c3a2..25501eeb2d 100644
 --- a/src/tools/msvc/vcregress.pl
 +++ b/src/tools/msvc/vcregress.pl
-@@ -429,7 +429,7 @@ sub contribcheck
+@@ -467,7 +467,7 @@ sub contribcheck
  {
  	chdir "../../../contrib";
  	my $mstat = 0;
