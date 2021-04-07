@@ -229,7 +229,7 @@ get_lib_pathstr(Oid langOid)
 		uint64		dstlen = pg_hex_dec_len(len - 2);
 		bc = dstlen + VARHDRSZ;	/* maximum possible length */
 		result = palloc0(bc);
-		bc = pg_hex_decode(inputText + 2, len - 2, VARDATA(result), dstlen);
+		bc = pg_hex_decode(raw_path + 2, len - 2, VARDATA(result), dstlen);
 #else
 		bc = (len - 2)/2 + 1;            /* maximum possible length */
 		result = palloc0(bc);
