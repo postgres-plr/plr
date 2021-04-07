@@ -63,7 +63,13 @@
 #include "storage/ipc.h"
 #include "tcop/tcopprot.h"
 #include "utils/array.h"
+
+#if PG_VERSION_NUM >= 14000
+#include "common/hex.h"
+#else
 #include "utils/builtins.h"
+#endif
+
 #if PG_VERSION_NUM >= 80500
 #include "utils/bytea.h"
 #endif
