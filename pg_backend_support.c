@@ -225,7 +225,7 @@ get_lib_pathstr(Oid langOid)
 		char   *result;
 		int		bc;
 		size_t	len = strlen(raw_path);
-#if PG_VERSION_NUM >= 14000
+#if PG_VERSION_NUM >= 140000
 		uint64		dstlen = pg_hex_dec_len(len - 2);
 		bc = dstlen + VARHDRSZ;	/* maximum possible length */
 		result = palloc0(bc);
