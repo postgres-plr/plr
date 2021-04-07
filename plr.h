@@ -66,9 +66,8 @@
 
 #if PG_VERSION_NUM >= 140000
 #include "common/hex.h"
-#else
-#include "utils/builtins.h"
 #endif
+#include "utils/builtins.h"
 
 #if PG_VERSION_NUM >= 80500
 #include "utils/bytea.h"
