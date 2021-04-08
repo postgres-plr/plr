@@ -225,13 +225,12 @@ get_lib_pathstr(Oid langOid)
 		char   *result;
 		int		bc;
 		size_t	len = strlen(raw_path);
-#if PG_VERSION_NUM >= 140000
-		uint64		dstlen = pg_hex_dec_len(len - 2);
-		bc = dstlen + VARHDRSZ;	/* maximum possible length */
-		result = palloc0(bc);
-		bc = pg_hex_decode(raw_path + 2, len - 2, VARDATA(result), dstlen);
-#else
 		bc = (len - 2)/2 + 1;            /* maximum possible length */
+
+#if PG_VERSION_NUM >= 140000
+		result = palloc0(bc);
+		bc = pg_hex_decode(raw_path + 2, len - 2, result, dstlen);
+#else
 		result = palloc0(bc);
 
 		bc = hex_decode(raw_path + 2, len - 2, result);
