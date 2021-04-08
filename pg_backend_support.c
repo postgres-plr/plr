@@ -225,11 +225,16 @@ get_lib_pathstr(Oid langOid)
 		char   *result;
 		int		bc;
 		size_t	len = strlen(raw_path);
-
 		bc = (len - 2)/2 + 1;            /* maximum possible length */
+
+#if PG_VERSION_NUM >= 140000
+		result = palloc0(bc);
+		bc = pg_hex_decode(raw_path + 2, len - 2, result, bc);
+#else
 		result = palloc0(bc);
 
 		bc = hex_decode(raw_path + 2, len - 2, result);
+#endif
 		cooked_path = expand_dynamic_library_name(result);
 	}
 	else
