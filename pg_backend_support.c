@@ -229,7 +229,7 @@ get_lib_pathstr(Oid langOid)
 
 #if PG_VERSION_NUM >= 140000
 		result = palloc0(bc);
-		bc = pg_hex_decode(raw_path + 2, len - 2, result, dstlen);
+		bc = pg_hex_decode(raw_path + 2, len - 2, result, bc);
 #else
 		result = palloc0(bc);
 
