@@ -24,6 +24,7 @@ matrix:
     - pg: master
 
 init: # Make %x64% available for caching
+- ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 - if %PLATFORM%==x64 ( set pf=%ProgramFiles%&& set x64=-x64) else set pf=%ProgramFiles(x86)%
 - set exe=postgresql-%pg%-windows%x64%.exe
 - setx /m exe %exe%
@@ -68,7 +69,10 @@ install:
       }
     }
 
-cache:
+    on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+  cache:
 - '%exe%'
 - R-%rversion%-win.exe
 
@@ -146,3 +150,4 @@ deploy:
       secure: sFXG3dBiC2S9bnHbDfg2fS0OdaxiSr6fGSlMQvQPb0lJGyKM3E5UZum4rik60zyi
    on:
       appveyor_repo_tag: true
+
