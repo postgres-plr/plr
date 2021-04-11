@@ -133,7 +133,11 @@ extern int R_SignalHandlers;
 #endif
 
 #define WARNING		19
+#if PG_VERSION_NUM >= 140000 
+#define ERROR		21
+#else
 #define ERROR		20
+#endif
 
 /* starting in R-2.7.0 this defn was removed from Rdevices.h */
 #ifndef KillAllDevices
