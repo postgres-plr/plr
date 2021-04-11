@@ -132,9 +132,14 @@ extern int R_SignalHandlers;
 #undef WARNING
 #endif
 
+#ifdef PGWARNING
+#define WARNING		PGWARNING
+#else
 #define WARNING		19
-#if PG_VERSION_NUM >= 140000 
-#define ERROR		21
+#endif
+
+#ifdef PGERROR
+#define ERROR		PGERROR
 #else
 #define ERROR		20
 #endif
