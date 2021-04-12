@@ -22,10 +22,10 @@ jobs:
           ./configure
           make
           sudo make install
-          pushd /usr/local/pgsql
-          ./bin/initdb -D data
-          ./bin/pg_ctl -D data -l logfile start
-          popd
+          export PATH=$PATH:/usr/local/pgsql/bin
+          initdb -D data
+          pg_ctl -D data -l logfile start
+          
 
   build:
     runs-on: ubuntu-latest
