@@ -18,13 +18,23 @@ jobs:
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
           git clone https://github.com/postgres/postgres.git
-          cd postgres
+          pushd postgres
           ./configure
           make
           sudo make install
           export PATH=$PATH:/usr/local/pgsql/bin
           initdb -D data
           pg_ctl -D data -l logfile start
+          popd
+
+      - name: Script
+        run: |
+          export USE_PGXS=1
+          SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
+          # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
+          sudo USE_PGXS=1 make install
+          psql --version
+          make installcheck || (cat regression.diffs && false)
           
 
   build:
