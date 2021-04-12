@@ -33,7 +33,7 @@ jobs:
           export PATH=/usr/local/pgsql/bin:$PATH
           SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
           # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
-          sudo USE_PGXS=1; PATH=/usr/local/pgsql/bin:$PATH make install
+          sudo USE_PGXS=1 PATH=/usr/local/pgsql/bin:$PATH make install
           psql --version
           make installcheck || (cat regression.diffs && false)
         env:
