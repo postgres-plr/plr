@@ -29,6 +29,7 @@ jobs:
 
       - name: Script
         run: |
+          pwd
           export PATH=/usr/local/pgsql/bin:$PATH
           which pg_config
           pg_config
