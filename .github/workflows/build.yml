@@ -8,7 +8,7 @@ jobs:
         run: echo building master
 
       - name: Checkout code
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       - name: checkout postgres
         run: |
