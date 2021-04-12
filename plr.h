@@ -63,7 +63,12 @@
 #include "storage/ipc.h"
 #include "tcop/tcopprot.h"
 #include "utils/array.h"
+
+#if PG_VERSION_NUM >= 140000
+#include "common/hex.h"
+#endif
 #include "utils/builtins.h"
+
 #if PG_VERSION_NUM >= 80500
 #include "utils/bytea.h"
 #endif
@@ -127,8 +132,17 @@ extern int R_SignalHandlers;
 #undef WARNING
 #endif
 
+#ifdef PGWARNING
+#define WARNING		PGWARNING
+#else
 #define WARNING		19
+#endif
+
+#ifdef PGERROR
+#define ERROR		PGERROR
+#else
 #define ERROR		20
+#endif
 
 /* starting in R-2.7.0 this defn was removed from Rdevices.h */
 #ifndef KillAllDevices
