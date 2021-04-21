@@ -22,7 +22,7 @@ PG_CPPFLAGS	+= $(r_includespec)
 SRCS		+= plr.c pg_conversion.c pg_backend_support.c pg_userfuncs.c pg_rsupport.c
 OBJS		:= $(SRCS:.c=.o)
 SHLIB_LINK	+= -L$(r_libdir1x) -L$(r_libdir2x) -lR
-DATA		= plr--8.4.1.sql plr--8.4--8.4.1.sql plr--unpackaged--8.4.1.sql
+DATA		= plr--8.4.1.sql plr--8.4--8.4.1.sql plr--unpackaged--8.4.1.sql plr--8.3.0.18--8.4.sql
 REGRESS		= plr bad_fun opt_window do out_args
 
 ifdef USE_PGXS
