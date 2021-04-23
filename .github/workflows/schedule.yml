@@ -1,0 +1,46 @@
+name: plr daily
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '30 5,1 * * *'
+jobs:
+  master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo site details
+        run: echo building master
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: checkout postgres
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq r-base-dev acl bison flex libssl-dev
+          sudo /etc/init.d/postgresql stop
+          sudo apt-get remove --purge postgresql\*
+          sudo rm -rf /etc/postgresql /var/lib/postgresql
+          git clone https://github.com/postgres/postgres.git
+          pushd postgres
+          ./configure
+          make
+          sudo make install
+          export PATH=/usr/local/pgsql/bin:$PATH
+          initdb -D data
+          pg_ctl -D data -l logfile start
+          popd
+
+      - name: Script
+        run: |
+          export USE_PGXS=1
+          export PATH=/usr/local/pgsql/bin:$PATH
+          SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
+          # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
+          sudo USE_PGXS=1 PATH=/usr/local/pgsql/bin:$PATH make install
+          psql --version
+          make installcheck || (cat regression.diffs && false)
+        env:
+          USE_PGXS: 1
+          
+
+  
