@@ -4,7 +4,7 @@ name: plr daily
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '30 7 * * *'
+    - cron:  '30 18 * * *'
 jobs:
   master:
     runs-on: ubuntu-latest
