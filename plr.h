@@ -553,6 +553,10 @@ PGDLLEXPORT void plr_SPI_cursor_close(SEXP cursor_in);
 PGDLLEXPORT void plr_SPI_cursor_move(SEXP cursor_in, SEXP forward_in, SEXP rows_in);
 PGDLLEXPORT SEXP plr_SPI_lastoid(void);
 PGDLLEXPORT void throw_r_error(const char **msg);
+#if PG_VERSION_NUM >= 110000
+PGDLLEXPORT SEXP plr_SPI_commit(void);
+PGDLLEXPORT SEXP plr_SPI_rollback(void);
+#endif
 
 /* Postgres callable functions useful in conjunction with PL/R */
 PGDLLEXPORT Datum plr_version(PG_FUNCTION_ARGS);
