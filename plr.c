@@ -121,6 +121,14 @@ int R_SignalHandlers = 1;  /* Exposed in R_interface.h */
 			"pg.spi.lastoid <-function() " \
 			"{.Call(\"plr_SPI_lastoid\")}"
 #endif
+#if PG_VERSION_NUM >= 110000
+#define SPI_COMMIT_CMD \
+			"pg.spi.commit <-function() " \
+			"{.Call(\"plr_SPI_commit\")}"
+#define SPI_ROLLBACK_CMD \
+			"pg.spi.rollback <-function() " \
+			"{.Call(\"plr_SPI_rollback\")}"
+#endif
 #define SPI_DBDRIVER_CMD \
 			"dbDriver <-function(db_name)\n" \
 			"{return(NA)}"
@@ -228,12 +236,26 @@ PG_FUNCTION_INFO_V1(plr_call_handler);
 Datum
 plr_call_handler(PG_FUNCTION_ARGS)
 {
+
+#if PG_VERSION_NUM >= 110000
+	bool		nonatomic;
+#endif
 	Datum			retval;
+
+#if PG_VERSION_NUM >= 110000
+	nonatomic = fcinfo->context &&
+		IsA(fcinfo->context, CallContext) &&
+		!castNode(CallContext, fcinfo->context)->atomic;
+#endif
 
 	/* save caller's context */
 	plr_caller_context = CurrentMemoryContext;
 
+#if PG_VERSION_NUM >= 110000
+	if (SPI_connect_ext(nonatomic ? SPI_OPT_NONATOMIC : 0) != SPI_OK_CONNECT)
+#else
 	if (SPI_connect() != SPI_OK_CONNECT)
+#endif
 		elog(ERROR, "SPI_connect failed");
 	plr_SPI_context = CurrentMemoryContext;
 	MemoryContextSwitchTo(plr_caller_context);
@@ -572,6 +594,10 @@ plr_load_builtins(Oid langOid)
 		SPI_CURSOR_CLOSE_CMD,
 #if CATALOG_VERSION_NO < 201811201
 		SPI_LASTOID_CMD,
+#endif
+#if PG_VERSION_NUM >= 110000
+		SPI_COMMIT_CMD,
+		SPI_ROLLBACK_CMD,
 #endif
 		SPI_DBDRIVER_CMD,
 		SPI_DBCONN_CMD,
