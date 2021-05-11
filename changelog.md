@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [8.4.0.1]
+## [8.4.2] - 2021-05-10
+### Added
+- Added support for transactions in procedures. [@petere](https://github.com/petere/plr/commit/1b275d1337f724e0330ecc027186a052509260fa)
+
+## [8.4.1]
 ### Added
 - Accept composite argument type. [@ikasou](https://github.com/ikasou)
 
