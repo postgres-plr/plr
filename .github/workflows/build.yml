@@ -13,6 +13,8 @@ jobs:
       - name: checkout postgres
         run: |
           sudo apt-get update -qq
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+          sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
           sudo apt-get install -qq r-base-dev acl bison flex libssl-dev
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
@@ -35,6 +37,7 @@ jobs:
           # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
           sudo USE_PGXS=1 PATH=/usr/local/pgsql/bin:$PATH make install
           psql --version
+          R --version
           make installcheck || (cat regression.diffs && false)
         env:
           USE_PGXS: 1
@@ -68,6 +71,8 @@ jobs:
           sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
           wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
           sudo apt-get update -qq
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+          sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
           sudo apt-get install -qq r-base-dev acl
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
@@ -89,6 +94,7 @@ jobs:
           sudo USE_PGXS=1 make install
           /usr/lib/postgresql/$PG/bin/pg_config
           psql --version
+          R --version
           make installcheck PGUSER=postgres || (cat regression.diffs && false)
 
       - name: After Success

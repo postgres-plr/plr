@@ -11,7 +11,7 @@ environment:
     PlatformToolset: v141
     configuration: Debug
 #try version 4
-    rversion: 4.0.5
+    rversion: 4.1.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - pg: 9.6.13-1
     PlatformToolset: v120
