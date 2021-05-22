@@ -2,8 +2,7 @@
 
 #### PL/R User’s Guide - R Procedural Language
 
-#### Copyright © 2003-2018 Joseph E Conway
-
+#### Copyright © 2003 Joseph E Conway
 
 ## Table of Contents
 
@@ -35,7 +34,13 @@
 
 #### 12. [Trigger Procedures](#trigger-procedures)
 
-#### 13. [License](#license)
+#### 13. [Inline Handler](#inline-handler)
+
+#### 14. [Stored Procedures](#stored-procedures)
+
+#### 15. [Transactions in Stored Procedures](#transactions-in-stored-procedures)
+
+#### 16. [License](#license)
 
 
 
@@ -71,7 +76,7 @@ This presumes you installed PostgreSQL using the PGDG repositories found [here](
 yum install plr-nn
 ```
 
-Where nn is the major version number such as 10 for PostgreSQL version 10.x
+Where nn is the major version number such as 13 for PostgreSQL version 13.x
 
 To set R_HOME for use by PostgreSQL.
 
@@ -106,17 +111,19 @@ apt-get install postgresql-nn-plr
 
 In the `/etc/postgresql/nn/main` directory there is a file named environment.
 Edit this file and add the following:
- 
+
 `R_HOME=<The location of R_HOME found using R.home(component="home")>`
 
 ### Compiling from source
 
-If you are going to compile PostgreSQL from the source, use the following commands from the untared
-and unzipped file downloaded from [http://www.postgresql.org/ftp/source/](http://www.postgresql.org/ftp/source/):
+If you are going to compile R from the source, then do the following:
 
 ```bash
 ./configure --enable-R-shlib --prefix=/opt/postgres_plr && make && make install
 ```
+
+If you are going to compile PostgreSQL from the source, use the following commands from the untared
+and unzipped file downloaded from [http://www.postgresql.org/ftp/source/](http://www.postgresql.org/ftp/source/):
 
 Place source tar file in the contrib dir in the PostgreSQL source tree and untar it. The shared object for the R
 call handler is built and installed in the PostgreSQL library directory via the following commands (starting
@@ -131,8 +138,8 @@ You may explicitly include the path of pg_config to `PATH`, such as
 
 ```bash
 cd plr
-PATH=/usr/pgsql-9.4/bin/:$PATH; USE_PGXS=1 make
-echo ’PATH=/usr/pgsql-9.4/bin/:$PATH; USE_PGXS=1 make install’ | sudo sh
+PATH=/usr/pgsql-13/bin/:$PATH; USE_PGXS=1 make
+echo "PATH=/usr/pgsql-13/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
 ```
 If you want to use git to pull the repository, run the following command before the make command:
 
@@ -148,22 +155,169 @@ cd plr
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
-Win32 - adjust paths according to your own setup, and be sure to restart the PostgreSQL service after
-changing:
 
-In Windows environment:
-```
-R_HOME=C:\Progra~1\R\R-3.5.1
-Path=%PATH%;%R_HOME\x64\bin
-```
 
 In MSYS:
 ```
-export R_HOME=/c/progra~1/R/R-2.5.
-export PATH=$PATH:/c/progra~1/PostgreSQL/8.2/bin
+export R_HOME=/c/progra~1/R/R-4.1.0
+export PATH=$PATH:/c/progra~1/PostgreSQL/13/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
+
+In Mingw, MSYS, or MSYS2:
+
+If R is built and installed using a sub-architecture, as explained in the section Sub-architectures in
+https://cran.r-project.org/doc/manuals/r-release/R-admin.html
+for example, in an R
+```
+R-x.y.z for Windows (32/64 bit)
+```
+that has been downloaded (and installed) from
+[https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
+
+then, include the environment variable R_ARCH.
+For example R_ARCH=/x64 (or R_ARCH=/i386 as appropriate):
+```
+export R_HOME=/c/progra~1/R/R-4.0.4
+export PATH=$PATH:/c/progra~1/PostgreSQL/13/bin
+export R_ARCH=/x64
+USE_PGXS=1 make
+USE_PGXS=1 make install
+```
+
+
+
+### Installing from a Pre-Built "plr"
+
+Win32 - adjust paths according to your own setup, and be sure to restart the PostgreSQL service after
+changing:
+
+In Windows environment (generally):
+```
+R_HOME=C:\Progra~1\R\R-4.1.0
+Path=%PATH%;%R_HOME%\x64\bin
+```
+
+In a Windows environment (in detail), with a PL/R compiled 
+using Microsoft Visual Studio [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest),
+with a PostgreSQL compiled 
+with Microsoft Visual Studio [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads),
+and an R acquired 
+from [https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
+do the following.
+
+
+First, Second, Third, and Fourth:
+
+
+First, download and install PostgreSQL compiled with Microsoft Visual Studio 
+[https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
+Download PL/R compiled using Microsoft Visual Studio 
+[https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest)
+
+Unzip the plr.zip file into a folder, that is called the "unzipped folder".
+If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\13",
+then from the unzipped PL/R folder, place the following 
+
+ * .sql files and the plr.control file, all found in the "share\extension" folder 
+   into "C:\Program Files\PostgreSQL\13\share\extension" folder.
+
+ * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\13\lib" folder.
+
+
+
+Second, install R with the feature checked [x] "Save version number in registry"." 
+See the "Tip" item below.
+
+Second-alternately, still acquire R from the same location
+and choose [ ] "Save version number in registry".
+At a Command Prompt run (and may have to be an Administrator Command Prompt)
+and using wherever your path to R may be, do:
+```
+setx R_HOME "C:\Program Files\R\R-4.1.0" /M
+```
+Second-alternately-again, still acquire R from the same location
+and choose [ ] "Save version number in registry".
+Choose Control Panel -> System -> advanced system settings -> Environment Variables button.
+In the "System variables" area, create the System Variable, called R_HOME.
+Give R_HOME the value of the PATH to the R home,
+for example (without quotes) "C:\Program Files\R\R-4.1.0".
+
+If you forgot to set the R_HOME environment variable (by any method),
+then (eventually) you may get this error:
+```postgresql
+postgres=# CREATE EXTENSION plr;
+CREATE EXTENSION
+postgres=# SELECT r_version();
+ERROR:  environment variable R_HOME not defined
+HINT:  R_HOME must be defined in the environment of the user that starts the postmaster process.
+```
+
+
+Third, put the R.dll in your PATH. This is required, so do the following:
+Control Panel -> System -> Advanced System Settings -> Environment Variables button
+In the "System variables" area, choose the System Variable, called "Path".
+Click on the Edit button.
+Add the R.dll folder to the "Path".
+For example (without quotes), add "C:\Program Files\R\R-4.1.0\bin\x64" 
+or "C:\Program Files\R\R-4.1.0\bin\i386".
+If you are running R version 2.11 or earlier on Windows, the R.dll folder is different;
+instead of "bin\i386" or "bin\x64", it is "bin".
+Note, a 64bit compiled PL/R can only run with a 64bit compiled PostgreSQL.
+A 32bit compiled PL/R can only run with a 32bit compiled PostgreSQL.
+The last 32bit PostgreSQL was version ten(10) from  [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads).
+Of course, you, yourself, may yourself, compile a 32bit PostgreSQL using Microsoft Visual Studio.
+
+Fourth, bounce the PostgreSQL cluster, do:
+
+At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
+Use the service name of whatever service your PostgreSQL is running under.
+```
+net stop   postgresql-x64-13
+```
+Alternately, do the following:
+Control Panel -> Administrative Tools -> Services
+Find postgresql-x64-13 (or whatever service your PostgreSQL is running under).  
+Right click and choose "Stop"
+
+At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
+Use the service name of whatever service your PostgreSQL is running under.
+```
+net start   postgresql-x64-13
+```
+Alternately, do the following:
+Control Panel -> Administrative Tools -> Services
+Find postgresql-x64-13 (or whatever service your PostgreSQL is running under).  
+Right click and choose "Start"
+
+
+
+**Tip** R headers are required. Download and install R prior to building PL/R. R must have been built
+with the `--enable-R-shlib` option when it was configured, in order for the libR shared object library
+to be available.
+
+**Tip:** Additionally, libR must be findable by your runtime linker. On Linux, this involves adding an entry
+in /etc/ld.so.conf for the location of libR (typically $R_HOME/bin or $R_HOME/lib), and then running
+ldconfig. Refer toman ldconfigor its equivalent for your system.
+
+**Tip:** R_HOME must be defined in the environment of the user under which PostgreSQL is started,
+before the postmaster is started. Otherwise PL/R will refuse to load. See plr_environ(), which allows
+examination of the environment available to the PostgreSQL postmaster process.
+
+**Tip:** On the Win32 platform, from a PL/R compiled by Microsoft Visual Studio, and from an R,
+installabled by an installer from [https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/),
+R will consider a registry entry created by the R installer if
+it fails to find R_HOME environment variable. If you choose the installer option ‘Save version number in registry’,
+as explained in ‘Does R use the Registry?’ at [https://cran.r-project.org/bin/windows/base/rw-FAQ.html](https://cran.r-project.org/bin/windows/base/rw-FAQ.html)
+there is no need to set R_HOME on this platform. Be careful removing older version of R as it may take
+away InstallPath entry away from HKLM\SOFTWARE\R-core\R a.k.a. Computer\HKEY_LOCAL_MACHINE\SOFTWARE\R-core\R.
+
+
+
+### In PostgreSQL, Creating the PLR Extension
+
+
 You can use `plr.sql` (which is created in contrib/plr) to create the language and support functions
 in your database of choice:
 
@@ -174,9 +328,9 @@ psql mydatabase < plr.sql
 Alternatively you can create the language manually using SQL commands:
 
 ```postgresql
-CREATE FUNCTION plr_call_handler()
-RETURNS LANGUAGE_HANDLER
-AS ’$libdir/plr’ LANGUAGE C;
+CREATE FUNCTION plr_call_handler() RETURNS language_handler AS
+'$libdir/plr'
+LANGUAGE C;
 
 CREATE LANGUAGE plr HANDLER plr_call_handler;
 ```
@@ -198,25 +352,8 @@ DROP EXTENSION plr;
 **Tip** If a language is installed into `template1`, all subsequently created databases will have the
 language installed automatically.
 
-**Tip** In addition to the documentation, the plr.out.* files in plr/expected are a good source of
-usage examples.
-
-**Tip** R headers are required. Download and install R prior to building PL/R. R must have been built
-with the `--enable-R-shlib` option when it was configured, in order for the libR shared object library
-to be available.
-
-**Tip:** Additionally, libR must be findable by your runtime linker. On Linux, this involves adding an entry
-in /etc/ld.so.conf for the location of libR (typically $R_HOME/bin or $R_HOME/lib), and then running
-ldconfig. Refer toman ldconfigor its equivalent for your system.
-
-**Tip:** R_HOME must be defined in the environment of the user under which PostgreSQL is started,
-beforethe postmaster is started. Otherwise PL/R will refuse to load. See plr_environ(), which allows
-examination of the environment available to the PostgreSQL postmaster process.
-
-**Tip:** On Win32 platform, R will consider a registry entry created by R installer if
-it fails to find R_HOME environment variable. If you accepted installer defaults,
-there is no need to set R_HOME on this platform. Be careful removing older version of R as it may take
-away InstallPath entry away from HKLM\SOFTWARE\R-core\R.
+**Tip** In addition to the documentation, the plr.out.* files in the plr/expected folder 
+are a good source of usage examples.
 
 
 ## Functions and Arguments <a name="functions"></a>
@@ -226,10 +363,9 @@ function assignment. Instead of `myfunc <- function(arguments) { function body }
 of your PL/R function is just `sqlfunction body`
 
 ```postgresql
-CREATE OR REPLACE FUNCTIONfuncname(argument-types)
-RETURNSreturn-typeAS ’
+CREATE OR REPLACE FUNCTION funcname(argument-types) RETURNS return-type AS '
 function body
-’ LANGUAGE ’plr’;
+' LANGUAGE plr;
 ```
 
 The body of the function is simply a piece of R script. When the function is called, the argument values
@@ -237,22 +373,76 @@ are passed as variables `arg1...argN` to the R script. The result is returned fr
 way. For example, a function returning the greater of two integer values could be defined as:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
+CREATE OR REPLACE FUNCTION r_max(integer, integer) RETURNS integer AS '
 if (arg1 > arg2)
-return(arg1)
+  return(arg1)
 else
-return(arg2)
-’ LANGUAGE ’plr’ STRICT;
+  return(arg2)
+' LANGUAGE plr STRICT;
+```
+
+Literal characters in the body of an R function that is withing the body of a PL/R function
+can be writting in double quotes (") or in single quotes (') (both, just like R), except that in PL/R each
+single quote is escaped with a preceding single quote(').  Also, in PostgreSQL functions, a dollar signs may
+distinquish the beginning and end of a string boundary. Some examples follow.
+
+```postgresql
+CREATE OR REPLACE FUNCTION hello() RETURNS text AS '
+return(''Hello'')
+' LANGUAGE plr;
+
+CREATE OR REPLACE FUNCTION hello2() RETURNS text AS '
+return("Hello")
+' LANGUAGE plr;
+
+CREATE OR REPLACE FUNCTION hello3() RETURNS text AS
+$body$
+return('Hello')
+$body$ LANGUAGE plr;
+
+CREATE OR REPLACE FUNCTION hello4() RETURNS text AS
+$body$
+return("Hello")
+$body$ LANGUAGE plr;
+
+SELECT hello();
+
+ hello
+-------
+ Hello
+(1 row)
+
+SELECT hello2();
+
+ hello2
+--------
+ Hello
+(1 row)
+
+SELECT hello3();
+
+ hello3
+--------
+ Hello
+(1 row)
+
+SELECT hello4();
+
+ hello4
+--------
+ Hello
+(1 row)
+
 ```
 
 Starting with PostgreSQL 8.0, arguments may be explicitly named when creating a function. If an argument
 is explicitly named at function creation time, that name will be available to your R script in place of
-the usual ```argNvariable```. For example:
+the usual ```argN variable```. For example:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION sd(vals float8[]) RETURNS float AS ’
+CREATE OR REPLACE FUNCTION sd(vals float8[]) RETURNS float AS '
 sd(vals)
-’ LANGUAGE ’plr’ STRICT;
+' LANGUAGE plr STRICT;
 ```
 
 Starting with PostgreSQL 8.4, a PL/R function may be declared to be a `WINDOW`. In this case, in addition to
@@ -263,18 +453,16 @@ These contain an R vector of all the values of the related argument for the movi
 the current `PARTITION`. For example:
 
 ```postgresql
-CREATE OR REPLACE
-FUNCTION r_regr_slope(float8, float8)
-RETURNS float8 AS
-$BODY$
+CREATE OR REPLACE FUNCTION r_regr_slope(float8, float8, int) RETURNS float8 AS '
 slope <- NA
-y <- farg
-x <- farg
-if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
+y <- farg1
+x <- farg2
+preceding <- arg3
+if (fnumrows == preceding + 1L)
+  try (slope <- lm(y ~ x)$coefficients[2])
 return(slope)
-LANGUAGE plr WINDOW;
+' LANGUAGE plr WINDOW;
 ```
-
 In the preceding example,`farg1` and `farg2` are R vectors containing the current row’s data plus that of
 related rows. The determination as to which rows qualify as related is determined by the frame specification
 of the query at run time. The example also illustrates one of two additional autogenerated arguments.
@@ -285,72 +473,74 @@ is called `prownum`. This argument provides the 1-based row offset of the curren
 In some of the the definitions above, note the clause `STRICT`, which saves us from having to think about
 NULL input values: if a NULL is passed, the function will not be called at all, but will just return a
 NULL result automatically. In a non-strict function, if the actual value of an argument is NULL, the
-corresponding `argN` variable will be set to a `NULLR` object. For example, suppose that we wanted `r_max`
+corresponding `argN` variable will be set to a `NULL R` object. For example, suppose that we wanted `r_max`
 with one null and one non-null argument to return the non-null argument, rather than NULL:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION r_max (integer, integer) RETURNS integer AS ’
+CREATE OR REPLACE FUNCTION r_max(integer, integer) RETURNS integer AS '
 if (is.null(arg1) && is.null(arg2))
-return(NULL)
+  return(NULL)
 if (is.null(arg1))
-return(arg2)
+  return(arg2)
 if (is.null(arg2))
-return(arg1)
+  return(arg1)
 if (arg1 > arg2)
-return(arg1)
-arg
-’ LANGUAGE ’plr’;
+  return(arg1)
+' LANGUAGE plr;
 ```
 
 As shown above, to return a NULL value from a PL/R function, return `NULL`. This can be done whether
 the function is strict or not.
 Composite-type (tuple) arguments are passed to the procedure as R data.frames. The element names of
 the frame are the attribute names of the composite type. If an attribute in the passed row has the NULL
-value, it will appear as an "NA" in the frame. Here is an example:
+value, it will appear as an `NA` in the frame. Here is an example:
 
 ```postgresql
-CREATE TABLE emp (name text, age int, salary numeric(10,2));
-INSERT INTO emp VALUES (’Joe’, 41, 250000.00);
-INSERT INTO emp VALUES (’Jim’, 25, 120000.00);
-INSERT INTO emp VALUES (’Jon’, 35, 50000.00);
-CREATE OR REPLACE FUNCTION overpaid (emp) RETURNS bool AS ’
+CREATE TABLE emp(name text, age int, salary numeric(10,2));
+INSERT INTO emp VALUES ('Joe', 41, 250000.00);
+INSERT INTO emp VALUES ('Jim', 25, 120000.00);
+INSERT INTO emp VALUES ('Jon', 35, 50000.00);
+
+CREATE OR REPLACE FUNCTION overpaid (emp) RETURNS bool AS '
 if (200000 < arg1$salary) {
-return(TRUE)
+  return(TRUE)
 }
 if (arg1$age < 30 && 100000 < arg1$salary) {
-return(TRUE)
+  return(TRUE)
 }
 return(FALSE)
-’ LANGUAGE ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
 SELECT name, overpaid(emp) FROM emp;
-name | overpaid
+
+name  | overpaid
 ------+----------
-Joe | t
-Jim | t
-Jon | f
+Joe   | t
+Jim   | t
+Jon   | f
 (3 rows)
 ```
 
 There is also support for returning a composite-type result value:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION get_emps() RETURNS SETOF emp AS ’
-names <- c("Joe","Jim","Jon")
+CREATE OR REPLACE FUNCTION get_emps() RETURNS SETOF emp AS '
+names <- c(''Joe'',''Jim'',''Jon'')
 ages <- c(41,25,35)
 salaries <- c(250000,120000,50000)
 df <- data.frame(name = names, age = ages, salary = salaries)
 return(df)
-’ LANGUAGE ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select* from get_emps();
-name | age | salary
+SELECT * FROM get_emps();
+
+name  | age | salary
 ------+-----+-----------
-Jim | 41 | 250000.
-Joe | 25 | 120000.
-Jon | 35 | 50000.
+Jim   | 41  | 250000.
+Joe   | 25  | 120000.
+Jon   | 35  | 50000.
 (3 rows)
 ```
 
@@ -362,11 +552,14 @@ be defined with no body, and the arguments will be passed directly to the R func
 For example:
 
 ```postgresql
-create or replace function sd(_float8) returns float as '' language ’plr’;
-select round(sd(’{1.23,1.31,1.42,1.27}’::_float8)::numeric,8);
+CREATE OR REPLACE FUNCTION sd(_float8) RETURNS float AS '
+' LANGUAGE plr;
+
+SELECT round(sd('{1.23,1.31,1.42,1.27}'::_float8)::numeric,8);
+
 round
 ------------
-0.
+0.08180261
 (1 row)
 ```
 
@@ -429,19 +622,21 @@ PostgreSQL function name; see: [R Function Names](#rfunction-names)) can be crea
 function `install_rcmd(text)`. Here is an example:
 
 ```postgresql
-select install_rcmd(’pg.test.install <-function(msg) {print(msg)}’);
+SELECT install_rcmd('pg.test.install <-function(msg) {print(msg)}');
+
 install_rcmd
 --------------
 OK
 (1 row)
 ```
 ```postgresql
-create or replace function pg_test_install(text) returns text as ’
+CREATE OR REPLACE FUNCTION pg_test_install(text) RETURNS text AS '
 pg.test.install(arg1)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select pg_test_install(’hello world’);
+SELECT pg_test_install('hello world');
+
 pg_test_install
 -----------------
 hello world
@@ -459,35 +654,35 @@ the query.
 For example:
 
 ```postgresql
-create table t (f1 int);
-insert into t values (1);
-insert into t values (2);
-insert into t values (3);
+CREATE TABLE t(f1 int);
+INSERT INTO t VALUES (1);
+INSERT INTO t VALUES (2);
+INSERT INTO t VALUES (3);
 ```
 ```postgresql
-create or replace function f1() returns int as ’
-msg <- paste("enter f1, pg.state.firstpass is", pg.state.firstpass)
+CREATE OR REPLACE FUNCTION f1() RETURNS int AS '
+msg <- paste(''enter f1, pg.state.firstpass is '', pg.state.firstpass)
 pg.thrownotice(msg)
 if (pg.state.firstpass == TRUE)
-pg.state.firstpass<<- FALSE
-msg <- paste("exit f1, pg.state.firstpass is", pg.state.firstpass)
+  pg.state.firstpass <<- FALSE
+msg <- paste(''exit f1, pg.state.firstpass is '', pg.state.firstpass)
 pg.thrownotice(msg)
 return(0)
-’ language plr;
+' LANGUAGE plr;
 ```
 ```postgresql
-create or replace function f2() returns int as ’
-msg <- paste("enter f2, pg.state.firstpass is", pg.state.firstpass)
+CREATE OR REPLACE FUNCTION f2() RETURNS int AS '
+msg <- paste(''enter f2, pg.state.firstpass is '', pg.state.firstpass)
 pg.thrownotice(msg)
 if (pg.state.firstpass == TRUE)
-pg.state.firstpass<<- FALSE
-msg <- paste("exit f2, pg.state.firstpass is", pg.state.firstpass)
+  pg.state.firstpass <<- FALSE
+msg <- paste(''exit f2, pg.state.firstpass is '', pg.state.firstpass)
 pg.thrownotice(msg)
 return(0)
-’ language plr;
+' LANGUAGE plr;
 ```
 ```postgresql
-select f1(), f2(), f1 from t;
+SELECT f1(), f2(), f1 FROM t;
 NOTICE: enter f1, pg.state.firstpass is TRUE
 NOTICE: exit f1, pg.state.firstpass is FALSE
 NOTICE: enter f2, pg.state.firstpass is TRUE
@@ -500,33 +695,35 @@ NOTICE: enter f1, pg.state.firstpass is FALSE
 NOTICE: exit f1, pg.state.firstpass is FALSE
 NOTICE: enter f2, pg.state.firstpass is FALSE
 NOTICE: exit f2, pg.state.firstpass is FALSE
-f1 | f2 | f
+
+f1  | f2 | f1
 ----+----+----
-0 | 0 | 1
-0 | 0 | 2
-0 | 0 | 3
+0   | 0  | 1
+0   | 0  | 2
+0   | 0  | 3
 (3 rows)
 ```
 ```postgresql
-create or replace function row_number() returns int as ’
+CREATE OR REPLACE FUNCTION row_number2() RETURNS int AS '
 if (pg.state.firstpass)
 {
-assign("pg.state.firstpass", FALSE, env=.GlobalEnv)
-lclcntr<- 1
+  assign(''pg.state.firstpass'', FALSE, env=.GlobalEnv)
+  lclcntr<- 1
 }
 else
-lclcntr<- plrcounter + 1
-assign("plrcounter", lclcntr, env=.GlobalEnv)
+  lclcntr<- plrcounter + 1
+assign(''plrcounter'', lclcntr, env=.GlobalEnv)
 return(lclcntr)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-SELECT row_number(), f1 from t;
-row_number | f
-------------+----
-1 | 1
-2 | 2
-3 | 3
+SELECT row_number2(), f1 FROM t;
+
+row_number2 | f1
+------------+-----
+1           | 1
+2           | 2
+3           | 3
 (3 rows)
 ```
 
@@ -551,24 +748,26 @@ column names. However, non-numeric columns are **not** converted to factors. If 
 numeric columns converted to factors, a convenience function `pg.spi.factor` (described below)
 is provided.
 
-If a field of a SELECT result is NULL, the target variable for it is set to “NA”. For example:
+If a field of a SELECT result is NULL, the target variable for it is set to `NA`. For example:
 
 ```postgresql
-create or replace function test_spi_tup(text) returns setof record as ’
+CREATE OR REPLACE FUNCTION test_spi_tup(text) RETURNS SETOF record AS '
 pg.spi.exec(arg1)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select * from test_spi_tup(’select oid, NULL::text as nullcol,
-typname from pg_type where typname = ”oid” or typname = ”text”’)
-as t(typeid oid, nullcol text, typename name);
-typeid | nullcol | typename
+SELECT * FROM test_spi_tup('SELECT oid, NULL::text as nullcol,
+typname FROM pg_type WHERE typname = ''oid'' OR typname = ''text''')
+AS t(typeid oid, nullcol text, typename name);
+
+typeid  | nullcol | typename
 --------+---------+----------
-25 | | text
-26 | | oid
+25      |         | text
+26      |         | oid
 (2 rows)
+
 ```
-The NULL values were passed to R as “NA”, and on return to PostgreSQL they were converted back to NULL.
+The NULL values were passed to R as `NA`, and on return to PostgreSQL they were converted back to NULL.
 
 `pg.spi.prepare(character query,integer vector type_vector)`
 
@@ -583,43 +782,43 @@ TYPENAMEOID, where the actual name of the type, in all capitals, is substituted 
 A support function, `load_r_typenames()` must be used to make the predefined global variables
 available for use:
 
-
-
 ```postgresql
-select load_r_typenames();
+SELECT load_r_typenames();
+```
 load_r_typenames
 ------------------
 OK
 (1 row)
-```
+
 Another support function,`r_typenames()` may be used to list the predefined Global variables:
 
 ```postgresql
-select * from r_typenames();
-typename | typeoid
------------------+---------
-ABSTIMEOID | 702
-ACLITEMOID | 1033
+SELECT * FROM r_typenames();
+
+typename    | typeoid
+------------+---------
+ABSTIMEOID  | 702
+ACLITEMOID  | 1033
 ANYARRAYOID | 2277
-ANYOID | 2276
-BITOID | 1560
-BOOLOID | 16
+ANYOID      | 2276
+BITOID      | 1560
+BOOLOID     | 16
 [...]
-TRIGGEROID | 2279
-UNKNOWNOID | 705
-VARBITOID | 1562
-VARCHAROID | 1043
-VOIDOID | 2278
-XIDOID | 28
-(59 rows)
+TRIGGEROID  | 2279
+UNKNOWNOID  | 705
+VARBITOID   | 1562
+VARCHAROID  | 1043
+VOIDOID     | 2278
+XIDOID      | 28
+(159 rows)
 ```
 
 The return value from `pg.spi.prepare` is a query ID to be used in subsequent calls to
 pg.spi.execp. See `spi_execp` for an example.
 
-`pg.spi.execp(external pointer saved_plan,variable listvalue_list)`
+`pg.spi.execp(external pointer saved_plan, variable listvalue_list)`
 
-Execute a query previously prepared with pg.spi.prepare.saved_planis the external pointer
+Execute a query previously prepared with pg.spi.prepare.saved_plan is the external pointer
 returned by `pg.spi.prepare`. If the query references arguments, a `value_list` must be supplied:
 this is an R list of actual values for the plan arguments. It must be the same length as the argument
 type_vector previously given to pg.spi.prepare. Pass `NA` for `value_list` if the query has
@@ -627,114 +826,114 @@ no arguments. The following illustrates the use of `pg.spi.prepare` and `pg.spi.
 without query arguments:
 
 ```postgresql
-create or replace function test_spi_prep(text) returns text as ’
-sp <<- pg.spi.prepare(arg1, c(NAMEOID, NAMEOID));
-print("OK")
-’ language ’plr’;
+CREATE OR REPLACE FUNCTION test_spi_prep(text) RETURNS text AS '
+sp <<- pg.spi.prepare(arg1, c(NAMEOID, NAMEOID))
+print(''OK'')
+' LANGUAGE plr;
 ```
 ```postgresql
-select test_spi_prep(’select oid, typname from pg_type
-where typname = $1 or typname = $2’);
+SELECT test_spi_prep('SELECT oid, typname FROM pg_type
+WHERE typname = $1 OR typname = $2');
+
 test_spi_prep
 ---------------
 OK
 (1 row)
 ```
 ```postgresql
-create or replace function test_spi_execp(text, text, text) returns setof record as ’
+CREATE OR REPLACE FUNCTION test_spi_execp(text, text, text) RETURNS SETOF record AS '
 pg.spi.execp(pg.reval(arg1), list(arg2,arg3))
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select * from test_spi_execp(’sp’,’oid’,’text’) as t(typeid oid, typename name);
-typeid | typename
+SELECT * FROM test_spi_execp('sp','oid','text') AS t(typeid oid, typename name);
+typeid  | typename
 --------+----------
-25 | text
-26 | oid
+25      | text
+26      | oid
 (2 rows)
 ```
 ```postgresql
-create or replace function test_spi_prep(text) returns text as ’
-sp <<- pg.spi.prepare(arg1, NA);
-print("OK")
-’ language ’plr’;
+CREATE OR REPLACE FUNCTION test_spi_prep2(text) RETURNS text AS '
+sp <<- pg.spi.prepare(arg1, NA)
+print(''OK'')
+' LANGUAGE plr;
 ```
 ```postgresql
-select test_spi_prep(’select oid, typname from pg_type
-where typname = ”bytea” or typname = ”text”’);
+SELECT test_spi_prep('SELECT oid, typname FROM pg_type
+WHERE typname = ''bytea'' OR typname = ''text''');
 test_spi_prep
 ---------------
 OK
 (1 row)
 ```
 ```postgresql
-create or replace function test_spi_execp(text) returns setof record as ’
+CREATE OR REPLACE FUNCTION test_spi_execp(text) RETURNS SETOF record AS '
 pg.spi.execp(pg.reval(arg1), NA)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
-typeid | typename
+SELECT * FROM test_spi_execp('sp') AS t(typeid oid, typename name);
+
+typeid  | typename
 --------+----------
-17 | bytea
-25 | text
+17      | bytea
+25      | text
 (2 rows)
 ```
 ```postgresql
-create or replace function test_spi_prep(text) returns text as ’
-sp <<- pg.spi.prepare(arg1);
-print("OK")
-’ language ’plr’;
+CREATE OR REPLACE FUNCTION test_spi_prep(text) RETURNS text AS '
+sp <<- pg.spi.prepare(arg1)
+print(''OK'')
+' LANGUAGE plr;
 ```
 ```postgresql
-select test_spi_prep(’select oid, typname from pg_type
-where typname = ”bytea” or typname = ”text”’);
+SELECT test_spi_prep('SELECT oid, typname FROM pg_type
+WHERE typname = ''bytea'' OR typname = ''text''');
 test_spi_prep
 ---------------
 OK
 (1 row)
 ```
 ```postgresql
-create or replace function test_spi_execp(text) returns setof record as ’
+CREATE OR REPLACE FUNCTION test_spi_execp(text) RETURNS SETOF record AS '
 pg.spi.execp(pg.reval(arg1))
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select * from test_spi_execp(’sp’) as t(typeid oid, typename name);
-typeid | typename
+SELECT * FROM test_spi_execp('sp') AS t(typeid oid, typename name);
+typeid  | typename
 --------+----------
-17 | bytea
-25 | text
+17      | bytea
+25      | text
 (2 rows)
 ```
-
-
 NULL arguments should be passed as individual `NA` values in value_list.
 Except for the way in which the query and its arguments are specified,`pg.spi.execp` works just
 like `pg.spi.exec`.
 
-`pg.spi.cursor_open( character cursor_name,external pointer saved_plan,variable list value_list)`
+`pg.spi.cursor_open(character cursor_name, external pointer saved_plan, variable list value_list)`
 
 Opens a cursor identified by cursor_name. The cursor can then be used to scroll through the results
 of a query plan previously prepared by pg.spi.prepare. Any arguments to the plan should be specified
 in arg values similar to `pg.spi.execp`. Only read-only cursors are supported at the moment.
 
-```
-plan <- pg.spi.prepare(’SELECT * FROM pg_class’);
-cursor_obj <- pg.spi.cursor_open(’my_cursor’,plan);
+```r
+plan <- pg.spi.prepare('SELECT * FROM pg_class');
+cursor_obj <- pg.spi.cursor_open('my_cursor',plan);
 ```
 Returns a cursor object that be be passed to `pg.spi.cursor_fetch`
 
-`pg.spi.cursor_fetch(external pointer cursor,boolean forward,integer rows)`
+`pg.spi.cursor_fetch(external pointer cursor, boolean forward, integer rows)`
 
 Fetches rows from the cursor object previously returned by `pg.spi.cursor_open`. If forward is
-TRUE then the cursor is moved forward to fetch at most the number of rows required by the rows
-parameter. If forward is FALSE then the cursor is moved backwards at most the number of rows
+TRUE, then the cursor is moved forward to fetch at most the number of rows required by the rows
+parameter. If forward is FALSE, then the cursor is moved backwards at most the number of rows
 specified. rows indicates the maximum number of rows that should be returned.
 
-```
-plan <- pg.spi.prepare(’SELECT * FROM pg_class’);
-cursor_obj <- pg.spi.cursor_open(’my_cursor’,plan);
+```r
+plan <- pg.spi.prepare('SELECT * FROM pg_class');
+cursor_obj <- pg.spi.cursor_open('my_cursor',plan);
 data <- pg.spi.cursor_fetch(cursor_obj,TRUE,as.integer(10));
 ```
 Returns a data frame containing the results.
@@ -743,9 +942,9 @@ Returns a data frame containing the results.
 
 Closes a cursor previously opened by `pg.spi.cursor_open`
 
-```
-plan <- pg.spi.prepare(’SELECT * FROM pg_class’);
-cursor_obj <- pg.spi.cursor_open(’my_cursor’,plan);
+```r
+plan <- pg.spi.prepare('SELECT * FROM pg_class');
+cursor_obj <- pg.spi.cursor_open('my_cursor',plan);
 pg.spi.cursor_close(cursor_obj);
 ```
 
@@ -788,17 +987,17 @@ R client, and then easily moved to PL/R for production use.
 `dbDriver(character dvr_name)`
 
 `dbConnect (DBIDriver drv, character user, character password, character host, character dbname,
-            character port,character tty,character options)`
+            character port, character tty, character options)`
 
-`dbSendQuery(DBIConnection conn,character sql)`
+`dbSendQuery(DBIConnection conn, character sql)`
 
 `fetch(DBIResult rs,integer num_rows)`
 
 `dbClearResult(DBIResult rs)`
 
-`dbGetQuery(DBIConnection conn,character sql)`
+`dbGetQuery(DBIConnection conn, character sql)`
 
-`dbReadTable(DBIConnection conn,character name)`
+`dbReadTable(DBIConnection conn, character name)`
 
 `dbDisconnect(DBIConnection conn)`
 
@@ -815,7 +1014,40 @@ The following commands are available to use in PostgreSQL queries to aid in the 
 
 `plr_version()`
 
-Displays PL/R version as a text string.
+that displays the PL/R version x.y (but not the patch version x.y.z) . . .
+```
+SELECT plr_version();
+
+ plr_version
+-------------
+ 8.4
+(1 row)
+```
+
+`r_version()`
+
+that displays R version . . .
+```
+SELECT r_version();
+
+                    r_version
+-------------------------------------------------
+ (platform,x86_64-w64-mingw32)
+ (arch,x86_64)
+ (os,mingw32)
+ (system,"x86_64, mingw32")
+ (status,"")
+ (major,4)
+ (minor,1.0)
+ (year,2021)
+ (month,05)
+ (day,18)
+ ("svn rev",80317)
+ (language,R)
+ (version.string,"R version 4.1.0 (2021-05-18)")
+ (nickname,"Camp Pontanezen")
+(14 rows)
+```
 
 `install_rcmd(text R_code)`
 
@@ -835,13 +1067,13 @@ array of the input parameter type. It can also accept multiple input parameters.
 a `plr_array` function to create a text array from two input text values:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION plr_array (text, text)
-RETURNS text[]
-AS ’$libdir/plr’,’plr_array’
-LANGUAGE ’C’ WITH (isstrict);
+CREATE OR REPLACE FUNCTION plr_array (text, text) RETURNS text[] AS
+'$libdir/plr', 'plr_array'
+LANGUAGE C STRICT;
 ```
 ```postgresql
-select plr_array(’hello’,’world’);
+SELECT plr_array('hello', 'world');
+
 plr_array
 ---------------
 {hello,world}
@@ -856,13 +1088,13 @@ this PostgreSQL function is capable of accepting and returning other data types.
 define a `plr_array_push` function to add a text value to an existing text array:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION plr_array_push (_text, text)
-RETURNS text[]
-AS ’$libdir/plr’,’plr_array_push’
-LANGUAGE ’C’ WITH (isstrict);
+CREATE OR REPLACE FUNCTION plr_array_push(_text, text) RETURNS text[] AS
+'$libdir/plr','plr_array_push'
+LANGUAGE C STRICT;
 ```
 ```postgresql
-select plr_array_push(plr_array(’hello’,’world’), ’how are you’);
+SELECT plr_array_push(plr_array('hello', 'world'), 'how are you');
+
 plr_array_push
 -----------------------------
 {hello,world,"how are you"}
@@ -870,7 +1102,7 @@ plr_array_push
 ```
 
 
-`plr_array_accum(float8[]state_value,float8next_element)`
+`plr_array_accum(float8[] state_value,float8 next_element)`
 
 Creates a new array using next_element if state_value is NULL. Otherwise, pushes
 next_element onto the end of state_value. This function is predefined to accept one
@@ -879,18 +1111,20 @@ PostgreSQL function is capable of accepting and returning other data types. For 
 a `plr_array_accum` function to add an int4 value to an existing int4 array:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION plr_array_accum (_int4, int4)
-RETURNS int4[]
-AS ’$libdir/plr’,’plr_array_accum’
-LANGUAGE ’C’;
+CREATE OR REPLACE FUNCTION plr_array_accum(_int4, int4) RETURNS int4[] AS
+'$libdir/plr','plr_array_accum'
+LANGUAGE C;
 ```
 ```postgresql
-select plr_array_accum(NULL, 42);
+SELECT plr_array_accum(NULL, 42);
+
 plr_array_accum
 -------------
 {42}
 (1 row)
-select plr_array_accum(’{23,35}’, 42);
+
+SELECT plr_array_accum('{23,35}', 42);
+
 plr_array_accum
 -----------------
 {23,35,42}
@@ -937,36 +1171,37 @@ using the predefined PostgreSQL C function,`plr_array_accum` (see [PostgreSQL Su
 function, and a PL/R function as a finalizer. For example:
 
 ```postgresql
-create or replace function r_median(_float8) returns float as ’
+CREATE OR REPLACE FUNCTION r_median(_float8) RETURNS float AS '
 median(arg1)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
 CREATE AGGREGATE median (
-sfunc = plr_array_accum,
-basetype = float8,
-stype = _float8,
-finalfunc = r_median
+  sfunc = plr_array_accum,
+  basetype = float8,
+  stype = _float8,
+  finalfunc = r_median
 );
 ```
 ```postgresql
-create table foo(f0 int, f1 text, f2 float8);
-insert into foo values(1,’cat1’,1.21);
-insert into foo values(2,’cat1’,1.24);
-insert into foo values(3,’cat1’,1.18);
-insert into foo values(4,’cat1’,1.26);
-insert into foo values(5,’cat1’,1.15);
-insert into foo values(6,’cat2’,1.15);
-insert into foo values(7,’cat2’,1.26);
-insert into foo values(8,’cat2’,1.32);
-insert into foo values(9,’cat2’,1.30);
+CREATE TABLE foo(f0 int, f1 text, f2 float8);
+INSERT INTO foo VALUES(1,'cat1',1.21);
+INSERT INTO foo VALUES(2,'cat1',1.24);
+INSERT INTO foo VALUES(3,'cat1',1.18);
+INSERT INTO foo VALUES(4,'cat1',1.26);
+INSERT INTO foo VALUES(5,'cat1',1.15);
+INSERT INTO foo VALUES(6,'cat2',1.15);
+INSERT INTO foo VALUES(7,'cat2',1.26);
+INSERT INTO foo VALUES(8,'cat2',1.32);
+INSERT INTO foo VALUES(9,'cat2',1.30);
 ```
 ```postgresql
-select f1, median(f2) from foo group by f1 order by f1;
-f1 | median
+SELECT f1, median(f2) FROM foo GROUP BY f1 ORDER BY f1;
+
+f1    | median
 ------+--------
-cat1 | 1.21
-cat2 | 1.28
+cat1  | 1.21
+cat2  | 1.28
 (2 rows)
 ```
 A more complex aggregate might be created by using a PL/R functions for both state transition and finalizer.
@@ -985,20 +1220,18 @@ use of this capability.
 PL/R functions may be defined as `WINDOW`. For example:
 
 ```postgresql
-CREATE OR REPLACE FUNCTION r_regr_slope(float8, float8)
-RETURNS float8 AS
-$BODY$
+CREATE OR REPLACE FUNCTION r_regr_slope(float8, float8, int) RETURNS float8 AS '
 slope <- NA
 y <- farg1
 x <- farg2
-if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
+preceding <- arg3
+if (fnumrows == preceding + 1L)
+  try (slope <- lm(y ~ x)$coefficients[2])
 return(slope)
-$BODY$
-LANGUAGE plr WINDOW;
+' LANGUAGE plr WINDOW;
 ```
 
 A number of variables are automatically provided by PL/R to the R interpreter:
-
 
 `fargN`
 
@@ -1010,44 +1243,41 @@ The number of rows in the current `WINDOW` frame.
 
 `prownum` (not shown)
 
-Provides the 1-based row offset of the current row in the current `PARTITION`.
+Provides the 1-based, row offset of the current row, in the current `PARTITION`.
 
 A more complete example follows:
 
 ```postgresql
--- create test table
+-- CREATE test TABLE
 CREATE TABLE test_data (
-fyear integer,
-firm float8,
-eps float8
+  fyear integer,
+  firm float8,
+  eps float8
 );
 ```
 ```postgresql
 -- insert randomly perturbated data for test
 INSERT INTO test_data
-SELECT (b.f + 1) % 10 + 2000 AS fyear,
-floor((b.f+1)/10) + 50 AS firm,
-f::float8/100 + random()/10 AS eps
+SELECT (b.f + 1) % 10 + 2000       AS fyear,
+       floor((b.f+1)/10) + 50      AS firm,
+       f::float8/100 + random()/10 AS eps
 FROM generate_series(-500,499,1) b(f);
 ```
 ```postgresql
-CREATE OR REPLACE
-FUNCTION r_regr_slope(float8, float8)
-RETURNS float8 AS
-$BODY$
+CREATE OR REPLACE FUNCTION r_regr_slope(float8, float8, int) RETURNS float8 AS '
 slope <- NA
 y <- farg1
 x <- farg2
-if (fnumrows==9) try (slope <- lm(y ~ x)$coefficients[2])
+preceding <- arg3
+if (fnumrows == preceding + 1L)
+  try (slope <- lm(y ~ x)$coefficients[2])
 return(slope)
-$BODY$
-LANGUAGE plr WINDOW;
+' LANGUAGE plr WINDOW;
 ```
 ```postgresql
-SELECT*, r_regr_slope(eps, lag_eps) OVER w AS slope_R
-FROM (SELECT firm, fyear, eps,
-lag(eps) OVER (ORDER BY firm, fyear) AS lag_eps
-FROM test_data) AS a
+SELECT *, r_regr_slope(eps, lag_eps, 8) OVER w AS slope_R
+FROM (SELECT firm, fyear, eps, lag(eps) OVER (ORDER BY firm, fyear) AS lag_eps
+      FROM test_data) AS a
 WHERE eps IS NOT NULL
 WINDOW w AS (ORDER BY firm, fyear ROWS 8 PRECEDING);
 ```
@@ -1057,48 +1287,132 @@ as the preceding 8 rows which are also in the same `WINDOW` frame within the sam
 case since no `PARTITION` is explicitly defined, the `PARTITION` is the entire set of rows returned from the
 inner sub-select.
 
+In these next examples, use of the variables `arg1`,`farg1`,`fnumrows`, and `prownum` are illustrated in detail.
+The window frame is saved into a dedicated R environment. 
+[R Environments] (https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Environment-objects). 
+
+Variables `farg#` and only `farg1` in these simple examples.
+The `foo` table that we created (above) is reused here.
+
+```postgresql
+CREATE OR REPLACE FUNCTION arg1(int) RETURNS int AS '
+return(arg1)
+' LANGUAGE plr WINDOW;
+
+CREATE OR REPLACE FUNCTION farg1(int) RETURNS text AS '
+return(capture.output(farg1))
+' LANGUAGE plr WINDOW;
+
+CREATE OR REPLACE FUNCTION fnumrows(int) RETURNS int AS '
+return(fnumrows)
+' LANGUAGE plr WINDOW;
+
+CREATE OR REPLACE FUNCTION prownum(int) RETURNS int AS '
+return(prownum)
+' LANGUAGE plr WINDOW;
+
+SELECT s.f1, s.f0,
+           arg1(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0),
+          farg1(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0),
+       fnumrows(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0),
+        prownum(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0)
+FROM (SELECT f0 + 10 f0, f1 FROM foo) AS s;
+
+  f1  | f0 | arg1 |       farg1        | fnumrows | prownum
+------+----+------+--------------------+----------+---------
+ cat1 | 11 |   11 | [1] 11             |        1 |       1
+ cat1 | 12 |   12 | [1] 11 12          |        2 |       2
+ cat1 | 13 |   13 | [1] 11 12 13       |        3 |       3
+ cat1 | 14 |   14 | [1] 11 12 13 14    |        4 |       4
+ cat1 | 15 |   15 | [1] 11 12 13 14 15 |        5 |       5
+ cat2 | 16 |   16 | [1] 16             |        1 |       1
+ cat2 | 17 |   17 | [1] 16 17          |        2 |       2
+ cat2 | 18 |   18 | [1] 16 17 18       |        3 |       3
+ cat2 | 19 |   19 | [1] 16 17 18 19    |        4 |       4
+(9 rows)
+
+SELECT s.f1, s.f0,
+           arg1(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0 ROWS 1 PRECEDING),
+          farg1(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0 ROWS 1 PRECEDING),
+       fnumrows(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0 ROWS 1 PRECEDING),
+        prownum(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0 ROWS 1 PRECEDING)
+FROM (SELECT f0 + 10 f0, f1 FROM foo) AS s;
+
+  f1  | f0 | arg1 |   farg1   | fnumrows | prownum
+------+----+------+-----------+----------+---------
+ cat1 | 11 |   11 | [1] 11    |        1 |       1
+ cat1 | 12 |   12 | [1] 11 12 |        2 |       2
+ cat1 | 13 |   13 | [1] 12 13 |        2 |       3
+ cat1 | 14 |   14 | [1] 13 14 |        2 |       4
+ cat1 | 15 |   15 | [1] 14 15 |        2 |       5
+ cat2 | 16 |   16 | [1] 16    |        1 |       1
+ cat2 | 17 |   17 | [1] 16 17 |        2 |       2
+ cat2 | 18 |   18 | [1] 17 18 |        2 |       3
+ cat2 | 19 |   19 | [1] 18 19 |        2 |       4
+(9 rows)
+```
+
+Programmer-created temporary (or utility) variables and their values may be needed by the user need to be
+re-available within the next call of the function, that is, at the next position of the row pointer.
+These variables can be stashed in the R environment `parent.frame(0)`.
+Do not stash these variables in the R global environment `.RGlobalEnv`.
+
+```postgresql
+CREATE OR REPLACE FUNCTION framefirst_plus_current(int) RETURNS int AS '
+if(prownum == 1)
+  assign(''frame_first_value'', arg1, envir = parent.frame())
+return(frame_first_value + farg1[fnumrows])
+' LANGUAGE plr WINDOW;
+
+SELECT s.f1, s.f0,
+        framefirst_plus_current(s.f0) OVER(PARTITION BY s.f1 ORDER BY f0)
+FROM (SELECT f0 + 10 f0, f1 FROM foo) AS s;
+
+  f1  | f0 | framefirst_plus_current
+------+----+-------------------------
+ cat1 | 11 |                      22
+ cat1 | 12 |                      23
+ cat1 | 13 |                      24
+ cat1 | 14 |                      25
+ cat1 | 15 |                      26
+ cat2 | 16 |                      32
+ cat2 | 17 |                      33
+ cat2 | 18 |                      34
+ cat2 | 19 |                      35
+(9 rows)
+````
+
 Another interesting example follows. The idea of "Winsorizing" is to return either the original value or,
 if that value is outside certain bounds, a trimmed value. So for example `winsorize(eps, 0.1)` would return the
 value at the 10th percentile for values of eps less that that, the value of the 90th percentile for eps greater
 than that value, and the unmodified value of eps otherwise.
 
+Everytime, the row pointer is moved, to prevent the re-calcuation of the 'frame result'
+the to-be-once calculated frame_result, that is only needs to be calculated at `prownum == 1`, is stored
+in the parent.frame.
+
 ```postgresql
-CREATE OR REPLACE FUNCTION winsorize(float8, float8)
-RETURNS float8 AS
-$BODY$
-library(psych)
-return(winsor(as.vector(farg1), arg2)[prownum])
-$BODY$ LANGUAGE plr VOLATILE WINDOW;
+CREATE OR REPLACE FUNCTION winsorize(float8, float8) RETURNS float8 AS '
+if(prownum == 1L)
+  assign(''frame_result'', psych::winsor(as.vector(farg1), arg2), envir = parent.frame())
+return(frame_result[prownum])
+' LANGUAGE plr VOLATILE WINDOW;
 ```
+
+Here is the example call through SQL.
+Note, the R CRAN package `psych` (and the dependencies), must have already been installed into R.
 ```postgresql
 SELECT fyear, eps,
 winsorize(eps, 0.1) OVER (PARTITION BY fyear) AS w_eps
 FROM test_data ORDER BY fyear, eps;
 ```
+For optimization reasons, constant expressions are not expanded.
 
-In this example, use of the variable `prownum` is illustrated.
+The corresponding `farg2`  in the `Winsorize` example above is passes with NULL value.
+Compatibility reasons exist, so that other arguments are not shifted, in functions users 
+created with previous versions of PL/R.
 
-For optimization reasons, constant expressions are not expanded, and corresponding `farg2` in the example above
-is passes with NULL value for compatibility reasons not to shift other arguments in functions users created
-with previous versions of PL/R.
 
-If the frame is unbound and no row exclusion like below and in *winsorize* example,
-window function calls are optimized as an entire partition is passed on the first call
-and saved into a dedicated R environment that can be used to store user data.
-Do not use `.GlobalEnv` for that if you reuse you window function in the same query.
-
-```postgresql
-CREATE OR REPLACE FUNCTION PLR_ClusterDBSCAN(x double precision, y double precision, eps double precision, minpoints integer)
-RETURNS int
-AS $$
-    if (1 == prownum) {
-        c <- dbscan(cbind(farg1, farg2), eps=eps, MinPts=minpoints)
-        assign("cluster", c$cluster, env = parent.frame())
-    }
-    return(cluster[prownum])
-$$ WINDOW LANGUAGE PLR;
-SELECT x, y, PLR_ClusterDBSCAN(x, y, 300, 15) OVER() AS cid FROM mtl_crimes
-```
 
 ## Loading R Modules at Startup <a name='startup'></a>
 
@@ -1109,8 +1423,8 @@ The definition of the table `plr_modules` is as follows:
 
 ```postgresql
 CREATE TABLE plr_modules (
-modseq int4,
-modsrc text
+  modseq int4,
+  modsrc text
 );
 ```
 
@@ -1120,19 +1434,20 @@ statement:
 
 ```postgresql
 INSERT INTO plr_modules
-VALUES (0, ’pg.test.module.load <-function(msg) {print(msg)}’);
+VALUES (0, 'pg.test.module.load <-function(msg) {print(msg)}');
 ```
 
 This statement will cause an R function namedpg.test.module.load to be created in the R interpreter on
 initialization. A PL/R function may now simply reference the function directly as follows:
 
 ```postgresql
-create or replace function pg_test_module_load(text) returns text as ’
+CREATE OR REPLACE FUNCTION pg_test_module_load(text) RETURNS text AS '
 pg.test.module.load(arg1)
-’ language ’plr’;
+' LANGUAGE plr;
 ```
 ```postgresql
-select pg_test_module_load(’hello world’);
+SELECT pg_test_module_load('hello world');
+
 pg_test_module_load
 ---------------------
 hello world
@@ -1160,7 +1475,6 @@ See [Using Global Data](#global-data).
 Trigger procedures can be written in PL/R. PostgreSQL requires that a procedure that is to be called as a
 trigger must be declared as a function with no arguments and a return type of `trigger`.
 The information from the trigger manager is passed to the procedure body in the following variables:
-
 
 `pg.tg.name`
 
@@ -1210,39 +1524,201 @@ trigger manager that will be inserted instead of the one given in `pg.tg.new`. T
 `UPDATE` only. Needless to say that all this is only meaningful when the trigger is r`BEFORE` and `FOR EACH
 ROW`; otherwise the return value is ignored.
 
-
 Here’s a little example trigger procedure that forces an integer value in a table to keep track of the number
 of updates that are performed on the row. For new rows inserted, the value is initialized to 0 and then
 incremented on every update operation.
 
 ```postgresql
-CREATE FUNCTION trigfunc_modcount() RETURNS trigger AS ’
-
-if (pg.tg.op == "INSERT")
-{
-retval <- pg.tg.new
-retval[pg.tg.args[1]] <- 0
-}
-if (pg.tg.op == "UPDATE")
-{
-retval <- pg.tg.new
-retval[pg.tg.args[1]] <- pg.tg.old[pg.tg.args[1]] + 1
-}
-if (pg.tg.op == "DELETE")
-retval <- pg.tg.old
-return(retval)
-’ LANGUAGE plr;
+CREATE TABLE mytab(num integer, description text, modcnt integer);
 ```
+**Notice** below, that the trigger procedure itself does not know the column name; that’s supplied from the trigger
+arguments. This lets the trigger procedure be reused with different tables.
 ```postgresql
-CREATE TABLE mytab (num integer, description text, modcnt integer);
+CREATE FUNCTION trigfunc_modcount() RETURNS trigger AS '
+if (pg.tg.op == ''INSERT'')
+{
+  retval <- pg.tg.new
+  retval[pg.tg.args[1]] <- 0
+}
+if (pg.tg.op == ''UPDATE'')
+{
+  retval <- pg.tg.new
+  retval[pg.tg.args[1]] <- pg.tg.old[pg.tg.args[1]] + 1
+}
+if (pg.tg.op == ''DELETE'')
+  retval <- pg.tg.old
+return(retval)
+' LANGUAGE plr;
 ```
 ```postgresql
 CREATE TRIGGER trig_mytab_modcount BEFORE INSERT OR UPDATE ON mytab
-FOR EACH ROW EXECUTE PROCEDURE trigfunc_modcount(’modcnt’);
+FOR EACH ROW EXECUTE PROCEDURE trigfunc_modcount('modcnt');
+```
+```postgresql
+INSERT INTO mytab(num, description) VALUES(11, 'eleven');
+
+
+SELECT * FROM mytab;
+
+ num | description | modcnt
+-----+-------------+--------
+  11 | eleven      |      0
+(1 row)
+
+
+INSERT INTO mytab(num, description) VALUES(12, 'twelve');
+
+
+SELECT * FROM mytab;
+
+ num | description | modcnt
+-----+-------------+--------
+  11 | eleven      |      0
+  12 | twelve      |      0
+(2 rows)
+
+
+UPDATE mytab SET description = 'twelve again' WHERE num = 12;
+
+
+SELECT * FROM mytab;
+
+ num | description  | modcnt
+-----+--------------+--------
+  11 | eleven       |      0
+  12 | twelve again |      1
+(2 rows)
+
+
+DELETE FROM mytab WHERE num = 12;
+
+
+SELECT * FROM mytab;
+
+ num | description | modcnt
+-----+-------------+--------
+  11 | eleven      |      0
+(1 row)
 ```
 
-**Notice** that the trigger procedure itself does not know the column name; that’s supplied from the trigger
-arguments. This lets the trigger procedure be reused with different tables.
+
+
+## Inline Handler <a name='inline-handler'></a>
+
+In PL/R version 8.4, is the `DO` inline handler.
+The DO inline handler allows the execution of an anonymous PL/R code block.
+
+```postgresql
+SELECT plr_version();
+ plr_version
+-------------
+ 8.4
+```
+```postgresql
+DO LANGUAGE plr '
+pg.throwlog(''Hello, world!'')
+';
+```
+Output is seen in the PostgreSQL log:
+```text
+2021-03-18 04:47:15.086 UTC [47940] LOG:  Hello, world!
+```
+```postgresql
+DO LANGUAGE plr '
+pg.thrownotice(''Hello, world!'')
+';
+```
+Output is seen in the user console:
+```text
+NOTICE:  Hello, world!
+DO
+```
+
+## Stored Procedures <a name='stored-procedures'></a>
+
+In PostgreSQL version eleven(11) or later, is the feature of Stored Procedures.
+These work in any operating system and in any platform.
+
+Unlike functions that return a value, procedures do not return a value.
+
+```postgresql
+SELECT version();
+                          version
+------------------------------------------------------------
+ PostgreSQL 11.0, compiled by Visual C++ build 1914, 64-bit
+(1 row)
+
+SELECT current_setting('server_version_num')::int;
+
+ current_setting
+-----------------
+          110000
+(1 row)
+```
+
+```postgresql
+CREATE TABLE tbl(val integer);
+
+CREATE OR REPLACE PROCEDURE insert_data(a int, b int) AS '
+pg.spi.exec(''INSERT INTO tbl VALUES (1);'')
+pg.spi.exec(''INSERT INTO tbl VALUES (2);'')
+' LANGUAGE plr;
+
+CALL insert_data(1, 2);
+
+SELECT * FROM tbl;
+
+ val
+-----
+   1
+   2
+(2 rows)
+```
+
+## Transactions in Stored Procedures <a name='transactions-in-stored-procedures'></a>
+
+This feature has the same PostgreSQL version
+requirement as seen in `Stored Procedures`.
+Also PL/R version 8.4.2 (or later) is required.
+
+```postgresql
+SELECT * FROM pg_available_extensions WHERE name = 'plr';
+
+ name | default_version | installed_version |                            comment
+------+-----------------+-------------------+----------------------------------------------------------------
+ plr  | 8.4.2           | 8.4.2             | load R interpreter and execute R script from within a database
+(1 row)
+```
+
+```postgresql
+CREATE TABLE test1 (a int, b text);
+
+CREATE OR REPLACE PROCEDURE transaction_test1() AS '
+  for(i in 0:9)
+  {
+    pg.spi.exec(paste(''INSERT INTO test1 (a) VALUES ('', i, '');''))
+    if (i %% 2 == 0) 
+    {
+      pg.spi.commit()
+    } else {
+      pg.spi.rollback()
+    }
+  }
+' LANGUAGE plr;
+
+CALL transaction_test1();
+
+SELECT * FROM test1;
+
+ a | b 
+---+---
+ 0 | 
+ 2 | 
+ 4 | 
+ 6 | 
+ 8 | 
+(5 rows)
+```
 
 ## License
 
