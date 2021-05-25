@@ -744,8 +744,8 @@ Execute an SQL query given as a string. An error in the query causes an error to
 the command’s return value is the number of rows processed for `INSERT` ,`UPDATE`, or `DELETE`
 statements, or zero if the query is a utility statement. If the query is a `SELECT` statement, the values of
 the selected columns are placed in an R data.frame with the target column names used as the frame
-column names. However, non-numeric columns are **not** converted to factors. If you want all non-
-numeric columns converted to factors, a convenience function `pg.spi.factor` (described below)
+column names. However, non-numeric columns are **not** converted to factors. If you want all non-numeric
+columns converted to factors, a convenience function `pg.spi.factor` (described below)
 is provided.
 
 If a field of a SELECT result is NULL, the target variable for it is set to `NA`. For example:
