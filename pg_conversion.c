@@ -338,14 +338,13 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 {
 	char		buf[256];
 	SEXP		result, v, names, row_names;
-	int64		i, numels = 0;
+	int64		i, num_frame_row = 0;
 	int			j, nc = 1, nc_effective = 1, df_colnum = 0;
 	Datum		dvalue;
 	bool		isnull, isout = false;
 	bool		isrel = function->arg_is_rel[argno];
 	Oid			element_type = function->arg_typid[argno];
 	FmgrInfo	out_func = function->arg_out_func[argno];
-	int64		nr = WinGetPartitionRowCount(winobj);
 	/* for tuple arguments */
 	HeapTuple	tuple;
 	HeapTupleHeader	tuple_hdr;
@@ -360,7 +359,8 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 	Oid			typoutput, typioparam;
 	FmgrInfo	outputproc;
 
-	if (nr < 1)
+	int64		num_partition_rows = WinGetPartitionRowCount(winobj);
+	if (num_partition_rows < 1)
 		return R_NilValue;
 
 	/*
@@ -407,9 +407,9 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 	}
 	PROTECT(result = NEW_LIST(nc_effective));
 
-	for (;; numels++)
+	for (;; num_frame_row++)
 	{
-		dvalue = WinGetFuncArgInFrame(winobj, argno, numels, WINDOW_SEEK_HEAD, numels == 0, &isnull, &isout);
+		dvalue = WinGetFuncArgInFrame(winobj, argno, num_frame_row, WINDOW_SEEK_HEAD, num_frame_row == 0, &isnull, &isout);
 
 		if (isout)
 			break;
@@ -434,7 +434,7 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 					continue;
 
 				/* set column names */
-				if (numels == 0)
+				if (num_frame_row == 0)
 					SET_COLUMN_NAMES;
 
 				/* update column datatype oid and check for embedded array */
@@ -447,15 +447,15 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 				}
 			}
 
-			if (numels == 0)
+			if (num_frame_row == 0)
 			{
 				/* allocate new vector of the appropriate type and length */
 				if (typelem == InvalidOid)
 					/* dealing with scalars of element_type */
-					PROTECT(v = get_r_vector(element_type, nr));
+					PROTECT(v = get_r_vector(element_type, num_partition_rows));
 				else
 					/* dealing with arrays (containing typelem's) */
-					PROTECT(v = NEW_LIST(nr));
+					PROTECT(v = NEW_LIST(num_partition_rows));
 				SET_VECTOR_ELT(result, df_colnum, v);
 				UNPROTECT(1);
 			}
@@ -468,21 +468,21 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 				switch (element_type)
 				{
 					case BOOLOID:
-						LOGICAL_DATA(v)[numels] = isnull ? NA_LOGICAL : DatumGetBool(dvalue);
+						LOGICAL_DATA(v)[num_frame_row] = isnull ? NA_LOGICAL : DatumGetBool(dvalue);
 						break;
 					case INT8OID:
-						NUMERIC_DATA(v)[numels] = isnull ? NA_REAL : (double)DatumGetInt64(dvalue);
+						NUMERIC_DATA(v)[num_frame_row] = isnull ? NA_REAL : (double)DatumGetInt64(dvalue);
 						break;
 					case INT2OID:
 					case INT4OID:
 					case OIDOID:
-						INTEGER_DATA(v)[numels] = isnull ? NA_INTEGER : DatumGetInt32(dvalue);
+						INTEGER_DATA(v)[num_frame_row] = isnull ? NA_INTEGER : DatumGetInt32(dvalue);
 						break;
 					case FLOAT4OID:
-						NUMERIC_DATA(v)[numels] = isnull ? NA_REAL : DatumGetFloat4(dvalue);
+						NUMERIC_DATA(v)[num_frame_row] = isnull ? NA_REAL : DatumGetFloat4(dvalue);
 						break;
 					case FLOAT8OID:
-						NUMERIC_DATA(v)[numels] = isnull ? NA_REAL : DatumGetFloat8(dvalue);
+						NUMERIC_DATA(v)[num_frame_row] = isnull ? NA_REAL : DatumGetFloat8(dvalue);
 						break;
 					default:
 						value = isnull ? NULL :
@@ -491,7 +491,7 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 						 * Note that pg_get_one_r() replaces NULL values with
 						 * the NA value appropriate for the data type.
 						 */
-						pg_get_one_r(value, element_type, v, numels);
+						pg_get_one_r(value, element_type, v, num_frame_row);
 						if (value != NULL)
 							pfree(value);
 				}
@@ -499,7 +499,7 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 			else if (isrel && typelem == InvalidOid)
 			{
 				char *value = isnull ? NULL : SPI_getvalue(tuple, tupdesc, j + 1);
-				pg_get_one_r(value, element_type, v, numels);
+				pg_get_one_r(value, element_type, v, num_frame_row);
 				if (value != NULL)
 					pfree(value);
 			}
@@ -516,7 +516,7 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 					PROTECT(fldvec_elem = pg_array_get_r(value, outputproc, typlen, typbyval, typalign));
 				else
 					PROTECT(fldvec_elem = R_NilValue);
-				SET_VECTOR_ELT(v, numels, fldvec_elem);
+				SET_VECTOR_ELT(v, num_frame_row, fldvec_elem);
 				UNPROTECT(1);
 			}
 			df_colnum++;
@@ -526,15 +526,15 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 			pfree(tuple);
 	}
 
-	/* Resize all vectors from nr (rows in partition) down to numels (rows in frame) */
-	if (numels < nr)
+	/* Resize all vectors from num_partition_rows (rows in partition) down to num_frame_row (rows in frame) */
+	if (num_frame_row < num_partition_rows)
 	{
 		for (df_colnum = 0, j = 0; j < nc; j++)
 		{
 			if (isrel && TUPLE_DESC_ATTR(tupdesc,j)->attisdropped)
 				continue;
 			v = VECTOR_ELT(result, df_colnum);
-			SET_VECTOR_ELT(result, df_colnum, SET_LENGTH(v, numels));
+			SET_VECTOR_ELT(result, df_colnum, SET_LENGTH(v, num_frame_row));
 			df_colnum++;
 		}
 	}
@@ -551,8 +551,8 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 	setAttrib(result, R_NamesSymbol, names);
 
 	/* attach row names - basically just the row number, zero based */
-	PROTECT(row_names = allocVector(STRSXP, numels));
-	for (i = 0; i < numels; i++)
+	PROTECT(row_names = allocVector(STRSXP, num_frame_row));
+	for (i = 0; i < num_frame_row; i++)
 	{
 		sprintf(buf, "%ld", i + 1);
 		SET_STRING_ELT(row_names, i, COPY_TO_USER_STRING(buf));
