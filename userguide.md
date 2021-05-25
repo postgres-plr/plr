@@ -299,7 +299,7 @@ to be available.
 
 **Tip:** Additionally, libR must be findable by your runtime linker. On Linux, this involves adding an entry
 in /etc/ld.so.conf for the location of libR (typically $R_HOME/bin or $R_HOME/lib), and then running
-ldconfig. Refer toman ldconfigor its equivalent for your system.
+ldconfig. Refer to `man ldconfig` or its equivalent for your system.
 
 **Tip:** R_HOME must be defined in the environment of the user under which PostgreSQL is started,
 before the postmaster is started. Otherwise PL/R will refuse to load. See plr_environ(), which allows
@@ -580,7 +580,7 @@ The argument values supplied to a PL/R function’s script are the input argumen
 | ------------------------------- | ------- |
 | boolean | logical |
 | int2,int4 | integer |
-| int8,float4,float8,cash,numeric | numeric |
+| int8,float4,float8,money,numeric | numeric |
 | bytea | object |
 | everything else | character |
 
@@ -744,8 +744,8 @@ Execute an SQL query given as a string. An error in the query causes an error to
 the command’s return value is the number of rows processed for `INSERT` ,`UPDATE`, or `DELETE`
 statements, or zero if the query is a utility statement. If the query is a `SELECT` statement, the values of
 the selected columns are placed in an R data.frame with the target column names used as the frame
-column names. However, non-numeric columns are **not** converted to factors. If you want all non-
-numeric columns converted to factors, a convenience function `pg.spi.factor` (described below)
+column names. However, non-numeric columns are **not** converted to factors. If you want all non-numeric
+columns converted to factors, a convenience function `pg.spi.factor` (described below)
 is provided.
 
 If a field of a SELECT result is NULL, the target variable for it is set to `NA`. For example:
@@ -785,6 +785,7 @@ available for use:
 ```postgresql
 SELECT load_r_typenames();
 ```
+
 load_r_typenames
 ------------------
 OK
@@ -818,7 +819,7 @@ pg.spi.execp. See `spi_execp` for an example.
 
 `pg.spi.execp(external pointer saved_plan, variable listvalue_list)`
 
-Execute a query previously prepared with pg.spi.prepare.saved_plan is the external pointer
+Execute a query previously prepared with `pg.spi.prepare.saved_plan` is the external pointer
 returned by `pg.spi.prepare`. If the query references arguments, a `value_list` must be supplied:
 this is an R list of actual values for the plan arguments. It must be the same length as the argument
 type_vector previously given to pg.spi.prepare. Pass `NA` for `value_list` if the query has
