@@ -580,7 +580,7 @@ The argument values supplied to a PL/R function’s script are the input argumen
 | ------------------------------- | ------- |
 | boolean | logical |
 | int2,int4 | integer |
-| int8,float4,float8,cash,numeric | numeric |
+| int8,float4,float8,money,numeric | numeric |
 | bytea | object |
 | everything else | character |
 
