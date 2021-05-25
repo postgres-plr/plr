@@ -784,12 +784,13 @@ available for use:
 
 ```postgresql
 SELECT load_r_typenames();
-```
+
 
 load_r_typenames
 ------------------
 OK
 (1 row)
+```
 
 Another support function,`r_typenames()` may be used to list the predefined Global variables:
 
