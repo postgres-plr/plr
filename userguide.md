@@ -785,6 +785,7 @@ available for use:
 ```postgresql
 SELECT load_r_typenames();
 ```
+
 load_r_typenames
 ------------------
 OK
