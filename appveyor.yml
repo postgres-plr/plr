@@ -5,14 +5,23 @@ clone_depth: 1
 environment:
   PGUSER: postgres
   PGPASSWORD: Password12!
-  rversion: 3.6.0
+  rversion: 4.1.0
   matrix:
+
   - pg: master
     PlatformToolset: v141
     configuration: Debug
-#try version 4
-    rversion: 4.1.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+  - pg: REL_13_0
+    PlatformToolset: v141
+    configuration: Release
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - pg: REL_12_0
+    PlatformToolset: v141
+    configuration: Release
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
   - pg: 9.6.13-1
     PlatformToolset: v120
   - pg: 11.11-2
@@ -23,7 +32,7 @@ environment:
   - pg: 13.2-2
     PlatformToolset: v141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  
+
 matrix:
   allow_failures:
     - pg: master
@@ -41,23 +50,47 @@ install:
 #- if not exist Rtools35.exe appveyor downloadfile https://cran.r-project.org/bin/windows/Rtools/Rtools35.exe
 #- Rtools35.exe /VERYSILENT
 - Set mingw=C:\msys64\mingw
-# http://www.databasesoup.com/2016/05/changing-postgresql-version-numbering.html
-- for /f "tokens=1 delims=-" %%A in ("%pg%") do set pgversion=%%~nA
+#
+# From the EnterpriseDB version name,
+# if any, strip off the: right-most part dot, then numbers, then one hyphen, then numbers.
+- ps: $env:pgversion = $env:pg -replace "[.]\d+-\d+$", ""
+#
 - echo pgversion=%pgversion%
 - set pgroot=%pf%\PostgreSQL\%pgversion%
 - echo %pgroot%
 - SET R_HOME=%ProgramFiles%\R\R-%rversion%
 - set RBIN=%PLATFORM:x86=i386%
 - SET sed=C:\msys64\usr\bin\sed
+# R in the path is not required: msvc compilation
+# R in the path is required: find Rscript
+- set PATH=%R_HOME%\bin\%rbin%;%PATH%
+# environment variable "postgresrcroot" is required for msvc.diff.R
+- set postgresrcroot=C:\projects\postgresql
 - ps: |
-    if ("$env:pg" -eq "master") {
+    # notmatch - if no "dot is found" in pg name, then pg is a: git: branch, tag, or commit.
+    if ("${env:pg}" -notmatch "[.]") {
       $env:Path += ";C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64"
-      git clone -q --depth 1 https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+      git config --global advice.detachedHead false
+      #
+      # git commit
+      #
+      if(("${env:pg}" -cmatch  "^[a-z0-9]+$") -and ("${env:pghint}" -eq "commit")) {
+        git clone -q  https://git.postgresql.org/git/postgresql.git  c:\projects\postgresql
+        pushd c:\projects\postgresql
+        git checkout -q  ${env:pg} -b ${env:pg}
+        popd
+      #
+      # git branch or tag(detached head)
+      # PostgreSQL case - git branches and tags have at least one capital letter - but expect mostly CAPS
+      #
+      } else {
+        git clone -q --depth 1 --branch ${env:pg} https://git.postgresql.org/git/postgresql.git  c:\projects\postgresql
+      }
       gendef - "$env:R_HOME\bin\$env:rbin\R.dll" > "R$env:PLATFORM.def" 2> $null
       lib "/def:R$env:PLATFORM.def" "/out:R$env:PLATFORM.lib" "/MACHINE:$env:PLATFORM"
       pushd c:\projects\postgresql
       cmd /c mklink /J contrib\plr $env:APPVEYOR_BUILD_FOLDER
-      patch -p1 -i "$env:APPVEYOR_BUILD_FOLDER\msvc.diff"
+      Rscript --vanilla "${env:APPVEYOR_BUILD_FOLDER}\msvc.diff.R"
       perl contrib\plr\buildsetup.pl
       popd
       $env:PROJ="C:\projects\postgresql\pgsql.sln"
@@ -99,7 +132,7 @@ after_build:
 - set zip=plr-%APPVEYOR_REPO_COMMIT:~0,8%-pg%pgversion%-R%rversion%-%PLATFORM%-%CONFIGURATION%.zip
 - 7z a -r %zip% .\tmp\* > nul
 - ps: |
-    if ("$env:pg" -eq "master") {
+    if ("$env:pg" -notmatch "[.]") {
       pushd c:\projects\postgresql\src\tools\msvc
       perl install.pl "$env:pgroot"
       popd
@@ -108,7 +141,7 @@ after_build:
 test_script:
 - path %pgroot%\bin;%PATH%
 - ps: |
-    if ("$env:pg" -eq "master") {
+    if ("$env:pg" -notmatch "[.]") {
       Set-Content -path pg.pass -value "$env:pgpassword" -encoding ascii
       initdb -A md5 -U "$env:PGUSER" --pwfile=pg.pass C:\pgdata
       pg_ctl register -S demand -N "postgresql$env:x64-$env:pgversion" -D c:\pgdata
@@ -117,7 +150,7 @@ test_script:
       7z x "$env:zip" "-o$env:pgroot"
     }
 - appveyor AddMessage "Starting the database server." -Category Information
-- setx /M PATH "%R_HOME%\bin\%RBIN%;%PATH%"
+- setx /M PATH "%R_HOME%\bin\%rbin%;%PATH%"
 - net start postgresql%x64%-%pgversion%
 
 - ps: |
@@ -130,7 +163,7 @@ test_script:
     $env:Outcome="Passed"
     $elapsed=(Measure-Command {
       pg_regress "$env:psqlopt=$env:pgroot\bin" --dbname=pl_regression plr `
-        bad_fun opt_window do out_args 2>&1 |
+        bad_fun opt_window do out_args plr_transaction 2>&1 |
         %{ if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.Exception.Message } else { $_ } } |
           Out-Default
       if ($LASTEXITCODE -ne 0) {
