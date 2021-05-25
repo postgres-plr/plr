@@ -299,7 +299,7 @@ to be available.
 
 **Tip:** Additionally, libR must be findable by your runtime linker. On Linux, this involves adding an entry
 in /etc/ld.so.conf for the location of libR (typically $R_HOME/bin or $R_HOME/lib), and then running
-ldconfig. Refer toman ldconfigor its equivalent for your system.
+ldconfig. Refer to `man ld config` or its equivalent for your system.
 
 **Tip:** R_HOME must be defined in the environment of the user under which PostgreSQL is started,
 before the postmaster is started. Otherwise PL/R will refuse to load. See plr_environ(), which allows
