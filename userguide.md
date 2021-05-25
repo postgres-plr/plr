@@ -819,7 +819,7 @@ pg.spi.execp. See `spi_execp` for an example.
 
 `pg.spi.execp(external pointer saved_plan, variable listvalue_list)`
 
-Execute a query previously prepared with pg.spi.prepare.saved_plan is the external pointer
+Execute a query previously prepared with `pg.spi.prepare.saved_plan` is the external pointer
 returned by `pg.spi.prepare`. If the query references arguments, a `value_list` must be supplied:
 this is an R list of actual values for the plan arguments. It must be the same length as the argument
 type_vector previously given to pg.spi.prepare. Pass `NA` for `value_list` if the query has
