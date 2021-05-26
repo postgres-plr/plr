@@ -23,7 +23,7 @@ SRCS		+= plr.c pg_conversion.c pg_backend_support.c pg_userfuncs.c pg_rsupport.c
 OBJS		:= $(SRCS:.c=.o)
 SHLIB_LINK	+= -L$(r_libdir1x) -L$(r_libdir2x) -lR
 DATA		= plr--8.3.0.18--8.4.sql plr--8.4--8.4.1.sql plr--8.4.1--8.4.2.sql plr--8.4.2.sql plr--unpackaged--8.4.2.sql
-REGRESS		= plr bad_fun opt_window do out_args plr_transaction
+REGRESS		= plr bad_fun opt_window do out_args plr_transaction opt_window_frame
 
 ifdef USE_PGXS
 ifndef PG_CONFIG
