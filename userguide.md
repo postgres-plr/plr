@@ -40,7 +40,9 @@
 
 #### 15. [Transactions in Stored Procedures](#transactions-in-stored-procedures)
 
-#### 16. [License](#license)
+#### 16. [Custom Type (Tuple) Arguments in Window Functions](#custom-type-tuple-arguments-in-window-functions)
+
+#### 17. [License](#license)
 
 
 
@@ -375,9 +377,9 @@ else
 ' LANGUAGE plr STRICT;
 ```
 
-Literal characters in the body of an R function that is withing the body of a PL/R function
-can be writting in double quotes (") or in single quotes (') (both, just like R), except that in PL/R each
-single quote is escaped with a preceding single quote(').  Also, in PostgreSQL functions, a dollar signs may
+Literal characters in the body of an R function that is within the body of a PL/R function
+can be written in double quotes (") or in single quotes (') (both, just like R), except that in PL/R each
+single quote is escaped with a preceding single quote(').  Also, in PostgreSQL functions, dollar signs may
 distinquish the beginning and end of a string boundary. Some examples follow.
 
 ```postgresql
@@ -426,7 +428,6 @@ SELECT hello4();
 --------
  Hello
 (1 row)
-
 ```
 
 Starting with PostgreSQL 8.0, arguments may be explicitly named when creating a function. If an argument
@@ -759,8 +760,8 @@ typeid  | nullcol | typename
 25      |         | text
 26      |         | oid
 (2 rows)
-
 ```
+
 The NULL values were passed to R as `NA`, and on return to PostgreSQL they were converted back to NULL.
 
 `pg.spi.prepare(character query,integer vector type_vector)`
@@ -1010,8 +1011,8 @@ The following commands are available to use in PostgreSQL queries to aid in the 
 
 `plr_version()`
 
-that displays the PL/R version x.y (but not the patch version x.y.z) . . .
-```
+that displays the PL/R version x.y (but not the patch version x.y.z)
+```postgresql
 SELECT plr_version();
 
  plr_version
@@ -1020,10 +1021,22 @@ SELECT plr_version();
 (1 row)
 ```
 
+`SELECT * FROM pg_available_extensions WHERE name = 'plr'`
+
+that displays the PL/R version x.y.z
+```postgresql
+SELECT * FROM pg_available_extensions WHERE name = 'plr';
+
+ name | default_version | installed_version |                            comment
+------+-----------------+-------------------+----------------------------------------------------------------
+ plr  | 8.4.2           | 8.4.2             | load R interpreter and execute R script from within a database
+(1 row)
+```
+
 `r_version()`
 
 that displays R version . . .
-```
+```postgresql
 SELECT r_version();
 
                     r_version
@@ -1630,6 +1643,8 @@ NOTICE:  Hello, world!
 DO
 ```
 
+
+
 ## Stored Procedures <a name='stored-procedures'></a>
 
 In PostgreSQL version eleven(11) or later, is the feature of Stored Procedures.
@@ -1678,15 +1693,6 @@ requirement as seen in `Stored Procedures`.
 Also PL/R version 8.4.2 (or later) is required.
 
 ```postgresql
-SELECT * FROM pg_available_extensions WHERE name = 'plr';
-
- name | default_version | installed_version |                            comment
-------+-----------------+-------------------+----------------------------------------------------------------
- plr  | 8.4.2           | 8.4.2             | load R interpreter and execute R script from within a database
-(1 row)
-```
-
-```postgresql
 CREATE TABLE test1 (a int, b text);
 
 CREATE OR REPLACE PROCEDURE transaction_test1() AS '
@@ -1715,6 +1721,44 @@ SELECT * FROM test1;
  8 | 
 (5 rows)
 ```
+
+
+## Custom Type (Tuple) Arguments in Window Functions <a name='custom-type-tuple-arguments-in-window-functions'></a>
+
+Arguments now can be a custom tuple or a record.
+PL/R version 8.4.2 (or later) is required.
+
+```postgresql
+CREATE OR REPLACE FUNCTION fast_win_frame(r int, t record) RETURNS bool AS '
+identical(parent.frame(), .GlobalEnv) && 
+  pg.throwerror(''Parent env is global'')
+exists(''plr_window_frame'', parent.frame(), inherits=FALSE) || 
+  pg.throwerror(''No window frame data found'')
+r == farg2[[prownum, 2]][3]
+' LANGUAGE plr WINDOW;
+
+SELECT s.r, s.p, fast_win_frame(NULLIF(r,4), (s.r, s.q)) OVER w
+FROM (SELECT r, r % 2 AS p, array_fill(CASE WHEN r=7 THEN 77 ELSE r END, ARRAY[3]) AS q 
+      FROM generate_series(1,10) r) s
+WINDOW w AS (PARTITION BY p ORDER BY r ROWS BETWEEN UNBOUNDED PRECEDING AND 
+                                                    UNBOUNDED FOLLOWING)
+ORDER BY s.r;
+
+ r  | p | fast_win_frame 
+----+---+----------------
+  1 | 1 | t
+  2 | 0 | t
+  3 | 1 | t
+  4 | 0 | 
+  5 | 1 | t
+  6 | 0 | t
+  7 | 1 | f
+  8 | 0 | t
+  9 | 1 | t
+ 10 | 0 | t
+(10 rows)
+```
+
 
 ## License
 
