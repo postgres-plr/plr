@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [8.4.2] - 2021-05-24
+## [8.4.2] - 2021-05-28
 ### Added
 - Added support for transactions in procedures. [@petere](https://github.com/petere/plr/commit/1b275d1337f724e0330ecc027186a052509260fa)
+- Added support for pg custom type (tuple) arguments in window functions 
 
 ### Changed
 - Changed R version to 4.10.
