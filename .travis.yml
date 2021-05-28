@@ -11,6 +11,13 @@ env:
   - PG=9.5
 
 before_script:
+  # creates a diff of all commits and exits the build if it only includes markdown files
+  - |
+      if ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(.md$)'
+      then
+        echo "Only doc files were updated, not running the CI."
+        exit
+      fi
   - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
   - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
   - sudo apt-get update -qq
