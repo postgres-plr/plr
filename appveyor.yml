@@ -1,3 +1,12 @@
+
+# Skipping commits affecting specific files (GitHub and Bitbucket only).
+skip_commits:
+  files:
+    # skipping AppVeyor build if, in the push’s head commit, all of the files 
+    # have the extension .md   
+    - '**/*.md'
+
+
 image: Visual Studio 2015
 configuration: Release
 platform: x64

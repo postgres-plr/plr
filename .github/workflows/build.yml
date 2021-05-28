@@ -1,8 +1,23 @@
 name: plr CI
-on: [push, pull_request]
+on:
+  pull_request:
+    paths-ignore:
+    # When using the push and pull_request events, 
+    # you can, configure a workflow to run, when at least one file does not match 
+    # paths-ignore, or at least one modified file matches the configured paths.
+    - '**/*.md'
+  push:
+    paths-ignore:
+    - '**/*.md'
 jobs:
   master:
     runs-on: ubuntu-latest
+    # not restricted to specific Webhook event payloads (of "push" and "pull_request")
+    # just check the latest commit
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]') && 
+      !contains(github.event.head_commit.message, '[skip actions]') && 
+      !contains(github.event.head_commit.message, '[skip github actions]')
     steps:
       - name: Echo site details
         run: echo building master
@@ -45,6 +60,12 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    # not restricted to specific Webhook event payloads (of "push" and "pull_request")
+    # just check the latest commit
+    if: |
+      !contains(github.event.head_commit.message, '[skip ci]') && 
+      !contains(github.event.head_commit.message, '[skip actions]') && 
+      !contains(github.event.head_commit.message, '[skip github actions]')
     env:
       PG: ${{ matrix.pg }}
     strategy:
