@@ -64,9 +64,6 @@
 #include "tcop/tcopprot.h"
 #include "utils/array.h"
 
-#if PG_VERSION_NUM >= 140000
-#include "common/hex.h"
-#endif
 #include "utils/builtins.h"
 
 #if PG_VERSION_NUM >= 80500
