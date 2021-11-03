@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [8.5.5] - 2021-11-03
+## [8.4.5] - 2021-11-03
 ### Fixed
 - added sql upgrade path to fix 
 
