@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.4.5] - 2021-11-03
+### Fixed
+- added sql upgrade path to fix 
+
+## [8.4.4] - 2021-09-29
+### Fixed
+- changed files names to be consistent with extension version
+
+## [8.4.3] - 2021-08-31
+### Fixed
+-  reverted part of PR#88. postgres has reverted the changes to hex_decode that
+ made it necessary (#120)
+
 ## [8.4.2] - 2021-05-28
 ### Added
 - Added support for transactions in procedures. [@petere](https://github.com/petere/plr/commit/1b275d1337f724e0330ecc027186a052509260fa)

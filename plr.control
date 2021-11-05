@@ -1,5 +1,5 @@
 # plr extension
 comment = 'load R interpreter and execute R script from within a database'
-default_version = '8.4.4'
+default_version = '8.4.5'
 module_pathname = '$libdir/plr'
 relocatable = true
