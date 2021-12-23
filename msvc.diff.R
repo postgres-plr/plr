@@ -53,11 +53,6 @@ Mkvcbuild.pm.Lines <- insContribExcludesArray(Mkvcbuild.pm.Lines)
 
 addProjectCode  <- function(lines) {
 
-  LineOnlyBeginPos    <- which(grepl("sub\\s+mkvcbuild", x = lines, perl = TRUE))
-  LineLastPgCryptoPos <- which(grepl("GenerateContribSqlFiles\\s*\\(\\s*'pgcrypto'", x = lines , perl = TRUE))
-  # after BeginPos, first-found line
-  LineOnlyPos <- LineLastPgCryptoPos[head(which(LineOnlyBeginPos < LineLastPgCryptoPos),1)]
-
   plrProjectText <-
 "\tmy $plr = $solution->AddProject('plr','dll','plr','contrib/plr');
 \t$plr->AddFiles(
@@ -70,8 +65,38 @@ addProjectCode  <- function(lines) {
 \tGenerateContribSqlFiles('plr', $mfplr);
 
 "
-  # insert into the file
+
+  LineOnlyBeginPos    <- which(grepl("sub\\s+mkvcbuild", x = lines, perl = TRUE))
+
+  # if pgcrypto code exists, then use it to do positioning
+  if(any(grepl("GenerateContribSqlFiles\\s*\\(\\s*'pgcrypto'", x = lines , perl = TRUE))) {
+  
+    LineLastPgCryptoPos <- which(grepl("GenerateContribSqlFiles\\s*\\(\\s*'pgcrypto'", x = lines , perl = TRUE))
+    # after BeginPos, first-found line
+    LineOnlyPos <- LineLastPgCryptoPos[head(which(LineOnlyBeginPos < LineLastPgCryptoPos),1)]
+    
+  # insert into the file after(below) the positition
   lines <- append(lines, strsplit(plrProjectText, split = "\n")[[1L]], after =  LineOnlyPos + 1L)
+    
+  # otherwise, use something else to do positioning
+  #
+  # pgcrypto: Remove non-OpenSSL support
+  # petere committed on Nov 5 2021
+  # https://github.com/postgres/postgres/commit/db7d1a7b0530e8cbd045744e1c75b0e63fb6916f#diff-fd3a59b81739e0c9f354d679334926ecfc23defb2b3d477f9d22f182adb19afe
+  #
+  # Fix the pgcrypto position error in the Windows build that uses pg master #127
+  # https://github.com/postgres-plr/plr/issues/127
+  #
+  } else {
+  
+    FirstLineIterSrcTestModules <- which(grepl("foreach\\s+my\\s+\\$subdir\\s*\\(\\s*'contrib'\\s*,\\s*'src/test/modules", x = lines , perl = TRUE))
+    # before BeginPos, first-found line
+    LineOnlyPos <- FirstLineIterSrcTestModules[head(which(LineOnlyBeginPos < FirstLineIterSrcTestModules),1)]
+  
+  # insert into the file before(above) the position
+  lines <- append(lines, strsplit(plrProjectText, split = "\n")[[1L]], after =  LineOnlyPos - 1L)
+  
+  }
 
   writeLines("")
   writeLines("BEGIN AddProjectCode")
