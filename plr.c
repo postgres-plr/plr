@@ -225,8 +225,13 @@ static void plr_resolve_polymorphic_argtypes(int numargs,
 											 const char *proname);
 
 /*
- * plr_call_handler -	This is the only visible function
- *						of the PL interpreter. The PostgreSQL
+There are three externally visible pieces to plr: plr_call_handler,
+plr_inline_handler, and plr_validator.
+*/
+
+
+/*
+ * plr_call_handler -	The PostgreSQL
  *						function manager and trigger manager
  *						call this function for execution of
  *						PL/R procedures.
