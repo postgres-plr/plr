@@ -2,36 +2,97 @@ image: Visual Studio 2015
 configuration: Release
 platform: x64
 clone_depth: 1
+
 environment:
+
   PGUSER: postgres
   PGPASSWORD: Password12!
-  rversion: 4.1.0
+
   matrix:
 
   - pg: master
     PlatformToolset: v141
     configuration: Debug
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.2.0
 
-  - pg: REL_13_0
+  - pg: master
+    PlatformToolset: v141
+    configuration: Debug
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
+
+  - pg: REL_14_3
     PlatformToolset: v141
     configuration: Release
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - pg: REL_12_0
+    rversion: 4.2.0
+
+  - pg: REL_14_3
     PlatformToolset: v141
     configuration: Release
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
 
-  - pg: 9.6.13-1
-    PlatformToolset: v120
-  - pg: 11.11-2
+  - pg: 14.3-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.2.0
+
+  - pg: 14.3-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
+
+  - pg: 13.7-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.2.0
+
+  - pg: 13.7-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
+
+  - pg: 12.11-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.2.0
+
+  - pg: 12.11-1
+    PlatformToolset: v141
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
+
+  - pg: 11.16-1
     PlatformToolset: v140
-  - pg: 12.6-2
-    PlatformToolset: v141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - pg: 13.2-2
-    PlatformToolset: v141
+    rversion: 4.2.0
+
+  - pg: 11.16-1
+    PlatformToolset: v140
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    rversion: 4.1.3
+
+  - pg: 10.21-1
+    PlatformToolset: v120
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    rversion: 4.2.0
+
+  - pg: 10.21-1
+    PlatformToolset: v120
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    rversion: 4.1.3
+
+  - pg: 9.6.24-1
+    PlatformToolset: v120
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    rversion: 4.2.0
+
+  - pg: 9.6.24-1
+    PlatformToolset: v120
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    rversion: 4.1.3
 
 matrix:
   allow_failures:
