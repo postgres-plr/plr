@@ -41,7 +41,6 @@ jobs:
           make installcheck || (cat regression.diffs && false)
         env:
           USE_PGXS: 1
-          
 
   build:
     runs-on: ubuntu-latest
@@ -49,14 +48,14 @@ jobs:
       PG: ${{ matrix.pg }}
     strategy:
       matrix:
-        pg: [13, 12, 11, 10, 9.6, 9.5]
+        pg: [14, 13, 12, 11, 10, 9.6]
         include:
+          - pg: 14
           - pg: 13
           - pg: 12
           - pg: 11
           - pg: 10
           - pg: 9.6
-          - pg: 9.5
 
     steps:
       - name: Echo site details
