@@ -5,7 +5,7 @@
 [![Code coverage](https://img.shields.io/codecov/c/github/postgres-plr/plr.svg?logo=codecov&cacheSeconds=2592000)](https://codecov.io/github/postgres-plr/plr)
 [![Chat on Slack](https://img.shields.io/badge/Slack-chat-orange.svg?logo=slack&cacheSeconds=2592000)](https://postgresteam.slack.com/messages/CJQUZ1475/ "Join the conversation!")
 
- Copyright (c) 2003-2021 by Joseph E. Conway ALL RIGHTS RESERVED
+ Copyright (c) 2003 by Joseph E. Conway ALL RIGHTS RESERVED
 
  Joe Conway <mail@joeconway.com>
 

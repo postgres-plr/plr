@@ -1,3 +1,5 @@
+Copyright (c) 2003
+
 I successfully did the following recently in order to build 64 bit PL/R
 on Windows 10:
 
