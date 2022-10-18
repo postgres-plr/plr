@@ -48,15 +48,14 @@ jobs:
       PG: ${{ matrix.pg }}
     strategy:
       matrix:
-        pg: [14, 13, 12, 11, 10, 9.6]
+        pg: [15, 14, 13, 12, 11, 10]
         include:
+          - pg: 15
           - pg: 14
           - pg: 13
           - pg: 12
           - pg: 11
           - pg: 10
-          - pg: 9.6
-
     steps:
       - name: Echo site details
         run: echo PG $PG

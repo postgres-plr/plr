@@ -214,6 +214,21 @@ Path=%PATH%;%R_HOME%\x64\bin
 
 #### Detailed Windows Environment
 
+If wanting to install R 4.2.0 or later on a system older than Windows 10, then the following applies.
+
+In R 4.2.0 or greater, support for 32-bit builds has been dropped.
+
+R 4.2.0 and later uses UTF-8 as the native encoding on recent Windows systems
+(at least Windows 10 version 1903, Windows Server 2022 or Windows Server 1903).
+As a part of this change, R 4.2.0 and later uses UCRT as the C runtime.
+UCRT should be installed manually on systems older than Windows 10 or Windows Server 2016 before installing R.
+
+This is documented at `CHANGES IN R 4.2.0`
+https://cran.r-project.org/doc/manuals/r-release/NEWS.html
+
+Acquire UCRT through `Windows Update` or at the following URL query result:
+https://www.google.com/search?q=download+UCRT
+
 In a Windows environment, with a PL/R compiled
 using Microsoft Visual Studio [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest),
 with a PostgreSQL compiled 

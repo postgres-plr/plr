@@ -4,11 +4,12 @@ os:
 language: c
 sudo : required 
 env:
+  - PG=15
+  - PG=14
+  - PG=13
   - PG=12
   - PG=11
   - PG=10
-  - PG=9.6
-  - PG=9.5
 
 before_script:
   - sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
