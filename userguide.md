@@ -20,7 +20,7 @@
 
 ####   6.1. [Normal Support](#normal-support)
 
-####   6.2. [RPostgreSQL Compatibility Support](#rpostgresql)
+####   6.2. [RPostgreSQL Compatibility Support](#rpostgresql-support)
 
 #### 7. [PostgreSQL Support Functions](#postgresql-support)
 
@@ -46,7 +46,7 @@
 
 
 
-## Overview
+## Overview <a name='overview'></a>
 
 PL/R is a loadable procedural language that enables you to write PostgreSQL functions and triggers in the
 R programming language<sup>1</sup>. PL/R offers most (if not all) of the capabilities a function writer has in the R
@@ -65,7 +65,7 @@ new data types.
 1. [http://www.r-project.org/](http://www.r-project.org/)
 
 
-## Installation
+## Installation <a name='installation'></a>
 
 All of the following presume that you have installed R before starting.
 From within R you can find R_HOME with ```R.home(component="home")```
@@ -78,7 +78,7 @@ This presumes you installed PostgreSQL using the PGDG repositories found [here](
 yum install plr-nn
 ```
 
-Where nn is the major version number such as 13 for PostgreSQL version 13.x
+Where nn is the major version number such as 15 for PostgreSQL version 15.x
 
 To set R_HOME for use by PostgreSQL.
 
@@ -140,8 +140,8 @@ You may explicitly include the path of pg_config to `PATH`, such as
 
 ```bash
 cd plr
-PATH=/usr/pgsql-13/bin/:$PATH; USE_PGXS=1 make
-echo "PATH=/usr/pgsql-13/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
+PATH=/usr/pgsql-15/bin/:$PATH; USE_PGXS=1 make
+echo "PATH=/usr/pgsql-15/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
 ```
 If you want to use git to pull the repository, run the following command before the make command:
 
@@ -161,8 +161,8 @@ USE_PGXS=1 make install
 
 In MSYS:
 ```
-export R_HOME=/c/progra~1/R/R-4.1.0
-export PATH=$PATH:/c/progra~1/PostgreSQL/13/bin
+export R_HOME=/c/progra~1/R/R-4.2.1
+export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
@@ -173,20 +173,31 @@ If R is built and installed using a sub-architecture, as explained in the sectio
 https://cran.r-project.org/doc/manuals/r-release/R-admin.html
 for example, in an R
 ```
-R-x.y.z for Windows (32/64 bit)
+R-x.y.z for Windows (32/64 bit) and version 4.1.3 or earlier
+R-x.y.z for Windows (64 bit) and version 4.2.0 or later
 ```
 that has been downloaded (and installed) from
-[https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
+[https://cran.r-project.org/bin/windows/base/old/](https://cran.r-project.org/bin/windows/base/old/)
 
 then, include the environment variable R_ARCH.
 For example R_ARCH=/x64 (or R_ARCH=/i386 as appropriate):
 ```
-export R_HOME=/c/progra~1/R/R-4.0.4
-export PATH=$PATH:/c/progra~1/PostgreSQL/13/bin
+export R_HOME=/c/progra~1/R/R-4.1.3
+export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
 export R_ARCH=/x64
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
+```
+export R_HOME=/c/progra~1/R/R-4.2.1
+export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
+export R_ARCH=/x64
+USE_PGXS=1 make
+USE_PGXS=1 make install
+```
+Note, R 4.2.0 and greater is not "single architecture." 
+It is still "subarchitecture" with only 64bit.  
+32bit has been removed.
 
 
 
@@ -197,11 +208,26 @@ changing:
 
 In Windows environment (generally):
 ```
-R_HOME=C:\Progra~1\R\R-4.1.0
+R_HOME=C:\Progra~1\R\R-4.2.1
 Path=%PATH%;%R_HOME%\x64\bin
 ```
 
 #### Detailed Windows Environment
+
+If wanting to install R 4.2.0 or later on a system older than Windows 10, then the following applies.
+
+In R 4.2.0 or greater, support for 32-bit builds has been dropped.
+
+R 4.2.0 and later uses UTF-8 as the native encoding on recent Windows systems
+(at least Windows 10 version 1903, Windows Server 2022 or Windows Server 1903).
+As a part of this change, R 4.2.0 and later uses UCRT as the C runtime.
+UCRT should be installed manually on systems older than Windows 10 or Windows Server 2016 before installing R.
+
+This is documented at `CHANGES IN R 4.2.0`
+https://cran.r-project.org/doc/manuals/r-release/NEWS.html
+
+Acquire UCRT through `Windows Update` or at the following URL query result:
+https://www.google.com/search?q=download+UCRT
 
 In a Windows environment, with a PL/R compiled
 using Microsoft Visual Studio [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest),
@@ -222,13 +248,13 @@ Download PL/R compiled using Microsoft Visual Studio
 [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest)
 
 Unzip the plr.zip file into a folder, that is called the "unzipped folder".
-If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\13",
+If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\15",
 then from the unzipped PL/R folder, place the following 
 
  * .sql files and the plr.control file, all found in the "share\extension" folder 
-   into "C:\Program Files\PostgreSQL\13\share\extension" folder.
+   into "C:\Program Files\PostgreSQL\15\share\extension" folder.
 
- * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\13\lib" folder.
+ * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\15\lib" folder.
 
 
 
@@ -244,7 +270,7 @@ and choose [ ] "Save version number in registry".
 At a Command Prompt run (and may have to be an Administrator Command Prompt)
 and using wherever your path to R may be, do:
 ```
-setx R_HOME "C:\Program Files\R\R-4.1.0" /M
+setx R_HOME "C:\Program Files\R\R-4.2.1" /M
 ```
 ### Optionally:
 
@@ -253,7 +279,7 @@ and choose [ ] "Save version number in registry".
 Choose Control Panel -> System -> advanced system settings -> Environment Variables button.
 In the "System variables" area, create the System Variable, called R_HOME.
 Give R_HOME the value of the PATH to the R home,
-for example (without quotes) "C:\Program Files\R\R-4.1.0".
+for example (without quotes) "C:\Program Files\R\R-4.2.1".
 
 If you forgot to set the R_HOME environment variable (by any method),
 then (eventually) you may get this error:
@@ -268,19 +294,25 @@ HINT:  R_HOME must be defined in the environment of the user that starts the pos
 
 ### Third:
 
+
+
 Put the R.dll in your PATH. This is required, so do the following:
 Control Panel -> System -> Advanced System Settings -> Environment Variables button
 In the "System variables" area, choose the System Variable, called "Path".
 Click on the Edit button.
 Add the R.dll folder to the "Path".
-For example (without quotes), add "C:\Program Files\R\R-4.1.0\bin\x64" 
-or "C:\Program Files\R\R-4.1.0\bin\i386".
+For example (without quotes), add "C:\Program Files\R\R-4.2.1\bin\x64" or
+"C:\Program Files\R\R-4.1.3\bin\x64"  or "C:\Program Files\R\R-4.1.3\bin\i386".
 If you are running R version 2.11 or earlier on Windows, the R.dll folder is different;
 instead of "bin\i386" or "bin\x64", it is "bin".
 Note, a 64bit compiled PL/R can only run with a 64bit compiled PostgreSQL.
 A 32bit compiled PL/R can only run with a 32bit compiled PostgreSQL.
 The last 32bit PostgreSQL was version ten(10) from  [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads).
-Of course, you, yourself, may yourself, compile a 32bit PostgreSQL using Microsoft Visual Studio.
+Of course, you, yourselfm may try to compile a 32bit PostgreSQL using Microsoft Visual Studio.
+
+Note, R 4.2.0 and greater is not "single architecture." 
+It is still "subarchitecture" with only 64bit.  
+32bit has been removed.
 
 ### Fourth:
 
@@ -289,21 +321,21 @@ Restart the PostgreSQL cluster, do:
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net stop   postgresql-x64-13
+net stop  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-13 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net start   postgresql-x64-13
+net start  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-13 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
 Right click and choose "Start"
 
 
@@ -1029,7 +1061,7 @@ SELECT * FROM pg_available_extensions WHERE name = 'plr';
 
  name | default_version | installed_version |                            comment
 ------+-----------------+-------------------+----------------------------------------------------------------
- plr  | 8.4.2           | 8.4.2             | load R interpreter and execute R script from within a database
+ plr  | 8.4.5           | 8.4.5             | load R interpreter and execute R script from within a database
 (1 row)
 ```
 
@@ -1044,18 +1076,19 @@ SELECT r_version();
  (platform,x86_64-w64-mingw32)
  (arch,x86_64)
  (os,mingw32)
+ (crt,"ucrt")
  (system,"x86_64, mingw32")
  (status,"")
  (major,4)
- (minor,1.0)
- (year,2021)
- (month,05)
- (day,18)
- ("svn rev",80317)
+ (minor,2.1)
+ (year,2022)
+ (month,06)
+ (day,23)
+ ("svn rev",82513)
  (language,R)
- (version.string,"R version 4.1.0 (2021-05-18)")
- (nickname,"Camp Pontanezen")
-(14 rows)
+ (version.string,"R version 4.2.1 (2022-06-23 ucrt)")
+ (nickname,"Funny-Looking Kid")
+(15 rows)
 ```
 
 `install_rcmd(text R_code)`
@@ -1297,8 +1330,9 @@ case since no `PARTITION` is explicitly defined, the `PARTITION` is the entire s
 inner sub-select.
 
 In these next examples, use of the variables `arg1`,`farg1`,`fnumrows`, and `prownum` are illustrated in detail.
-The window frame is saved into a dedicated R environment. 
-[R Environments] (https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Environment-objects). 
+The window frame is saved into a dedicated [R Environment](https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Environment-objects). 
+
+
 
 Variables `farg#` and only `farg1` in these simple examples.
 The `foo` table that we created (above) is reused here.
@@ -1630,7 +1664,7 @@ pg.throwlog(''Hello, world!'')
 ```
 Output is seen in the PostgreSQL log:
 ```text
-2021-03-18 04:47:15.086 UTC [47940] LOG:  Hello, world!
+2022-07-20 20:05:04.017 UTC [43852] LOG:  Hello, world!
 ```
 ```postgresql
 DO LANGUAGE plr '
@@ -1649,16 +1683,14 @@ DO
 
 In PostgreSQL version eleven(11) or later, is the feature of Stored Procedures.
 These work in any operating system and in any platform.
-
-Unlike functions that return a value, procedures do not return a value.
-
 ```postgresql
 SELECT version();
                           version
 ------------------------------------------------------------
  PostgreSQL 11.0, compiled by Visual C++ build 1914, 64-bit
 (1 row)
-
+```
+```postgresql
 SELECT current_setting('server_version_num')::int;
 
  current_setting
@@ -1666,7 +1698,7 @@ SELECT current_setting('server_version_num')::int;
           110000
 (1 row)
 ```
-
+Unlike functions that return a value, procedures do not return a value.
 ```postgresql
 CREATE TABLE tbl(val integer);
 
@@ -1689,7 +1721,7 @@ SELECT * FROM tbl;
 ## Transactions in Stored Procedures <a name='transactions-in-stored-procedures'></a>
 
 This feature has the same PostgreSQL version
-requirement as seen in `Stored Procedures`.
+requirement as seen in [Stored Procedures](#stored-procedures).
 Also PL/R version 8.4.2 (or later) is required.
 
 ```postgresql
@@ -1760,7 +1792,7 @@ ORDER BY s.r;
 ```
 
 
-## License
+## License <a name='license'></a>
 
 License: GPL version 2 or newer. http://www.gnu.org/copyleft/gpl.html
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General
