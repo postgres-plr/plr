@@ -274,7 +274,7 @@ file_exists(const char *name)
 {
 	struct stat st;
 
-	AssertArg(name != NULL);
+	Assert(name != NULL);
 
 	if (stat(name, &st) == 0)
 		return S_ISDIR(st.st_mode) ? false : true;
@@ -306,7 +306,7 @@ expand_dynamic_library_name(const char *name)
 	char	   *new;
 	char	   *full;
 
-	AssertArg(name);
+	Assert(name);
 
 	have_slash = (strchr(name, '/') != NULL);
 
@@ -360,7 +360,7 @@ substitute_libpath_macro(const char *name)
 	char	   *ret;
 	char		pkglib_path[MAXPGPATH];
 
-	AssertArg(name != NULL);
+	Assert(name != NULL);
 	get_pkglib_path(my_exec_path, pkglib_path);
 
 	if (name[0] != '$')
@@ -400,9 +400,9 @@ find_in_dynamic_libpath(const char *basename)
 #endif
 		);
 
-	AssertArg(basename != NULL);
-	AssertArg(strchr(basename, '/') == NULL);
-	AssertState(Dynamic_library_path != NULL);
+	Assert(basename != NULL);
+	Assert(strchr(basename, '/') == NULL);
+	Assert(Dynamic_library_path != NULL);
 
 	p = Dynamic_library_path;
 	if (strlen(p) == 0)
