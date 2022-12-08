@@ -8,7 +8,7 @@ jobs:
         run: echo building master
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: checkout postgres
         run: |
@@ -19,7 +19,7 @@ jobs:
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
-          git clone https://github.com/postgres/postgres.git
+          git clone --depth=1 https://github.com/postgres/postgres.git
           pushd postgres
           ./configure
           make
@@ -61,7 +61,7 @@ jobs:
         run: echo PG $PG
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Before Script
         run: |
