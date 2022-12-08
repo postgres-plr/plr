@@ -22,7 +22,7 @@ jobs:
           git clone --depth=1 https://github.com/postgres/postgres.git
           pushd postgres
           ./configure
-          make
+          make -j4
           sudo make install
           export PATH=/usr/local/pgsql/bin:$PATH
           initdb -D data
