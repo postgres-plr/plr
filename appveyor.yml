@@ -13,83 +13,77 @@ environment:
   - pg: master
     PlatformToolset: v141
     configuration: Debug
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
 
-  - pg: master
-    PlatformToolset: v141
+  - pg: REL_16_BETA1
+    PlatformToolset: v143
     configuration: Debug
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
+
+  - pg: REL_15_3
+    PlatformToolset: v143
+    configuration: Debug
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
+
+  - pg: 15.3-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
+    
+  - pg: 15.3-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     rversion: 4.1.3
 
-  - pg: REL_15_0
-    PlatformToolset: v141
-    configuration: Release
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
+  - pg: 14.8-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
 
-  - pg: REL_15_0
-    PlatformToolset: v141
-    configuration: Release
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - pg: 14.8-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     rversion: 4.1.3
 
-  - pg: 15.0-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
+  - pg: 13.11-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
 
-  - pg: 15.0-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - pg: 13.11-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     rversion: 4.1.3
 
-  - pg: 14.5-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
+  - pg: 12.15-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+    rversion: 4.2.3
 
-  - pg: 14.5-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - pg: 12.15-2
+    PlatformToolset: v143
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
     rversion: 4.1.3
 
-  - pg: 13.8-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
-
-  - pg: 13.8-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.1.3
-
-  - pg: 12.12-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
-
-  - pg: 12.12-1
-    PlatformToolset: v141
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.1.3
-
-  - pg: 11.17-1
+  - pg: 11.20-2
     PlatformToolset: v140
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-    rversion: 4.2.1
+    rversion: 4.2.3
 
-  - pg: 11.17-1
+  - pg: 11.20-2
     PlatformToolset: v140
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     rversion: 4.1.3
 
-  - pg: 10.22-1
+  - pg: 10.23-1
     PlatformToolset: v120
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-    rversion: 4.2.1
+    rversion: 4.2.3
 
-  - pg: 10.22-1
+  - pg: 10.23-1
     PlatformToolset: v120
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
     rversion: 4.1.3
@@ -98,9 +92,33 @@ matrix:
   allow_failures:
     - pg: master
 
-init: # Make %x64% available for caching
+init: 
+- echo compiler msvc init
+- systeminfo
+# https://stackoverflow.com/questions/5089389/how-can-i-check-what-version-edition-of-visual-studio-is-installed-programmatica
+- if not "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property productId
+- if not "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion
+# Make %x64% available for caching
 - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-- if %PLATFORM%==x64 ( set pf=%ProgramFiles%&& set x64=-x64) else set pf=%ProgramFiles(x86)%
+# a variable used in the Appveyor cache area must be defined in the init
+- ps: |
+    if ("$env:Platform" -eq "x64") {
+      $env:pf = "$env:ProgramFiles"
+      $env:x64 = "-x64"
+    } else {
+      $env:pf = "${env:ProgramFiles(x86)}"
+    }
+    $env:exe = "postgresql-$env:pg-windows$env:x64.exe"
+    [Environment]::SetEnvironmentVariable("exe", $env:exe, "Machine")
+
+    if ("${env:Platform}" -eq "x64") {
+      ${env:bit} = "64"
+    } else {
+      ${env:bit} = "32"
+    }
+    ${env:betterperl} = "strawberry${env:bit}"
+    ${env:betterperlurl} = "https://strawberryperl.com/download/5.32.1.1/strawberry-perl-5.32.1.1-${env:bit}bit-portable.zip"
+
 - set exe=postgresql-%pg%-windows%x64%.exe
 - setx /m exe %exe%
 
@@ -122,14 +140,44 @@ install:
 - SET R_HOME=%ProgramFiles%\R\R-%rversion%
 - set RBIN=%PLATFORM:x86=i386%
 - SET sed=C:\msys64\usr\bin\sed
+
+# Appveyor specific: seems not required - with Appveyor - Strawberry perl is already in the path
+# ActiveState Perl is good, but Strawberry Perl is preferred
+#
+- ps: |
+    # Set-PSDebug -Trace 2
+    if (-not (Test-Path "${env:betterperl}.zip")) {
+      curl -o "${env:betterperl}.zip" -v "${env:betterperlurl}"
+    }
+    7z x    "${env:betterperl}.zip" "-oc:\${env:betterperl}"
+    # of needed to install pl/perl
+    ${env:PATH} = "c:\${env:betterperl}\perl\bin;${env:PATH}"
+    which perl
+    ${env:PATH} = "${env:PATH};c:\${env:betterperl}\c\bin"
+    which pexports
+
+
 # R in the path is not required: msvc compilation
 # R in the path is required: find Rscript
 - set PATH=%R_HOME%\bin\%rbin%;%PATH%
 # environment variable "postgresrcroot" is required for msvc.diff.R
 - set postgresrcroot=C:\projects\postgresql
+
+- ps: |
+    # "branchtagcommit" exists only because, this makes an easier test in a windows batch
+    # This environment variable is use in a test that is used that is used in determining
+    # whether or not to perform patching (see below).
+    #
+    if ("${env:pg}" -notmatch "[.]") {
+      ${env:branchtagcommit} = "yes"
+    } else {
+      ${env:branchtagcommit} = "no"
+    }
+    echo "branchtagcommit ${env:branchtagcommit}"
+
 - ps: |
     # notmatch - if no "dot is found" in pg name, then pg is a: git: branch, tag, or commit.
-    if ("${env:pg}" -notmatch "[.]") {
+    if ("${env:branchtagcommit}" -eq "yes") {
       $env:Path += ";C:\msys64\usr\bin;C:\msys64\mingw64\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\amd64"
       git config --global advice.detachedHead false
       #
@@ -150,10 +198,14 @@ install:
       gendef - "$env:R_HOME\bin\$env:rbin\R.dll" > "R$env:PLATFORM.def" 2> $null
       lib "/def:R$env:PLATFORM.def" "/out:R$env:PLATFORM.lib" "/MACHINE:$env:PLATFORM"
       pushd c:\projects\postgresql
+      pwd
       cmd /c mklink /J contrib\plr $env:APPVEYOR_BUILD_FOLDER
       Rscript --vanilla "${env:APPVEYOR_BUILD_FOLDER}\msvc.diff.R"
       perl contrib\plr\buildsetup.pl
+      echo  "AFTER perl contrib\plr\buildsetup.pl CONTENTS OF C:\projects\postgresql\pgsql.sln"
+      type  C:\projects\postgresql\pgsql.sln
       popd
+      pwd
       $env:PROJ="C:\projects\postgresql\pgsql.sln"
       $env:dll="c:\projects\postgresql\$env:CONFIGURATION\plr\plr.dll"
     } else {
@@ -168,12 +220,30 @@ install:
       }
     }
 
+#
+# Only when compiling pg from scratch.
+# If pg is not being compiled then pgsql.sln will not exist and not have been created.
+#
+# The semi-duplicate extra 'plr' entry in the pgsql.sln file 
+# prevents building if Microsoft Visual Studio is the version 2019 and greater.
+#
+- if exist C:\projects\postgresql\pgsql.sln if "%branchtagcommit%"=="yes" (
+    echo REMOVE plr ENTRY from pgsql.sln &
+    echo FILE BEFORE clean_pgsql_sln.sh C:\projects\postgresql\pgsql.sln &
+    type      C:\projects\postgresql\pgsql.sln &
+    bash -lc '/c/projects/plr/clean_pgsql_sln.sh' &
+    echo FILE AFTER clean_pgsql_sln.sh C:\projects\postgresql\pgsql.sln &
+    type      C:\projects\postgresql\pgsql.sln
+  )
+
+
 #on_failure:
 # - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 cache:
 - '%exe%'
 - R-%rversion%-win.exe
+- '%betterperl%.zip'
 
 build_script:
 - msbuild /p:PlatformToolset=%PlatformToolset% /p:configuration=%CONFIGURATION% /p:platform=%PLATFORM%
@@ -202,7 +272,7 @@ after_build:
 test_script:
 - path %pgroot%\bin;%PATH%
 - ps: |
-    if ("$env:pg" -notmatch "[.]") {
+    if ("${env:branchtagcommit}" -eq "yes") {
       Set-Content -path pg.pass -value "$env:pgpassword" -encoding ascii
       initdb -A md5 -U "$env:PGUSER" --pwfile=pg.pass C:\pgdata
       pg_ctl register -S demand -N "postgresql$env:x64-$env:pgversion" -D c:\pgdata
@@ -238,7 +308,7 @@ test_script:
     }
 
 artifacts:
-- path: '*.zip'
+- path: 'plr*.zip'
 
 deploy:
    provider: GitHub
