@@ -195,8 +195,8 @@ export R_ARCH=/x64
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
-Note, R 4.2.0 and greater is not "single architecture." 
-It is still "subarchitecture" with only 64bit.  
+Note, R 4.2.0 and greater is not "single architecture."
+It is still "subarchitecture" with only 64bit.
 32bit has been removed.
 
 
@@ -310,8 +310,8 @@ A 32bit compiled PL/R can only run with a 32bit compiled PostgreSQL.
 The last 32bit PostgreSQL was version ten(10) from  [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads).
 Of course, you, yourselfm may try to compile a 32bit PostgreSQL using Microsoft Visual Studio.
 
-Note, R 4.2.0 and greater is not "single architecture." 
-It is still "subarchitecture" with only 64bit.  
+Note, R 4.2.0 and greater is not "single architecture."
+It is still "subarchitecture" with only 64bit.
 32bit has been removed.
 
 ### Fourth:
@@ -325,7 +325,7 @@ net stop  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under). 
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
@@ -335,7 +335,7 @@ net start  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
 Right click and choose "Start"
 
 
@@ -1330,7 +1330,7 @@ case since no `PARTITION` is explicitly defined, the `PARTITION` is the entire s
 inner sub-select.
 
 In these next examples, use of the variables `arg1`,`farg1`,`fnumrows`, and `prownum` are illustrated in detail.
-The window frame is saved into a dedicated [R Environment](https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Environment-objects). 
+The window frame is saved into a dedicated [R Environment](https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Environment-objects).
 
 
 
