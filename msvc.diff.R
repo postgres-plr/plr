@@ -74,7 +74,7 @@ addProjectCode  <- function(lines) {
     LineLastPgCryptoPos <- which(grepl("GenerateContribSqlFiles\\s*\\(\\s*'pgcrypto'", x = lines , perl = TRUE))
     # after BeginPos, first-found line
     LineOnlyPos <- LineLastPgCryptoPos[head(which(LineOnlyBeginPos < LineLastPgCryptoPos),1)]
-  
+
   # insert into the file after(below) the positition
   lines <- append(lines, strsplit(plrProjectText, split = "\n")[[1L]], after =  LineOnlyPos + 1L)
 

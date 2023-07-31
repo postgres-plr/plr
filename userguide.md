@@ -325,7 +325,7 @@ net stop  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under). 
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
