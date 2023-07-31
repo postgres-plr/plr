@@ -128,8 +128,8 @@ export R_ARCH=/x64
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
-Note, R 4.2.0 and greater is not "single architecture." 
-It is still "subarchitecture" with only 64bit.  
+Note, R 4.2.0 and greater is not "single architecture."
+It is still "subarchitecture" with only 64bit.
 32bit has been removed.
 
 
@@ -164,9 +164,9 @@ https://www.google.com/search?q=download+UCRT
 
 In a Windows environment, with a PL/R compiled
 using Microsoft Visual Studio [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest),
-with a PostgreSQL compiled 
+with a PostgreSQL compiled
 with Microsoft Visual Studio [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads),
-and an R acquired 
+and an R acquired
 from [https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
 do the following.
 
@@ -177,14 +177,14 @@ do the following.
 
 Download and install PostgreSQL compiled with Microsoft Visual Studio
 [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
-Download PL/R compiled using Microsoft Visual Studio 
+Download PL/R compiled using Microsoft Visual Studio
 [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest)
 
 Unzip the plr.zip file into a folder, that is called the "unzipped folder".
 If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\15",
-then from the unzipped PL/R folder, place the following 
+then from the unzipped PL/R folder, place the following
 
- * .sql files and the plr.control file, all found in the "share\extension" folder 
+ * .sql files and the plr.control file, all found in the "share\extension" folder
    into "C:\Program Files\PostgreSQL\15\share\extension" folder.
 
  * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\15\lib" folder.
@@ -243,8 +243,8 @@ A 32bit compiled PL/R can only run with a 32bit compiled PostgreSQL.
 The last 32bit PostgreSQL was version ten(10) from  [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads).
 Of course, you, yourselfm may try to compile a 32bit PostgreSQL using Microsoft Visual Studio.
 
-Note, R 4.2.0 and greater is not "single architecture." 
-It is still "subarchitecture" with only 64bit.  
+Note, R 4.2.0 and greater is not "single architecture."
+It is still "subarchitecture" with only 64bit.
 32bit has been removed.
 
 ### Fourth:
@@ -258,7 +258,7 @@ net stop  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
@@ -268,7 +268,7 @@ net start  postgresql-x64-15
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).  
+Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
 Right click and choose "Start"
 
 
@@ -313,5 +313,5 @@ DROP EXTENSION plr;
 **Tip** If a language is installed into `template1`, all subsequently created databases will have the
 language installed automatically.
 
-**Tip** In addition to the documentation, the plr.out.* files in the plr/expected folder 
+**Tip** In addition to the documentation, the plr.out.* files in the plr/expected folder
 are a good source of usage examples.
