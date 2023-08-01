@@ -316,7 +316,7 @@ deploy:
    draft: false
    prerelease: false
    auth_token:
-      secure: nasXR/dCMdQmmouYtN0t1/9jilLmOA6E5EsGoP6Td5yvp3JK4QPfZO0BEVzMeXW1
+      secure: DpxrjrmF0pQsm3G/F8m7EDVz6yhBQhlwXWOtqxgQTmUMiofL1PZD+9Q1dAqyKh9Z
    on:
       appveyor_repo_tag: true
 
