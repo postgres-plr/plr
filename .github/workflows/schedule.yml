@@ -1,6 +1,8 @@
 # This is a basic workflow to help you get started with Actions
 
 name: plr daily
+run-name: plr daily - ${{ github.event.head_commit.message }}
+
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string

@@ -1,4 +1,6 @@
 name: plr CI
+run-name: plr CI - ${{ github.event.head_commit.message }}
+
 on: [push, pull_request]
 jobs:
   master:
@@ -48,7 +50,6 @@ jobs:
       PG: ${{ matrix.pg }}
     strategy:
       matrix:
-        pg: [15, 14, 13, 12, 11, 10]
         include:
           - pg: 15
           - pg: 14
