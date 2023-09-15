@@ -1,0 +1,7 @@
+
+
+project('Test the detection of the dependency libpostgres',
+  ['c']
+)
+
+dep_postgres = dependency('libpostgres')

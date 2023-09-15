@@ -1,0 +1,7 @@
+
+
+project('Test the detection of the dependency libR',
+  ['c']
+)
+
+dep_R = dependency('libR')

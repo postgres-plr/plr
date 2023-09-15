@@ -1,0 +1,2395 @@
+name: Meson Builds PL/R
+run-name: Meson Builds PL/R - ${{ github.event.head_commit.message }}
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  build_test_install:
+    name: R ${{ matrix.rversion }} PGsrc ${{ matrix.pgSRCversion }} PGbin ${{ matrix.pgWINversion }} ${{ matrix.compilerEnv }} ${{ matrix.Platform }}  ${{ matrix.os }} ${{ matrix.Configuration }}
+    runs-on: ${{ matrix.os }}
+    # With "continue-on-error" (and with "fail-fast") emulate Appveyor "allow_failures"
+    # Prevents a workflow run from failing when a job fails. Set to true to allow a workflow run to pass when this job fails.
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idcontinue-on-error
+    continue-on-error: ${{ matrix.GithubActionsIgnoreFail }}
+    strategy:
+      # Disable fail-fast as we want results from all even if one fails.
+      fail-fast: false
+      matrix:
+        include:
+
+          # Note, the x86 Cygwin Server will "not start" on Github Actions
+          # Therfore cygwin x86 is "not PostgreSQL regression testable."
+          #
+          # Repository R and Repository Postgresql
+          # Package: R
+          # https://www.cygwin.com/packages/summary/R.html
+          # Package: postgresql
+          # https://www.cygwin.com/packages/summary/postgresql.html
+          #
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: cygwin
+            Platform: x64
+            Configuration: Release
+
+          # plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
+          # Therefore, here, plr for "R 4.3.0 (and later) for Windows" is compiled with MSYS2(UCRT64/MINGW32).
+          # It is regression tested twice.  The first regression test is within PostgreSQL on MSYS2.
+          # The second regression test is within PostgreSQL on Windows.
+          #
+          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
+          #
+          # Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'
+          # Status: CLOSED WONTFIX
+          # https://bugs.r-project.org/show_bug.cgi?id=18544
+          #
+          # The new definition does not work with MSVC compilers because they don't support the C99 _Complex type
+          # https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support?view=msvc-170
+          #
+          # C Complex Numbers in C++?
+          # https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c
+          #
+          # bleeding edge R and bleeding edge PostgreSQL
+          - os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion:  devel
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: master
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: master.future-future
+            #
+            # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL master for Windows" exists anywhere.
+
+          # bleeding edge R and next PostgreSQL
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion:  devel
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_16_0
+            PG_SOURCE: 'D:\PGSOURCE'
+            #
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+            #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+            #   https://www.postgresql.org/docs/16/release-16.html
+            # xor
+            buildpgANDplrInSRCcontrib: true
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            pgWINversion: 16.0-1
+            # 
+            MSYS2testonpgWIN: true
+
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.3.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            # September 2023 - MSYS2 PostgreSQL version is 15.3
+            #
+            # See the UCRT repository postgreSQL version
+            # https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
+            #
+            # pgSRCversion: REL_15
+            # PG_SOURCE: 'D:\PGSOURCE'
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make
+            # PG_HOME: 'D:\PGINSTALL'
+            #
+            # download from EnterpriseDB - PostgreSQL for Windows
+            pgWINversion: 15.3-3
+            #
+            MSYS2testonpgWIN: true
+
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.3.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_14_8
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: make
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # EnterpriseDB PostgreSQL for Windows
+            # pgWINversion: 14.x-y
+            #
+            # September 2023 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
+            # ServiceName postgresql-x64-14
+            # Version 14.8
+            # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+            # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-software
+            #
+            MSYS2testonpgWIN: true
+
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.3.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_13_12
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: make
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            pgWINversion: 13.12-1
+            #
+            MSYS2testonpgWIN: true
+
+          # PG 12 x64 and PG 11 x64
+          # R 4.3.1 PGsrc REL_12_16 PGbin 12.16-1 UCRT64 x64 windows-latest Release
+          # https://github.com/AndreMikulec/plr/actions/runs/6166564347/job/16737092810#step:33:773
+          # #
+          # FUTURE - investigate and solve
+          # config_info.c:128:54: error: incomplete universal character name \uc
+
+##        - os: windows-latest
+##          GithubActionsIgnoreFail: false
+##          compilerEnv: UCRT64
+##          shellEnv: msys2 {0}
+##          compilerExe: gcc
+##          Platform: x64
+##          Configuration: Release
+##          #
+##          rversion: 4.3.1
+##          R_HOME: 'D:\RINSTALL'
+##          R_ARCH: /x64
+##          #
+##          pgSRCversion: REL_12_16
+##          PG_SOURCE: 'D:\PGSOURCE'
+##          buildpgFromSRC: true
+##          buildpgFromSRCmethod: make
+##          PG_HOME: 'D:\PGINSTALL'
+##          #
+##          pgWINversion: 12.16-1
+##          #
+##          MSYS2testonpgWIN: true
+
+##        - os: windows-latest
+##          GithubActionsIgnoreFail: false
+##          compilerEnv: UCRT64
+##          shellEnv: msys2 {0}
+##          compilerExe: gcc
+##          Platform: x64
+##          Configuration: Release
+##          #
+##          rversion: 4.3.1
+##          R_HOME: 'D:\RINSTALL'
+##          R_ARCH: /x64
+##          #
+##          pgSRCversion: REL_11_21
+##          PG_SOURCE: 'D:\PGSOURCE'
+##          buildpgFromSRC: true
+##          buildpgFromSRCmethod: make
+##          PG_HOME: 'D:\PGINSTALL'
+##          #
+##          pgWINversion: 11.21-1
+##          #
+##          MSYS2testonpgWIN: true
+
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: MINGW32
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x86
+            Configuration: Release
+            #
+            rversion: 4.1.3
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /i386
+            #
+            pgSRCversion: REL_10_23
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: make
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            pgWINversion: 10.23-1
+            #
+            MSYS2testonpgWIN: true
+
+    defaults:
+      run:
+        shell: ${{ matrix.shellEnv || 'bash' }}
+
+    steps:
+
+      - name: Windows Machine Stats systeminfo
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: cmd
+        run: |
+          systeminfo
+
+      - name: Prepare to Download Files from Github
+        shell: powershell
+        run: |
+          git config --global core.autocrlf input
+          git config --global advice.detachedHead false
+
+      - name: Matrix Variables
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          # systeminfo
+          echo "${{ matrix.compilerEnv }} on ${{ matrix.os }}"
+          # JUL 2023 - only THIS exists in Github Actions
+          if( Test-Path "C:\Program Files\PostgreSQL\14" ) {
+            "PostgreSQL for Windows x64-14 exists."
+          } else {
+            "PostgreSQL for Windows x64-14 does not exist."
+          }
+          function Set-EnvVar {param($X)     Add-Content -Path ${env:GITHUB_ENV} -Value "$X"}
+          #
+          ${env:HEAD8_GITHUB_SHA} = "${env:GITHUB_SHA}".SubString(0,8)
+          Set-EnvVar "HEAD8_GITHUB_SHA=${env:HEAD8_GITHUB_SHA}"
+
+          echo "HEAD8_GITHUB_SHA: ${env:HEAD8_GITHUB_SHA}"
+
+          ${env:os} = "${{ matrix.os }}"
+          if("${env:os}" -eq ""){${env:os} = "notset"}
+          Set-EnvVar "os=${env:os}"
+
+          echo "os: ${env:os}"
+
+          ${env:Platform} = "${{ matrix.Platform }}"
+          if("${env:Platform}" -eq ""){${env:Platform} = "notset"}
+          Set-EnvVar "Platform=${env:Platform}"
+
+          echo "Platform: ${env:Platform}"
+
+          ${env:Configuration} = "${{ matrix.Configuration }}"
+          if("${env:Configuration}" -eq ""){${env:Configuration} = "notset"}
+          Set-EnvVar "Configuration=${env:Configuration}"
+
+          echo "Configuration: ${env:Configuration}"
+
+          ${env:rversion} = "${{ matrix.rversion }}"
+          if("${env:rversion}" -eq ""){${env:rversion} = "notset"}
+          Set-EnvVar "rversion=${env:rversion}"
+
+          echo "rversion: ${env:rversion}"
+
+          ${env:rmajor} = "notset"
+          ${env:rminor} = "notset"
+          ${env:rpatch} = "notset"
+          ${env:rversionnumeric} = "notset"
+
+          $matches = @()
+          if("${env:rversion}" -ne "notset") {
+            # R-major.minor.patch
+            # R-major.minor.patchpatched
+            if(${env:rversion} -match '(\d+)')             { ${env:rmajor} = $matches[1]; $matches = @() }
+            if(${env:rversion} -match '\d+[.](\d+)')       { ${env:rminor} = $matches[1]; $matches = @() }
+            if(${env:rversion} -match '\d+[.]\d+[.](\d+)') { ${env:rpatch} = $matches[1]; $matches = @() }
+            if(${env:rversion} -match '\d+[.]\d+[.](\d+)') {
+              ${env:rversionnumeric} = ([int]"${env:rmajor}" * 10000) + ([int]"${env:rminor}" * 100) + ([int]"${env:rpatch}")
+            }
+            $matches = @()
+          }
+          if("${env:rversion}" -match 'devel') {
+            ${env:rmajor} = "devel"
+            ${env:rminor} = "devel"
+            ${env:rpatch} = "devel"
+            ${env:rversionnumeric} = "999999"
+          }
+          $matches = @()
+
+          Set-EnvVar "rmajor=${env:rmajor}"
+          Set-EnvVar "rminor=${env:rminor}"
+          Set-EnvVar "rpatch=${env:rpatch}"
+          Set-EnvVar "rversionnumeric=${env:rversionnumeric}"
+
+          echo "         rmajor: ${env:rmajor}"
+          echo "         rminor: ${env:rminor}"
+          echo "         rpatch: ${env:rpatch}"
+          echo "rversionnumeric: ${env:rversionnumeric}"
+
+          ${env:rversionlong} = "notset"
+          # derived (this will be changed FAR FAR below)
+          ${env:rversionlong} = ${env:rversion}
+          Set-EnvVar "rversionlong=${env:rversionlong}"
+
+          ${env:bit} = "notset"
+                                           # derived
+          if("${env:Platform}" -eq "x64")  { ${env:bit} = "64" }
+          if("${env:Platform}" -eq "x86")  { ${env:bit} = "32" }
+          if("${env:Platform}" -eq "notset") { ${env:bit} = "notset" }
+          Set-EnvVar "bit=${env:bit}"
+
+          echo "bit: ${env:bit}"
+
+          ${env:R_HOME} = "${{ matrix.R_HOME }}"
+          if("${env:R_HOME}" -eq ""){${env:R_HOME} = "notset"}
+          Set-EnvVar "R_HOME=${env:R_HOME}"
+
+          echo "R_HOME: ${env:R_HOME}"
+
+          ${env:R_ARCH} = "${{ matrix.R_ARCH }}"
+          if("${env:R_ARCH}" -eq ""){${env:R_ARCH} = "notset"}
+          Set-EnvVar "R_ARCH=${env:R_ARCH}"
+
+          echo "R_ARCH: ${env:R_ARCH}"
+
+          ${env:compilerEnv} = "${{ matrix.compilerEnv }}"
+          if("${env:compilerEnv}" -eq ""){${env:compilerEnv} = "notset"}
+          Set-EnvVar "compilerEnv=${env:compilerEnv}"
+
+          echo "compilerEnv: ${env:compilerEnv}"
+
+          ${env:compilerClass} = "notset"
+          if("${env:compilerEnv}" -in "MING64", "MINGW32", "UCRT64", "CLANG32", "CLANG64", "CLANGARM64") {
+            ${env:compilerClass} = "MSYS2"
+          }
+          if("${env:compilerEnv}" -eq "cygwin") {
+            ${env:compilerClass} = "cygwin"
+          }
+          if("${env:compilerEnv}" -eq "msvc") {
+            ${env:compilerClass} = "msvc"
+          }
+          Set-EnvVar "compilerClass=${env:compilerClass}"
+
+          echo "compilerClass: ${env:compilerClass}"
+
+
+          ${env:compilerExe} = "${{ matrix.compilerExe }}"
+          if("${env:compilerExe}" -eq ""){${env:compilerExe} = "notset"}
+          Set-EnvVar "compilerExe=${env:compilerExe}"
+
+          echo "compilerExe: ${env:compilerExe}"
+
+          ${env:mingw_env} = "notset"
+          if ( "${{ matrix.compilerEnv }}" -eq "MINGW64"    ) { ${env:mingw_env} = "x86_64" }
+          if ( "${{ matrix.compilerEnv }}" -eq "MINGW32"    ) { ${env:mingw_env} = "i686" }
+          if ( "${{ matrix.compilerEnv }}" -eq "UCRT64"     ) { ${env:mingw_env} = "ucrt-x86_64" }
+          if ( "${{ matrix.compilerEnv }}" -eq "CLANG32"    ) { ${env:mingw_env} = "clang-i686" }
+          if ( "${{ matrix.compilerEnv }}" -eq "CLANG64"    ) { ${env:mingw_env} = "clang-x86_64" }
+          if ( "${{ matrix.compilerEnv }}" -eq "CLANGARM64" ) { ${env:mingw_env} = "clang-aarch64" }
+          if ( "${{ matrix.compilerEnv }}" -eq "notset"     ) { ${env:mingw_env} = "notset" }
+          Set-EnvVar "mingw_env=${env:mingw_env}"
+
+          echo "mingw_env: ${env:mingw_env}"
+
+          ${env:MINGW_PACKAGE_PREFIX} = "notset"
+          if ("${{ env.mingw_env }}" -ne "notset") { ${env:MINGW_PACKAGE_PREFIX} = "mingw-w64-${env:mingw_env}" }
+          if ("${{ env.mingw_env }}" -eq "notset") { ${env:MINGW_PACKAGE_PREFIX} = "notset" }
+          Set-EnvVar "MINGW_PACKAGE_PREFIX=${env:MINGW_PACKAGE_PREFIX}"
+
+          echo "MINGW_PACKAGE_PREFIX: ${env:MINGW_PACKAGE_PREFIX}"
+
+          ${env:R_ARCHplat} = "notset"
+          if("${env:R_ARCH}" -eq "/x64")    { ${env:R_ARCHplat} =    "x64" }
+          if("${env:R_ARCH}" -eq "/i386")   { ${env:R_ARCHplat} =   "i386" }
+          if("${env:R_ARCH}" -eq "notset")  { ${env:R_ARCHplat} = "notset" }
+          Set-EnvVar "R_ARCHplat=${env:R_ARCHplat}"
+
+          echo "R_ARCHplat: ${env:R_ARCHplat}"
+
+          ${env:pgSRCversion} = "${{ matrix.pgSRCversion }}"
+          if("${env:pgSRCversion}" -eq ""){${env:pgSRCversion} = "notset"}
+          Set-EnvVar "pgSRCversion=${env:pgSRCversion}"
+
+          echo "pgSRCversion: ${env:pgSRCversion}"
+
+          ${env:PG_SOURCE} = "${{ matrix.PG_SOURCE }}"
+          if("${env:PG_SOURCE}" -eq ""){${env:PG_SOURCE} = "notset"}
+          Set-EnvVar "PG_SOURCE=${env:PG_SOURCE}"
+
+          echo "PG_SOURCE: ${env:PG_SOURCE}"
+
+          ${env:buildpgFromSRC} = "${{ matrix.buildpgFromSRC }}"
+          if("${env:buildpgFromSRC}" -eq ""){${env:buildpgFromSRC} = "notset"}
+          Set-EnvVar "buildpgFromSRC=${env:buildpgFromSRC}"
+
+          echo "buildpgFromSRC: ${env:buildpgFromSRC}"
+
+          ${env:buildpgFromSRCmethod} = "${{ matrix.buildpgFromSRCmethod }}"
+          if("${env:buildpgFromSRCmethod}" -eq ""){${env:buildpgFromSRCmethod} = "notset"}
+          Set-EnvVar "buildpgFromSRCmethod=${env:buildpgFromSRCmethod}"
+
+          echo "buildpgFromSRCmethod: ${env:buildpgFromSRCmethod}"
+
+          ${env:buildpgANDplrInSRCcontrib} = "${{ matrix.buildpgANDplrInSRCcontrib }}"
+          if("${env:buildpgANDplrInSRCcontrib}" -eq ""){${env:buildpgANDplrInSRCcontrib} = "notset"}
+          Set-EnvVar "buildpgANDplrInSRCcontrib=${env:buildpgANDplrInSRCcontrib}"
+
+          echo "buildpgANDplrInSRCcontrib: ${env:buildpgANDplrInSRCcontrib}"
+
+          ${env:PG_HOME} = "${{ matrix.PG_HOME }}"
+          if("${env:PG_HOME}" -eq ""){${env:PG_HOME} = "notset"}
+          Set-EnvVar "PG_HOME=${env:PG_HOME}"
+
+          echo "PG_HOME: ${env:PG_HOME}"
+
+          ${env:MSYS2testonpgWIN} = "${{ matrix.MSYS2testonpgWIN }}"
+          if("${env:MSYS2testonpgWIN}" -eq ""){${env:MSYS2testonpgWIN} = "notset"}
+          Set-EnvVar "MSYS2testonpgWIN=${env:MSYS2testonpgWIN}"
+
+          echo "MSYS2testonpgWIN: ${env:MSYS2testonpgWIN}"
+
+          ${env:pgWINversion} = "${{ matrix.pgWINversion }}"
+          if("${env:pgWINversion}" -eq ""){${env:pgWINversion} = "notset"}
+          Set-EnvVar "pgWINversion=${env:pgWINversion}"
+
+          echo "pgWINversion: ${env:pgWINversion}"
+
+          ${env:pgWINServiceNameHostDefault} = "notset"
+          ${env:pgWINServiceNameHostDefault} = (Get-Service -ErrorAction SilentlyContinue | where-object {$_.name -like "*postgres*"}).Name
+          echo "pgWINServiceNameHostDefault: ${env:pgWINServiceNameHostDefault}"
+          Set-EnvVar "pgWINServiceNameHostDefault=${env:pgWINServiceNameHostDefault}"
+
+          ${env:pgwinmajor} = "notset"
+          # if any, strip off the: right-most part dot, then numbers, then one hyphen, then numbers.
+          # e.g.  9.6.24-1 becomes  9.6
+          # e.g. 13.11-3   becomes 13
+          if("${env:pgWINversion}" -ne "notset") { ${env:pgwinmajor} = ${env:pgWINversion} -replace "[.]\d+-\d+$" }
+          if("${env:pgWINversion}" -eq "notset") {
+            if("${env:pgWINServiceNameHostDefault}" -match "(\d+[.]{0,1}\d+$)") {
+              # if (1) no entry "pgWINversion: whatever" and yes entry "MSYS2testonpgWIN: true"
+              # then THIS(14) is the default TESTING(14) "MSYS2testonpgWIN PostgreSQL"
+              # 9.6
+              # 13
+              ${env:pgwinmajor} = $matches[1]; $matches = @()
+              # override
+              ${env:pgWINversion} = "NODOWNLOAD"
+            }
+          }
+          Set-EnvVar "pgwinmajor=${env:pgwinmajor}"
+          Set-EnvVar "pgWINversion=${env:pgWINversion}"
+
+          echo "pgwinmajor: ${env:pgwinmajor}"
+          echo "pgWINversion: ${env:pgWINversion}"
+
+          ${env:pgWINversionlong} = "notset"
+          if("${env:Platform}" -eq "x86"  -and "${env:pgWINversion}" -ne "notset") {
+            ${env:pgWINversionlong} = "postgresql-${env:pgWINversion}-windows"
+          }
+          if("${env:Platform}" -eq "x64" -and "${env:pgWINversion}" -ne "notset") {
+            ${env:pgWINversionlong} = "postgresql-${env:pgWINversion}-windows-x64"
+          }
+          if("${env:Platform}" -eq "notset" -or "${env:pgWINversion}" -eq "notset") {
+            ${env:pgWINversionlong} = "notset"
+          }
+          Set-EnvVar "pgWINversionlong=${env:pgWINversionlong}"
+
+          echo "pgWINversionlong: ${env:pgWINversionlong}"
+
+          if("${env:pgWINversionlong}" -ne "notset") {
+            ${env:ENTDB_PG_DOWNLOAD_URL} = "http://get.enterprisedb.com/postgresql/${env:pgWINversionlong}.exe"
+          }
+          if("${env:pgWINversionlong}" -eq "notset") {
+            ${env:ENTDB_PG_DOWNLOAD_URL} = "notset"
+          }
+          Set-EnvVar "ENTDB_PG_DOWNLOAD_URL=${env:ENTDB_PG_DOWNLOAD_URL}"
+
+          echo "ENTDB_PG_DOWNLOAD_URL: ${env:ENTDB_PG_DOWNLOAD_URL}"
+
+          ${env:PGVER2} = "notset"
+          # Prep for Install PostgreSQL for Windows (if applicable)
+          ${env:PGVER2} = ${env:pgwinmajor}
+          Set-EnvVar "PGVER2=${env:PGVER2}"
+
+          echo "PGVER2: ${env:PGVER2}"
+
+          ${env:PGBIN2}  = "notset"
+          ${env:PGDATA2} = "notset"
+          ${env:PGROOT2} = "notset"
+          if("${env:Platform}" -eq "x64") {
+            ${env:PGBIN2}  = "C:\Program Files\PostgreSQL\${env:pgwinmajor}\bin"
+            ${env:PGDATA2} = "C:\Program Files\PostgreSQL\${env:pgwinmajor}\data"
+            ${env:PGROOT2} = "C:\Program Files\PostgreSQL\${env:pgwinmajor}"
+          }
+          if("${env:Platform}" -eq "x86") {
+            ${env:PGBIN2}  = "C:\Program Files (x86)\PostgreSQL\${env:pgwinmajor}\bin"
+            ${env:PGDATA2} = "C:\Program Files (x86)\PostgreSQL\${env:pgwinmajor}\data"
+            ${env:PGROOT2} = "C:\Program Files (x86)\PostgreSQL\${env:pgwinmajor}"
+          }
+          if("${env:Platform}" -eq "notset") {
+            ${env:PGBIN2}  = "notset"
+            ${env:PGDATA2} = "notset"
+            ${env:PGROOT2} = "notset"
+          }
+          Set-EnvVar "PGBIN2=${env:PGBIN2}"
+          Set-EnvVar "PGDATA2=${env:PGDATA2}"
+          Set-EnvVar "PGROOT2=${env:PGROOT2}"
+
+          echo " PGBIN2: ${env:PGBIN2}"
+          echo "PGDATA2: ${env:PGDATA2}"
+          echo "PGROOT2: ${env:PGROOT2}"
+
+
+      - name: Matrix Windows Platform Specific Variables
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
+        shell: powershell
+        run: |
+          function Set-EnvVar {param($X)     Add-Content -Path ${env:GITHUB_ENV} -Value "$X"}
+
+          # enhances and overrides #
+          ${env:rversionlong} = "${{ env.rversionlong }}-win"
+
+          $matches = @()
+          if( "${{ env.rversion }}" -match "2.11.0|2.11.1") {
+            ${env:rversionlong} = "${{ env.rversion }}-win${{ env.bit }}"
+          }
+          $matches = @()
+          ${env:rversionlong} = "R-${env:rversionlong}"
+
+          Set-EnvVar "rversionlong=${env:rversionlong}"
+
+          echo "rversionlong: ${env:rversionlong}"
+
+          # CRAN download URL
+          ${env:CRAN_R_DOWNLOAD_URL} ="notset"
+
+          $matches = @()
+          if(-not ("${env:rversionlong}" -match 'patched|devel')) {
+            if([int]"${{ env.rversionnumeric }}" -ge 30600 ) {
+              ${env:CRAN_R_DOWNLOAD_URL} = "https://cran.r-project.org/bin/windows/base/old/${{ env.rversion }}/${env:rversionlong}.exe"
+            }
+
+            if([int]"${{ env.rversionnumeric }}" -lt 30600 ) {
+              ${env:CRAN_R_DOWNLOAD_URL} = "https://cran-archive.r-project.org/bin/windows/base/old/${{ env.rversion }}/${env:rversionlong}.exe"
+            }
+          }
+          $matches = @()
+          if("${env:rversionlong}" -match 'patched|devel') {
+            ${env:CRAN_R_DOWNLOAD_URL} = "https://cran.r-project.org/bin/windows/base/${env:rversionlong}.exe"
+          }
+          $matches = @()
+          Set-EnvVar "CRAN_R_DOWNLOAD_URL=${env:CRAN_R_DOWNLOAD_URL}"
+
+          echo "CRAN_R_DOWNLOAD_URL: ${env:CRAN_R_DOWNLOAD_URL}"
+
+      - name: Checkout Code of This Repository
+        uses: actions/checkout@v3
+
+      # running Meson on GitHub Actions will end up using GCC rather than MSVC
+      #
+      # His fix .
+      # https://dvdhrm.github.io/2021/04/21/meson-msvc-github-actions/
+      #
+      # `x64` for 64-bit x86 machines, `x86` for 32-bit x86 machines.
+      # https://github.com/bus1/cabuild/blob/8c91ebf06b7a5f8405cf93c89a6928e4c76967e0/action/msdevshell/action.yml
+      - name: Prepare Github Actions, MSVC, and Meson
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        uses: bus1/cabuild/action/msdevshell@v1
+        with:
+          # msvc ARCHITECTURE
+          architecture: ${{ env.Platform }}
+
+      - name: Checkout PostgreSQL Code
+        if: ${{ env.pgSRCversion != 'notset' }}
+        uses: actions/checkout@v3
+        with:
+          repository: 'postgres/postgres'
+
+          # The branch, tag or SHA to checkout. When checking out the repository that
+          # triggered a workflow, this defaults to the reference or SHA for that event.
+          # Otherwise, uses the default branch.
+
+          # # statics
+          # REL_16_BETA2
+          #   19508f4
+          #   19508f4763b6e55baae788af000ee47e74d24370
+          # REL_10_23
+          #   02991e7
+          #   02991e79f8f58bc208f05dcc8af0c62dbe0a6ea4
+
+          # # non-statics
+          # master
+          # REL_16_STABLE
+          # REL_15_STABLE
+          #
+          ref: '${{ env.pgSRCversion }}'
+          # Relative path under $GITHUB_WORKSPACE to place the repository
+          path: PGSOURCE
+
+      - name: Windows Move PostgreSQL Code
+        if: ${{ env.os == 'windows-latest' && env.pgSRCversion != 'notset' }}
+        shell: powershell
+        run: |
+          Move-Item -Path PGSOURCE -Destination ${{ env.PG_SOURCE }}
+          Get-ChildItem                         ${{ env.PG_SOURCE }}
+
+      # I do not want to cache "R for Windows devel version".
+      #
+      # Manage my caches
+      # https://github.com/GITHUBUSER/GITHUBREPOSITORY/actions/caches
+      #
+      # TODO - possiblity of a FUTURE workaround
+      # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+      #
+      - name: Cache R-x.y.z Windows Installer Exe
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.rversion != 'devel' }}
+        uses: actions/cache@v3
+        id: cacheRWindowsInstallerExe
+        with:
+          path: ${{ env.rversionlong }}.exe
+          key:  ${{ env.rversionlong }}.exe
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      - name: Cache PostgreSQL for Windows
+        if: >-
+          ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          (( env.PGVER2 == '14' && env.Platform == 'x86' ) || ( env.PGVER2 != '14' ))
+          }}
+        uses: actions/cache@v3
+        id: cachePGWindowsInstallerExe
+        with:
+          path: ${{ env.pgWINversionlong }}.exe
+          key:  ${{ env.pgWINversionlong }}.exe
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 10
+
+      - name: Cache GNU diffutils for Test on PostgreSQL for Windows
+        if: ${{ ( env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-latest' && env.compilerClass == 'msvc' ) }}
+        uses: actions/cache@v3
+        id: cacheDiffutilsZip
+        with:
+          path: diffutils-2.8.7-1-bin.zip
+          key:  diffutils-2.8.7-1-bin.zip
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      - name: Cache pkgconfiglite for Compile using msvc and meson
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        uses: actions/cache@v3
+        id: cachePkgConfigLiteZip
+        with:
+          path: pkg-config-lite-0.28-1_bin-win32.zip
+          key:  pkg-config-lite-0.28-1_bin-win32.zip
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      - name: Cache winflexbison for Compile using msvc
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        uses: actions/cache@v3
+        id: cacheWinFlexBisonZip
+        with:
+          path: win_flex_bison-2.5.24.zip
+          key:  win_flex_bison-2.5.24.zip
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      - name: Cache meson for Compile using msvc and meson
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        uses: actions/cache@v3
+        id: cacheMesonMsi
+        with:
+          path: meson-1.2.1-64.msi
+          key:  meson-1.2.1-64.msi
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      # Notice
+      # Path R-2.11.1-x64
+      # Download Name -R-2.11.1-win64.exe
+      # https://cran-archive.r-project.org/bin/windows/base/old/2.11.1/R-2.11.1-win64.exe
+      # Path R-2.11.1
+      # Download Name - R-2.11.1-win32.exe
+      # https://cran-archive.r-project.org/bin/windows/base/old/2.11.1/R-2.11.1-win32.exe
+      #
+      # five seconds
+      - name: Download R for Windows R-x.y.z R-rmajor.rminor.rpatch
+        if: >-
+          ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) &&
+          steps.cacheRWindowsInstallerExe.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadfileRforWindows
+        with:
+          url: ${{ env.CRAN_R_DOWNLOAD_URL }}
+
+      - name: Download PostgreSQL for Windows
+        if: >-
+          ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          (( env.PGVER2 == '14' && env.Platform == 'x86' ) || ( env.PGVER2 != '14' )) &&
+          steps.cachePGWindowsInstallerExe.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadfilePGforWindows
+        with:
+          url: ${{ env.ENTDB_PG_DOWNLOAD_URL }}
+
+#     # The "crazy-max/ghaction-chocolatey@v2" "install SOMEHING_AT_SOURCEFORGE" file download often times-out.
+#     - name: Choco Install GNU diffutils for Test on PostgreSQL for Windows
+#       uses: crazy-max/ghaction-chocolatey@v2
+#       with:
+#         args: install diffutils
+
+      - name: Download GNU diffutils for Test on PostgreSQL for Windows
+        if: ${{ ( ( env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-latest' && env.compilerClass == 'msvc' ) ) &&
+          steps.cacheDiffutilsZip.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadDiffutilsZip
+        with:
+          retry-times: 1
+          url: https://zenlayer.dl.sourceforge.net/project/gnuwin32/diffutils/2.8.7-1/diffutils-2.8.7-1-bin.zip
+
+      - name: Download pkgconfiglite for Compile using msvc and meson
+        if: >-
+          ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
+          steps.cachePkgConfigLiteZip.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadPkgConfigLiteZip
+        with:
+          retry-times: 1
+          url: http://downloads.sourceforge.net/project/pkgconfiglite/0.28-1/pkg-config-lite-0.28-1_bin-win32.zip
+
+      - name: Download winflexbison for Compile using msvc
+        if: >-
+          ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
+          steps.cacheWinFlexBisonZip.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadWinFlexBisonZip
+        with:
+          retry-times: 1
+          url: https://sourceforge.net/projects/winflexbison/files/win_flex_bison-2.5.24.zip
+
+
+      - name: Download meson for Compile using msvc and meson
+        if: >-
+          ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
+          steps.cacheMesonMsi.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.4.0
+        id: downloadMesonMsi
+        with:
+          retry-times: 1
+          url: https://github.com/mesonbuild/meson/releases/download/1.2.1/meson-1.2.1-64.msi
+
+      - name: Install R for Windows R-x.y.z R-rmajor.rminor.rpatch
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
+        env:
+          R_HOME: ${{ env.R_HOME }}
+          R_ARCHplat: ${{ env.R_ARCHplat }}
+        shell: cmd
+        run: |
+          echo on
+          echo R_HOME: %R_HOME%
+          echo R_ARCHplat: %R_ARCHplat%
+          rem need "main" for the GUIs and command line utilites to work
+          rem A comma at the end is O.K
+          rem Component "notset" is ignored
+          "${{ env.rversionlong }}.exe" /VERYSILENT /COMPONENTS=main,%R_ARCHplat% /DIR=%R_HOME% /NOICONS /TASKS=
+          dir "%R_HOME%"
+
+      # Github Actions provided PostgreSQL x64-14 (as of SEPTEMBER 2023)
+      #
+      # # AUGUST 2023
+      # # The PL/R extension was built using PostreSQL 15
+      # ServiceName postgresql-x64-14
+      # Version 14.8
+      # ServiceStatus Stopped
+      # ServiceStartType Disabled
+      # EnvironmentVariables PGBIN=C:\Program Files\PostgreSQL\14\bin
+      # PGDATA=C:\Program Files\PostgreSQL\14\data
+      # PGROOT=C:\Program Files\PostgreSQL\14
+      # Path C:\Program Files\PostgreSQL\14
+      # UserName postgres
+      # Password root
+      # #
+      # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-software
+      #
+      - name: From Disabled, Enable PostgreSQL x64-14 for Windows and Start and Stop
+        if: >-
+          ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' || env.compilerClass == 'msvc' ) &&
+          env.PGVER2 == '14' && env.Platform == 'x64'
+          }}
+        shell: cmd
+        run: |
+          echo on
+          sc config "postgresql-x64-14" start= auto
+          net start  postgresql-x64-14
+          net stop   postgresql-x64-14
+
+      - name: Install PostgreSQL for Windows and Stop PostgreSQL
+        if: >-
+          ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          (( env.PGVER2 == '14' && env.Platform == 'x86' ) || ( env.PGVER2 != '14' ))
+          }}
+        env:
+          PGVER2: ${{ env.PGVER2 }}
+          PGROOT2: ${{ env.PGROOT2 }}
+          Platform: ${{ env.Platform }}
+        shell: cmd
+        run: |
+          echo on
+          "${{ env.pgWINversionlong }}.exe" --unattendedmodeui none --mode unattended --enable-components server,commandlinetools --disable-components pgAdmin,stackbuilder --superpassword "root" > nul
+          rem postgresql-15.3-4-windows-x64.exe
+          rem "C:\Program Files\PostgreSQL\15"
+          rem "C:\Program Files\PostgreSQL\15\data"
+          rem root
+          rem 5432
+          rem "Installation Directory: C:\Program Files\PostgreSQL\15"
+          rem "Server Installation Directory: C:\Program Files\PostgreSQL\15"
+          rem "Data Directory: C:\Program Files\PostgreSQL\15\data"
+          rem "Database Port: 5432"
+          rem "Database Superuser: postgres"
+          rem "Operating System Account: NT AUTHORITY\NetworkService"
+          rem "Database Service: postgresql-x64-15"
+          rem "Command Line Tools Installation Directory: C:\Program Files\PostgreSQL\15"
+          rem "Installation Log: C:\Users\AnonymousUser\AppData\Local\Temp\install-postgresql.log"
+          rem
+          rem "Starting the database server"
+          rem
+          rem Installation will also start PostgreSQL
+          if "%Platform%"=="x64" (net stop postgresql-x64-%PGVER2%)
+          if "%Platform%"=="x86" (net stop postgresql-%PGVER2%)
+          if "%Platform%"=="notset" (echo Platform is not set, therefore no net stop happens.)
+          dir "%PGROOT2%"
+
+      # https://wiki.postgresql.org/wiki/Meson
+      #   NOTE - (for PostgreSQL) winflexbison - fails with a general error. (see OTHER step)
+      #   NOTE - (for testing) diffutils - times out - doing a custom install instead (see OTHER step)
+      #   NOTE - (for meson) pkgconfiglite - times out - doing a custom install instead (see OTHER step)
+      #   NOTE - meson - fails with msiexec.exe Exit code was '3010' (see OTHER step)
+      #   NOTE - 7z is provided by Github Actions
+      - name: Choco Install support software about PL/R compiling using msvc for Windows
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        # Keep v2.  v2.2.0 may have connection to Sourceforge problems
+        uses: crazy-max/ghaction-chocolatey@v2
+        with:
+          args: >-
+            install sed gzip strawberryperl
+            grep
+
+      # Choco Install GNU diffutils
+      # BUT the "crazy-max/ghaction-chocolatey@v2" "install diffutils" file download often times-out
+      - name: Extract Diffuntils and add Diffuntils bin directory to the PATH for Test on PostgreSQL for Windows
+        if: ${{ ( env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-latest' && env.compilerClass == 'msvc' ) }}
+        shell: cmd
+        run: |
+          rem MKDIR creates any intermediate directories in the path, if needed.
+          mkdir                                "C:\OTHERBIN\diffutils"
+          rem 7z is provided by Github Actions
+          7z x  diffutils-2.8.7-1-bin.zip    -o"C:\OTHERBIN\diffutils"
+          copy  diffutils-2.8.7-1-bin.zip      "C:\OTHERBIN\diffutils"
+          dir                                  "C:\OTHERBIN\diffutils"
+          rem - man7.org/linux/man-pages/man1/printf.1.html
+          printf                               "C:\\OTHERBIN\\diffutils\\bin" >> %GITHUB_PATH%
+
+      # Choco Install pkgconfiglite
+      # BUT the "crazy-max/ghaction-chocolatey@v2" "install pkgconfiglite" file download often times-out
+      - name: Extract pkgconfiglite and add pkgconfiglite bin directory to the PATH for Compile using msvc and meson
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        shell: cmd
+        run: |
+          rem MKDIR creates any intermediate directories in the path, if needed.
+          mkdir                                           "C:\OTHERBIN\pkgconfiglite"
+          rem 7z is provided by Github Actions
+          7z x  pkg-config-lite-0.28-1_bin-win32.zip    -o"C:\OTHERBIN\pkgconfiglite"
+          copy  pkg-config-lite-0.28-1_bin-win32.zip      "C:\OTHERBIN\pkgconfiglite"
+          dir                                             "C:\OTHERBIN\pkgconfiglite"
+          rem - man7.org/linux/man-pages/man1/printf.1.html
+          printf                                          "C:\\OTHERBIN\\pkgconfiglite\\pkg-config-lite-0.28-1\\bin" >> %GITHUB_PATH%
+
+      # Choco Install winflexbison
+      # BUT the "crazy-max/ghaction-chocolatey@v2" "install pkgconfiglite" file download often times-out
+      - name: Extract winflexbison and add the winflexbison directory to the PATH for Compile using msvc
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        shell: cmd
+        run: |
+          rem MKDIR creates any intermediate directories in the path, if needed.
+          mkdir                                           "C:\OTHERBIN\winflexbison"
+          rem 7z is provided by Github Actions
+          7z x  win_flex_bison-2.5.24.zip               -o"C:\OTHERBIN\winflexbison"
+          copy  win_flex_bison-2.5.24.zip                 "C:\OTHERBIN\winflexbison"
+          dir                                             "C:\OTHERBIN\winflexbison"
+          rem - man7.org/linux/man-pages/man1/printf.1.html
+          printf                                          "C:\\OTHERBIN\\winflexbison" >> %GITHUB_PATH%
+
+      # Choco Install meson
+      # BUT the "crazy-max/ghaction-chocolatey@v2" "install meson" msiexec.exe Exit code was '3010'.
+      - name: Install meson and add meson directory to the PATH for Compile using msvc and meson
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        shell: cmd
+        run: |
+          msiexec.exe /i meson-1.2.1-64.msi /qn /norestart /l*v meson.1.2.1.MsiInstall.log
+          printf "C:\Program Files\Meson" >> %GITHUB_PATH%
+          type meson.1.2.1.MsiInstall.log
+
+      # 34 seconds with zero packages
+      # 2 minutes and seven(7) seconds with everything
+      - name: Install Windows mingw Software
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          # By default, the installation is not updated; hence package versions are those of the installation tarball.
+          # Faster without the "update"
+          # update: true
+          update: true
+          # do not inherit anything from the PATH
+          path-type: strict
+          msystem: ${{ env.compilerEnv }}
+          #
+          install: >-
+            ${{ env.MINGW_PACKAGE_PREFIX }}-pkg-config
+            ${{ env.MINGW_PACKAGE_PREFIX }}-curl
+            git
+            ${{ env.MINGW_PACKAGE_PREFIX }}-meson
+            ${{ env.MINGW_PACKAGE_PREFIX }}-make
+            make
+            ${{ env.MINGW_PACKAGE_PREFIX }}-${{ env.compilerExe }}
+            tar
+            gzip
+            ${{ env.MINGW_PACKAGE_PREFIX }}-readline
+            ${{ env.MINGW_PACKAGE_PREFIX }}-zlib
+            ${{ env.MINGW_PACKAGE_PREFIX }}-icu
+            icu-devel
+            git
+            flex
+            bison
+            ${{ env.MINGW_PACKAGE_PREFIX }}-perl
+            ${{ env.MINGW_PACKAGE_PREFIX }}-winpty
+            p7zip
+            tar
+            zstd
+            ${{ env.MINGW_PACKAGE_PREFIX }}-tools-git
+            ${{ env.MINGW_PACKAGE_PREFIX }}-binutils
+            ${{ env.MINGW_PACKAGE_PREFIX }}-diffutils
+            ${{ env.MINGW_PACKAGE_PREFIX }}-libxml2
+            ${{ env.MINGW_PACKAGE_PREFIX }}-libxslt
+            ${{ env.MINGW_PACKAGE_PREFIX }}-lz4
+
+      - name: Install Windows mingw Software Repository PostgreSQL
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC != 'true' }}
+        env:
+          # Msys OS variable
+          msystem: ${{ env.compilerEnv }}
+        run: |
+          echo "Install Windows mingw Software Repository PostgreSQL"
+          set -x -v -e
+          pacman -S --needed --noconfirm ${{ env.MINGW_PACKAGE_PREFIX }}-postgresql
+
+      - name: Set up Cygwin
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'cygwin' }}
+        uses: cygwin/cygwin-install-action@v4
+        with:
+          # x86 or x86_64
+          #         GitHub offers ternary operator like behaviour that you can use in expressions
+          platform: ${{ env.Platform == 'x64' && 'x86_64' || 'x86' }}
+          # REQUIRED def true - otherwise the default install MING64 "bash" will be found
+          # add-to-path: true
+          packages: >-
+             cygrunsrv pkg-config  meson  gendef
+             gcc-core  make  tar  gzip  libreadline7  zlib  icu-devel  bison  perl
+             flex  libreadline-devel  libssl-devel  libxml2-devel  libxslt-devel  openldap-devel  zlib-devel
+             libintl-devel  libcrypt-devel
+             p7zip
+             postgresql-client  postgresql  postgresql-devel
+             libpq-devel
+             R  R-debuginfo
+
+      # If the PostgreSQL version is 16 or greater, I can compile PostgreSQL using meson.
+      - name: Compile PG using pgSRCversion and PG_SOURCE and Install to here PG_HOME
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgFromSRC == 'true' }}
+        env:
+          # Cygwin OS variables
+          SHELLOPTS: igncr
+          CHERE_INVOKING: 1
+          # Msys OS variable
+          msystem: ${{ env.compilerEnv }}
+          Configuration: ${{ env.Configuration }}
+          #
+          PG_SOURCE: ${{ env.PG_SOURCE }}
+          PG_HOME: ${{ env.PG_HOME }}
+          buildpgFromSRCmethod: ${{ env.buildpgFromSRCmethod }}
+        run: |
+          echo "Compile PG using pgSRCversion and PG_SOURCE and Install to here PG_HOME"
+          set -x -v -e
+          if [ "${OperatingSystem}" == "" ]; then export OperatingSystem=$(uname -o); fi
+          echo "OperatingSystem: ${OperatingSystem}"
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            # because I set CHERE_INVOKING to be 1
+            export PATH=/usr/local/bin:/usr/bin:/usr/lib/lapack:/bin:/usr/sbin:/sbin
+          fi
+          uname -a
+          echo "compilerEnv: ${{ env.compilerEnv }}"
+          echo "bash: $(which bash)"
+          echo "Present Working Directory: $(pwd)"
+          #
+          if [ "${OperatingSystem}" == "Msys" ]
+          then
+            echo "msystem: ${msystem}"
+            export | grep MINGW
+            export | grep MSYSTEM
+          fi
+          #
+          echo "pgSRCversion: ${pgSRCversion}"
+          echo "PG_SOURCE:    ${PG_SOURCE}"
+          echo "PG_HOME:      ${PG_HOME}"
+
+          if [ "${PG_SOURCE}" == "notset" ] || [ "${PG_SOURCE}" == "" ]
+          then
+            echo "One must set PG_SOURCE=value"
+            exit 1
+          fi
+
+          export PG_SOURCE=$(cygpath "${PG_SOURCE}")
+          echo  "cygpath PG_SOURCE: ${PG_SOURCE}"
+
+          if [ ! -d "${PG_SOURCE}" ]
+          then
+            echo "Missing already-existing PG source code directory: ${PG_SOURCE}"
+            echo "Did you download the source code from Github?"
+            exit 1
+          fi
+
+          if [ "${PG_HOME}" == "notset" ] || [ "${PG_HOME}" == "" ]
+          then
+            echo "One must set PG_HOME=value"
+            exit 1
+          fi
+
+          export PG_HOME=$(cygpath "${PG_HOME}")
+          echo  "cygpath   PG_HOME: ${PG_HOME}"
+
+          if [ "${buildpgFromSRCmethod}" == "notset" ] || [ "${buildpgFromSRCmethod}" == "" ]
+          then
+            echo "One must set buildpgFromSRCmethod=value"
+            exit 1
+          fi
+
+          if [ "${buildpgFromSRCmethod}" == "make" ]
+          then
+            pushd "${PG_SOURCE}"
+
+            echo "BEGIN PostgreSQL make CONFIGURE"
+            set +x +v +e
+
+            if [ "${Configuration}" == "Debug" ]
+            then
+              ./configure --prefix="${PG_HOME}" --enable-depend --disable-rpath --without-icu --enable-debug --enable-cassert CFLAGS="-ggdb -Og -g3 -fno-omit-frame-pointer"
+            fi
+
+            if [ "${Configuration}" == "Release" ]
+            then
+              ./configure --prefix="${PG_HOME}" --enable-depend --disable-rpath --without-icu
+            fi
+
+            set -x -v -e
+            echo "END   PostgreSQL make CONFIGURE"
+
+            echo "BEGIN PostgreSQL make BUILD"
+            set +x +v +e
+            make
+            set -x -v -e
+            echo "END   PostgreSQL make BUILD"
+
+            echo "BEGIN PostgreSQL make INSTALL to ${PG_HOME}"
+            set +x +v +e
+            make install
+            set -x -v -e
+            echo "END   PostgreSQL make INSTALL to ${PG_HOME}"
+
+            popd # from "${PG_SOURCE}"
+          fi
+
+          if [ "${buildpgFromSRCmethod}" == "meson" ]
+          then
+            pushd "${PG_SOURCE}"
+
+            rm -Rf build
+
+            echo "BEGIN PostgreSQL meson CONFIGURE"
+            set +x +v +e
+
+            if [ "${Configuration}" == "Debug" ]
+            then
+              meson setup --prefix "${PG_HOME}"                                   -Db_pie=true -Dnls=disabled -Dplperl=disabled -Dplpython=disabled -Dpltcl=disabled -Dicu=disabled -Dllvm=disabled -Dlz4=disabled -Dzstd=disabled -Dgssapi=disabled -Dldap=disabled -Dpam=disabled -Dbsd_auth=disabled -Dsystemd=disabled -Dbonjour=disabled -Dlibxml=disabled -Dlibxslt=disabled -Dreadline=enabled -Dzlib=disabled -Ddocs=disabled -Ddocs_pdf=disabled -Dcassert=false -Dtap_tests=disabled -Db_coverage=false -Ddtrace=disabled build
+            fi
+
+            if [ "${Configuration}" == "Release" ]
+            then
+              meson setup --prefix "${PG_HOME}" -Dbuildtype=release -Ddebug=false -Db_pie=true -Dnls=disabled -Dplperl=disabled -Dplpython=disabled -Dpltcl=disabled -Dicu=disabled -Dllvm=disabled -Dlz4=disabled -Dzstd=disabled -Dgssapi=disabled -Dldap=disabled -Dpam=disabled -Dbsd_auth=disabled -Dsystemd=disabled -Dbonjour=disabled -Dlibxml=disabled -Dlibxslt=disabled -Dreadline=enabled -Dzlib=disabled -Ddocs=disabled -Ddocs_pdf=disabled -Dcassert=false -Dtap_tests=disabled -Db_coverage=false -Ddtrace=disabled build
+            fi
+
+            set -x -v -e
+            echo "END   PostgreSQL meson CONFIGURE"
+
+            echo "BEGIN PostgreSQL meson BUILD"
+            set +x +v +e
+            meson compile -C build -v
+            set -x -v -e
+            echo "END   PostgreSQL meson BUILD"
+
+            echo "BEGIN PostgreSQL meson INSTALL to ${PG_HOME}"
+            set +x +v +e
+            meson install -C build
+            set -x -v -e
+            echo "END   PostgreSQL meson INSTALL to ${PG_HOME}"
+
+            popd # from "${PG_SOURCE}"
+          fi
+
+          #
+          # For artifact naming, determine the Compiler Supplied pgversion.
+          #
+          export pgversion=$("${PG_HOME}/bin/pg_config" | grep "^VERSION" | sed "s/ = /=/" | sed "s/^.*=//" | grep -oP '[ ].*$' | grep -oP '\d.*$')
+          # potential override
+          echo "pgversion=${pgversion}" >> ${GITHUB_ENV}
+          echo "pg_config VERSION pgversion: ${pgversion}"
+
+          if [ -d "${PG_HOME}" ]
+          then
+            echo "BEGIN compressing pg artifact"
+            7z a -t7z -mmt24 -mx7 -r pg-artifact.7z  "${PG_HOME}/*"
+            echo "END   compressing pg artifact"
+          fi
+
+      - name: Windows Prep PG Artifact
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
+        env:
+          PGVER2: ${{ env.PGVER2 }}
+          Platform: ${{ env.Platform }}
+        shell: cmd
+        run: |
+          echo on
+          if exist pg-artifact.7z copy pg-artifact.7z pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
+          if exist pg-artifact.7z dir                 pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
+
+      - name: Upload artifact PG for export for LOCAL testing
+        if: ${{ env.os == 'windows-latest' &&  env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}
+          path: |
+            pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
+
+      - name: Windows non-msvc Meson PG and Meson PL/R Setup Compile and Meson Test
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib == 'true' }}
+        env:
+          # Cygwin shell variables
+          SHELLOPTS: igncr
+          CHERE_INVOKING: 1
+          # Msys shell variable
+          msystem: ${{ env.compilerEnv }}
+          Configuration: ${{ env.Configuration }}
+          #
+          R_HOME: ${{ env.R_HOME }}
+          Platform: ${{ env.Platform }}
+          R_ARCH: ${{ env.R_ARCH }}
+          rversion: ${{ env.rversion }}
+          PG_SOURCE: ${{ env.PG_SOURCE }} # different - full
+          PG_HOME: ${{ env.PG_HOME }}     # different - empty - and below - it is not used
+          PGROOT2: ${{ env.PGROOT2 }}
+        run: |
+          echo "Windows non-msvc Meson PG and Meson PL/R Setup Compile and Meson Test"
+          set -x -v -e
+          echo "Windows non-msvc Meson PL/R Setup Compile and Non-Meson Manual Test"
+          set -x -v -e
+          if [ "${OperatingSystem}" == "" ]; then export OperatingSystem=$(uname -o); fi
+          echo "OperatingSystem: ${OperatingSystem}"
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            # because I set CHERE_INVOKING to be 1
+            export PATH=/usr/local/bin:/usr/bin:/usr/lib/lapack:/bin:/usr/sbin:/sbin
+          fi
+          uname -a
+          echo "compilerEnv: ${{ env.compilerEnv }}"
+          echo "bash: $(which bash)"
+          echo "Present Working Directory: $(pwd)"
+          #
+          if [ "${OperatingSystem}" == "Msys" ]
+          then
+            echo "msystem: ${msystem}"
+            export | grep MINGW
+            export | grep MSYSTEM
+          fi
+          #
+          echo "R_HOME: ${R_HOME}"
+          echo "Platform: ${Platform}"
+          echo "R_ARCH: ${R_ARCH}"
+          echo "rversion: ${rversion}"
+          echo "PG_SOURCE: ${PG_SOURCE}"
+          echo "PG_HOME: ${PG_HOME}"
+          echo "PGROOT2: ${PGROOT2}"
+
+          export WORKSPACE=$(pwd)
+          echo "WORKSPACE ${WORKSPACE}"
+
+          #### BEGIN R SECTION ####
+
+          #
+          # Trying smartly and hard to find the R_HOME
+          #
+          if [ ! "${R_HOME}" == "notset" ] && [ ! "${R_HOME}" == "" ]
+          then
+            export R_HOME=$(cygpath "${R_HOME}")
+
+            # user supplied variable
+            echo "cygpath R_HOME: ${R_HOME}"
+
+            # PATHs are needed for the proper compile and runtime
+            # find "libraries"
+            # R Non-Sub-Architectures
+            export PATH="${R_HOME}/bin:${PATH}"
+
+          fi
+
+          export ERRORLEVEL=0
+          which R || export ERRORLEVEL=$?
+          if [ ! "${ERRORLEVEL}" == "0" ]; then echo ERROR - No R found in the PATH - ${PATH}; exit 1;fi
+
+          if [ "${R_HOME}" == "notset" ] || [ "${R_HOME}" == "" ]
+          then
+            # I CAN NOT FIGURE OUT HOW TO extract the R_HOME into an
+            # Environment Variable on Github Actions
+            #
+            # THIS DOES NOT EXTRACT
+            # Rscript . . . cat(Sys.getenv("R_HOME"))
+
+            # Temporary workarounds
+
+            if [ "${OperatingSystem}" == "Cygwin" ]
+            then
+              # dangerously assumes that
+              # 1. R is installed and 2. R is installed in the DEFAULT location
+              export R_HOME=/usr/lib/R
+              echo "Cygwin assume R_HOME: ${R_HOME}"
+              echo "R_HOME=$(cygpath -w ${R_HOME})" >> ${GITHUB_ENV}
+            fi
+
+            # R for Windows SUFFICIENT
+            if [ "${OperatingSystem}" == "Msys" ]
+            then
+              # ONLY "R for Windows"
+              # dangerously assumes that
+              # 1. R is installed and 2. R is in the PATH
+              export R_HOME=$(dirname $(dirname "$(which R)"))
+              # determined variable
+              echo "dirname which R R_HOME: ${R_HOME}"
+              echo "R_HOME=$(cygpath -w ${R_HOME})" >> ${GITHUB_ENV}
+            fi
+
+            # PATHs are needed for the proper compile and runtime
+            # find "libraries"
+            # R Non-Sub-Architectures
+            export PATH="${R_HOME}/bin:${PATH}"
+          fi
+
+          # Pipes have been known to fail in Msys
+          # when piping from a non-Msys program. E.g "R for Windows".
+          #
+          if [ ! "${OperatingSystem}" == "Msys" ]
+          then
+            # determine rversion xor verify user supplied rversion
+            #
+            # For artifact naming, match and verify the Compiler Supplied rversion.
+            #
+            export rversion_supplied=${rversion}
+            echo "rversion_supplied: ${rversion_supplied}"
+            if [ "${rversion_supplied}" == "notset" ] || [  "${rversion_supplied}" == "" ]
+            then
+              # For artifact naming, determine the Compiler Supplied rversion.
+              #
+              # OLD_R_HOME part - OperatingSystem "Cygwin"
+              #
+              export OLD_R_HOME=${R_HOME}
+              unset               R_HOME
+              export  rversion=$(Rscript --version | grep -oP "\d+[.]\d+[.]\d+")
+              echo   "rversion: ${rversion}"
+              echo   "rversion=${rversion}" >> ${GITHUB_ENV}
+              echo   "R --version: ${rversion}"
+              export R_HOME=${OLD_R_HOME}
+              unset OLD_R_HOME
+            fi
+            # Fail if the user supplied rversion does not match the true rversion
+            #
+            if [ ! "${rversion_supplied}" == "notset" ] && [ ! "${rversion_supplied}" == "" ]
+            then
+              if [ ! "${rversion_supplied}" == "${rversion}" ]
+              then
+                echo "WARNING rversion_supplied ${rversion_supplied} != rversion ${rversion}"
+              fi
+            fi
+          fi
+          if [ "${rversion}" == "notset" ] || [ "${rversion}" == "" ]
+          then
+            echo ERROR - No user supplied rversion and no determined rversion - ${rversion}
+            exit 1
+          fi
+
+          #
+          # verify user supplied R_ARCH or determine the R_ARCH
+          #
+          if [ ! "${R_ARCH}" == "notset" ] && [ ! "${R_ARCH}" == "" ]
+          then
+            if [ ! -d "${R_HOME}/bin${R_ARCH}" ]
+            then
+               echo ERROR - No user supplied R_ARCH found in - ${R_HOME}/bin${R_ARCH}
+               exit 1
+            fi
+          fi
+
+          # Note on Windows, one can compile /i386 on x64.
+          # But that scenario is too complex to support that here.
+          #
+          if [  "${R_ARCH}" == "notset" ] || [ "${R_ARCH}" == "" ]
+          then
+            if [ "${Platform}" == "x64" ] && [ -d "${R_HOME}/bin/x64" ]
+            then
+              export R_ARCH="/x64"
+              echo "user and determined R_ARCH: ${R_ARCH}"
+            fi
+            if [ "${Platform}" == "x86" ] && [ -d "${R_HOME}/bin/i386" ]
+            then
+              export R_ARCH="/i386"
+              echo "user and determined R_ARCH: ${R_ARCH}"
+            fi
+            #
+            # FUTURE - The ONE(first) subdirectory name in alphabetical order
+            # is in a space separated string.
+            # pushd "${R_HOME}/bin"; ls -d */ | grep -oP '^.*[^/]' | xargs; popd
+          fi
+
+          if [  "${R_ARCH}" == "notset" ] || [   "${R_ARCH}" == "" ]
+          then
+            unset R_ARCH
+            echo "The rest of this program uses R_ARCH like this: R_ARCH: ${R_ARCH}"
+          fi
+
+          # LAST
+          if [ ! "${R_ARCH}" == "notset" ] && [ ! "${R_ARCH}" == "" ]
+          then
+            echo "R_ARCH=${R_ARCH}" >> ${GITHUB_ENV}
+            echo "The rest of this program uses R_ARCH like this: R_ARCH: ${R_ARCH}"
+            # R    Sub-Architectures
+            export PATH="${R_HOME}/bin${R_ARCH}:${PATH}"
+          fi
+
+          #### END R SECTION ####
+
+          #### BEGIN PG_SOURCE AND PG_HOME SECTION ####
+
+          if [ ! "${PG_SOURCE}" == "notset" ] && [ ! "${PG_SOURCE}" == "" ]
+          then
+            export PG_SOURCE=$(cygpath "${PG_SOURCE}")
+            echo "cygpath PG_SOURCE: ${PG_SOURCE}"
+          fi
+
+          if [ ! "${PG_HOME}" == "notset" ] && [ ! "${PG_HOME}" == "" ]
+          then
+            export PG_HOME=$(cygpath "${PG_HOME}")
+            echo "cygpath PG_HOME: ${PG_HOME}"
+          fi
+
+          #### END PG_SOURCE AND PG_HOME SECTION ####
+
+          #### BEGIN PKGCONFIG SECTION ####
+
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          # note "Cygwin" has "no defaults"
+          #
+          # note MSYS(mingw) UCRT uses MSYSTEM_PREFIX="/ucrt64" in place of "/usr"
+          # note MSYS(mingw) UCRT variable PKG_CONFIG_PATH at the tail also has "/ucrt64/share/pkgconfig"
+          #
+          # This case handles Cygwin.
+          if [ "${PKG_CONFIG_PATH}" == "" ];                then export PKG_CONFIG_PATH="/usr/lib/pkgconfig"; fi
+          if [ "${PKG_CONFIG_SYSTEM_INCLUDE_PATH}" == "" ]; then export PKG_CONFIG_SYSTEM_INCLUDE_PATH="/usr/include"; fi
+          if [ "${PKG_CONFIG_SYSTEM_LIBRARY_PATH}" == "" ]; then export PKG_CONFIG_SYSTEM_LIBRARY_PATH="/usr/lib"; fi
+
+          export PKG_CONFIG_PATH_ORIG=$(echo "${PKG_CONFIG_PATH}" |  grep -o '^[^:]*')
+          echo "PKG_CONFIG_PATH_ORIG: ${PKG_CONFIG_PATH}"
+
+          export PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG=$(echo "${PKG_CONFIG_SYSTEM_INCLUDE_PATH}" |  grep -o '^[^:]*')
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG}"
+
+          # For MSYS(mingw) and R environment variable R_ARCH and Rlib.dll.a.
+          # Need ONE single leftmost headish important library path.
+          export PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG=$(echo "${PKG_CONFIG_SYSTEM_LIBRARY_PATH}" |  grep -o '^[^:]*')
+          # MSYS2(mingw) environments
+          # e.g. UCRT
+          # export PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG="/ucrt64/lib"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}"
+
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          #### END PKGCONFIG SECTION ####
+
+          #### BEGIN MAKE R INTO A LIBRARY ####
+
+          # Make R into a library
+          if [ ! -d "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig" ]
+          then
+            mkdir "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig"
+          fi
+
+          if [ ! -f "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig/libR.pc" ]
+          then
+            # Uses the provided template file "libR.pc"
+            # This template file is "based" off of the "R for Cygwin" file /lib/pkgconfig/libR.pc.
+            cat "libR.pc" | sed "s|R_HOME|${R_HOME}|" | sed "s|R_ARCH|${R_ARCH}|" | sed "s/rversion/${rversion}/" > "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig/libR.pc"
+          fi
+
+          # Cygwin already has the file /usr/lib/R/lib/libR.dll.a
+          # MSYS2 (mingw) compilers require libR.dll.a.
+          # That file is created by ddltool program parameter "--output-lib".
+          #
+          # Note, Windows compilers (e.g. msvc) require R.lib.
+          # To create this file, instead of using the "dlltool" program, use the msvc "lib" program.
+          # Alternately, in the Windows "msvc" compiler case, just rename an archive dll.a to be a .lib,
+          # and that also works.
+          #
+          if [ ! -d "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}" ]
+          then
+            mkdir   "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}"
+          fi
+
+          # Create and Move, or, Copy, the R static library,
+          # to the target location - "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+          if [ ! -f "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a" ]
+          then
+            #
+            # These should? be exclusive cases.
+            #
+            # Cygwin Repository R install case.
+            # Do I need to do this at all?
+            # If I am not given the R.dll, then THEY must provide the static library libR.dll.a.
+            if [ -f         "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib/libR.dll.a" ]
+            then
+              pushd         "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib"
+              cp libR.dll.a "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+              popd # from   "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib"
+            fi
+            # Msys case using "R for Windows" from CRAN
+            # If I am given the R.dll, then I can myself, create the static library libR.dll.a.
+            if [ -f "${R_HOME}/bin${R_ARCH}/R.dll" ]
+            then
+              pushd "${R_HOME}/bin${R_ARCH}"
+              gendef  -         R.dll >     R.def
+              dlltool --dllname R.dll --def R.def --output-lib libR.dll.a
+              #
+              # Put libR.dll.a into the general library location {...ORIG}${R_ARCH}/libR.dll.a
+              mv libR.dll.a "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+              popd # from "${R_HOME}/bin${R_ARCH}"
+            fi
+          fi
+
+          #### END MAKE R INTO A LIBRARY ####
+
+          #### BEGIN SETUP MESON.BUILD FILES AND OPTIONS ####
+
+          cat _meson_options.txt_postgres_root_additional_plr_option.txt >>         ${PG_SOURCE}/meson_options.txt
+          echo 'subdir('"'"'plr'"'"')'                                   >> ${PG_SOURCE}/contrib/meson.build
+
+          ######## mv  meson.build meson.build.STANDALONE.HIDDEN
+          ######## mv _meson.build meson.build
+
+          #### END SETUP MESON.BUILD FILES AND OPTIONS ####
+
+          #### BEGIN CREATE THE PLR DIRECTORY ####
+
+          # Create the contrib/plr directory parallel in contrib.
+          # Copy all of the PL/R source code into contrib/plr.
+          #
+          mkdir     "${PG_SOURCE}/contrib/plr"
+          cp -R   * "${PG_SOURCE}/contrib/plr"
+
+          #### END CREATE THE PLR DIRECTORY ####
+
+          #### BEGIN BUILD PG AND PLR AND TEST PLR ####
+
+          # from WORKSPACE
+          pushd "${PG_SOURCE}"
+
+          if [ "${Configuration}" == "Debug" ]
+          then
+            meson setup --prefix "${PG_HOME}"                                   -Db_pie=true -DR_HOME=${R_HOME} -Dnls=disabled -Dplperl=disabled -Dplpython=disabled -Dpltcl=disabled -Dicu=disabled -Dllvm=disabled -Dlz4=disabled -Dzstd=disabled -Dgssapi=disabled -Dldap=disabled -Dpam=disabled -Dbsd_auth=disabled -Dsystemd=disabled -Dbonjour=disabled -Dlibxml=disabled -Dlibxslt=disabled -Dreadline=enabled -Dzlib=disabled -Ddocs=disabled -Ddocs_pdf=disabled -Dcassert=false -Dtap_tests=disabled -Db_coverage=false -Ddtrace=disabled build
+          fi
+
+          if [ "${Configuration}" == "Release" ]
+          then
+            meson setup --prefix "${PG_HOME}" -Dbuildtype=release -Ddebug=false -Db_pie=true -DR_HOME=${R_HOME} -Dnls=disabled -Dplperl=disabled -Dplpython=disabled -Dpltcl=disabled -Dicu=disabled -Dllvm=disabled -Dlz4=disabled -Dzstd=disabled -Dgssapi=disabled -Dldap=disabled -Dpam=disabled -Dbsd_auth=disabled -Dsystemd=disabled -Dbonjour=disabled -Dlibxml=disabled -Dlibxslt=disabled -Dreadline=enabled -Dzlib=disabled -Ddocs=disabled -Ddocs_pdf=disabled -Dcassert=false -Dtap_tests=disabled -Db_coverage=false -Ddtrace=disabled build
+          fi
+
+          meson compile -C build -v
+
+          export pgversion=$("${PG_SOURCE}/build/src/bin/pg_config/pg_config" | grep "^VERSION" | sed "s/ = /=/" | sed "s/^.*=//" | grep -oP '[ ].*$' | grep -oP '\d.*$')
+          # potential override
+          echo "pgversion=${pgversion}" >> ${GITHUB_ENV}
+          echo "pg_config VERSION pgversion: ${pgversion}"
+
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            echo "cygrunsrv START"
+            # shutdown current
+            #### cygrunsrv -E cygserver || true
+            # uninstall previous
+            #### cygrunsrv -R cygserver || true
+            # install
+            cygserver-config --yes
+            # postgresql failing with below error on lion os x
+            # https://stackoverflow.com/questions/6861945/postgresql-failing-with-below-error-on-lion-os-x#:~:text=Failed%20system%20call%20was%20shmget,the%20kernel%20with%20larger%20SHMMAX.
+            echo kern.ipc.shmall 4096 >>     /etc/defaults/etc/cygserver.conf
+            echo kern.ipc.shmmax 16777216 >> /etc/defaults/etc/cygserver.conf
+
+            # start
+            cygrunsrv -S cygserver
+          fi
+
+          # meson has no "test" pre-req system.  So this "ordered" implentation is a kind of "hack".
+          # sometimes the "plr" regression test fails if an "easier" regression test did not come before it.
+          meson test -C build --num-processes 1 -v --suite setup --suite cube
+
+          meson test -C build --num-processes 1 -v --suite setup --suite plr
+
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            echo "cygrunsrv STOP"
+            # shutdown current
+            cygrunsrv -E cygserver
+            # uninstall previous
+            #### cygrunsrv -R cygserver
+          fi
+
+          popd # from "${PG_SOURCE}"
+          # back in WORKSPACE
+
+          #### END BUILD PG AND PLR AND TEST PLR ####
+
+          # save GOOD artifact plr.dll
+          #
+          if [ -f "${PG_SOURCE}/build/contrib/plr/plr.dll" ]
+          then
+            echo "Save plr.dll to be an artifact."
+            mkdir -p                                             ${WORKSPACE}/tmp/lib
+            cp    LICENSE                                        ${WORKSPACE}/tmp/PLR_LICENSE
+            cp    "${PG_SOURCE}/build/contrib/plr/plr.dll"       ${WORKSPACE}/tmp/lib
+            ls -alrt                                             ${WORKSPACE}/tmp/lib/plr.dll
+            mkdir -p                                             ${WORKSPACE}/tmp/share/extension
+            cp    *.control                                      ${WORKSPACE}/tmp/share/extension
+            cp    *.sql                                          ${WORKSPACE}/tmp/share/extension
+          fi
+
+          #
+          # save GOOD artifact plr.dll.a
+          #
+          if [ -f "${PG_SOURCE}/build/contrib/plr/plr.dll.a" ]
+          then
+            echo "Save plr.dll.a to be an artifact."
+            mkdir -p                                               ${WORKSPACE}/tmp/lib
+            cp    "${PG_SOURCE}/build/contrib/plr/plr.dll.a"       ${WORKSPACE}/tmp/lib
+            ls -alrt                                               ${WORKSPACE}/tmp/lib/plr.dll.a
+          fi
+
+          # 7z GOOD PL/R Artifact for LATER Release
+          echo "7z: $(which 7z)"
+          echo 7z a -r ${WORKSPACE}/plr-artifact.zip  ${WORKSPACE}/tmp/*
+          if [ -f "${WORKSPACE}/tmp/PLR_LICENSE" ]
+          then
+            echo "Create PL/R Artifact .zip for future Release"
+            7z a -r ${WORKSPACE}/plr-artifact.zip  ${WORKSPACE}/tmp/*
+          fi
+
+          # if "PostgreSQL for Windows" exists, then
+          # copy "Msys artifacts into "PostgreSQL for Windows" for future testing if env.MSYS2testonpgWIN == 'true'.
+          #
+          if ( [ ! "${PGROOT2}" == "notset" ] && [ ! "${PGROOT2}" == "" ] ) && [ "${OperatingSystem}" == "Msys" ]
+          then
+            export PGROOT2=$(cygpath "${PGROOT2}")
+            echo  "cygpath PGROOT2: ${PGROOT2}"
+
+            if [ -d "${PGROOT2}" ]
+            then
+              if [ -f "${PG_SOURCE}/build/contrib/plr/plr.dll" ]
+              then
+                echo "PGROOT2 is found. Preparing PostgreSQL for Windows testing."
+
+                cp  "${PG_SOURCE}/build/contrib/plr/plr.dll"   "${PGROOT2}/lib"
+                ls -alrt                                       "${PGROOT2}/lib/plr.dll"
+                cp plr.control                                 "${PGROOT2}/share/extension"
+                ls -alrt                                       "${PGROOT2}/share/extension/plr.control"
+                cp plr--*.sql                                  "${PGROOT2}/share/extension"
+                ls -alrt                                       "${PGROOT2}"/share/extension/plr--*.sql
+
+              fi
+            fi
+          fi
+
+      - name: Windows non-msvc Meson PL/R Setup Compile and Non-Meson Manual Test
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib != 'true' }}
+        env:
+          # Cygwin shell variables
+          SHELLOPTS: igncr
+          CHERE_INVOKING: 1
+          # Msys shell variable
+          msystem: ${{ env.compilerEnv }}
+          Configuration: ${{ env.Configuration }}
+          #
+          R_HOME: ${{ env.R_HOME }}
+          Platform: ${{ env.Platform }}
+          R_ARCH: ${{ env.R_ARCH }}
+          rversion: ${{ env.rversion }}
+          PG_HOME: ${{ env.PG_HOME }} # different
+          PGROOT2: ${{ env.PGROOT2 }}
+        run: |
+          echo "Windows non-msvc Meson PL/R Setup Compile and Non-Meson Manual Test"
+          set -x -v -e
+          if [ "${OperatingSystem}" == "" ]; then export OperatingSystem=$(uname -o); fi
+          echo "OperatingSystem: ${OperatingSystem}"
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            # because I set CHERE_INVOKING to be 1
+            export PATH=/usr/local/bin:/usr/bin:/usr/lib/lapack:/bin:/usr/sbin:/sbin
+          fi
+          uname -a
+          echo "compilerEnv: ${{ env.compilerEnv }}"
+          echo "bash: $(which bash)"
+          echo "Present Working Directory: $(pwd)"
+          #
+          if [ "${OperatingSystem}" == "Msys" ]
+          then
+            echo "msystem: ${msystem}"
+            export | grep MINGW
+            export | grep MSYSTEM
+          fi
+          #
+          echo "R_HOME: ${R_HOME}"
+          echo "Platform: ${Platform}"
+          echo "R_ARCH: ${R_ARCH}"
+          echo "rversion: ${rversion}"
+          echo "PG_HOME: ${PG_HOME}"
+          echo "PGROOT2: ${PGROOT2}"
+
+          export WORKSPACE=$(pwd)
+          echo "WORKSPACE ${WORKSPACE}"
+
+          #### BEGIN R SECTION ####
+
+          #
+          # Trying smartly and hard to find the R_HOME
+          #
+          if [ ! "${R_HOME}" == "notset" ] && [ ! "${R_HOME}" == "" ]
+          then
+            export R_HOME=$(cygpath "${R_HOME}")
+
+            # user supplied variable
+            echo "cygpath R_HOME: ${R_HOME}"
+
+            # PATHs are needed for the proper compile and runtime
+            # find "libraries"
+            # R Non-Sub-Architectures
+            export PATH="${R_HOME}/bin:${PATH}"
+
+          fi
+
+          export ERRORLEVEL=0
+          which R || export ERRORLEVEL=$?
+          if [ ! "${ERRORLEVEL}" == "0" ]; then echo ERROR - No R found in the PATH - ${PATH}; exit 1;fi
+
+          if [ "${R_HOME}" == "notset" ] || [ "${R_HOME}" == "" ]
+          then
+            # I CAN NOT FIGURE OUT HOW TO extract the R_HOME into an
+            # Environment Variable on Github Actions
+            #
+            # THIS DOES NOT EXTRACT
+            # Rscript . . . cat(Sys.getenv("R_HOME"))
+
+            # Temporary workarounds
+
+            if [ "${OperatingSystem}" == "Cygwin" ]
+            then
+              # dangerously assumes that
+              # 1. R is installed and 2. R is installed in the DEFAULT location
+              export R_HOME=/usr/lib/R
+              echo "Cygwin assume R_HOME: ${R_HOME}"
+              echo "R_HOME=$(cygpath -w ${R_HOME})" >> ${GITHUB_ENV}
+            fi
+
+            # R for Windows SUFFICIENT
+            if [ "${OperatingSystem}" == "Msys" ]
+            then
+              # ONLY "R for Windows"
+              # dangerously assumes that
+              # 1. R is installed and 2. R is in the PATH
+              export R_HOME=$(dirname $(dirname "$(which R)"))
+              # determined variable
+              echo "dirname which R R_HOME: ${R_HOME}"
+              echo "R_HOME=$(cygpath -w ${R_HOME})" >> ${GITHUB_ENV}
+            fi
+
+            # PATHs are needed for the proper compile and runtime
+            # find "libraries"
+            # R Non-Sub-Architectures
+            export PATH="${R_HOME}/bin:${PATH}"
+          fi
+
+          # Pipes have been known to fail in Msys
+          # when piping from a non-Msys program. E.g "R for Windows".
+          #
+          if [ ! "${OperatingSystem}" == "Msys" ]
+          then
+            # determine rversion xor verify user supplied rversion
+            #
+            # For artifact naming, match and verify the Compiler Supplied rversion.
+            #
+            export rversion_supplied=${rversion}
+            echo "rversion_supplied: ${rversion_supplied}"
+            if [ "${rversion_supplied}" == "notset" ] || [  "${rversion_supplied}" == "" ]
+            then
+              # For artifact naming, determine the Compiler Supplied rversion.
+              #
+              # OLD_R_HOME part - OperatingSystem "Cygwin"
+              #
+              export OLD_R_HOME=${R_HOME}
+              unset               R_HOME
+              export  rversion=$(Rscript --version | grep -oP "\d+[.]\d+[.]\d+")
+              echo   "rversion: ${rversion}"
+              echo   "rversion=${rversion}" >> ${GITHUB_ENV}
+              echo   "R --version: ${rversion}"
+              export R_HOME=${OLD_R_HOME}
+              unset OLD_R_HOME
+            fi
+            # Fail if the user supplied rversion does not match the true rversion
+            #
+            if [ ! "${rversion_supplied}" == "notset" ] && [ ! "${rversion_supplied}" == "" ]
+            then
+              if [ ! "${rversion_supplied}" == "${rversion}" ]
+              then
+                echo "WARNING rversion_supplied ${rversion_supplied} != rversion ${rversion}"
+              fi
+            fi
+          fi
+          if [ "${rversion}" == "notset" ] || [ "${rversion}" == "" ]
+          then
+            echo ERROR - No user supplied rversion and no determined rversion - ${rversion}
+            exit 1
+          fi
+
+          #
+          # verify user supplied R_ARCH or determine the R_ARCH
+          #
+          if [ ! "${R_ARCH}" == "notset" ] && [ ! "${R_ARCH}" == "" ]
+          then
+            if [ ! -d "${R_HOME}/bin${R_ARCH}" ]
+            then
+               echo ERROR - No user supplied R_ARCH found in - ${R_HOME}/bin${R_ARCH}
+               exit 1
+            fi
+          fi
+
+          # Note on Windows, one can compile /i386 on x64.
+          # But that scenario is too complex to support that here.
+          #
+          if [  "${R_ARCH}" == "notset" ] || [ "${R_ARCH}" == "" ]
+          then
+            if [ "${Platform}" == "x64" ] && [ -d "${R_HOME}/bin/x64" ]
+            then
+              export R_ARCH="/x64"
+              echo "user and determined R_ARCH: ${R_ARCH}"
+            fi
+            if [ "${Platform}" == "x86" ] && [ -d "${R_HOME}/bin/i386" ]
+            then
+              export R_ARCH="/i386"
+              echo "user and determined R_ARCH: ${R_ARCH}"
+            fi
+            #
+            # FUTURE - The ONE(first) subdirectory name in alphabetical order
+            # is in a space separated string.
+            # pushd "${R_HOME}/bin"; ls -d */ | grep -oP '^.*[^/]' | xargs; popd
+          fi
+
+          if [  "${R_ARCH}" == "notset" ] || [   "${R_ARCH}" == "" ]
+          then
+            unset R_ARCH
+            echo "The rest of this program uses R_ARCH like this: R_ARCH: ${R_ARCH}"
+          fi
+
+          # LAST
+          if [ ! "${R_ARCH}" == "notset" ] && [ ! "${R_ARCH}" == "" ]
+          then
+            echo "R_ARCH=${R_ARCH}" >> ${GITHUB_ENV}
+            echo "The rest of this program uses R_ARCH like this: R_ARCH: ${R_ARCH}"
+            # R    Sub-Architectures
+            export PATH="${R_HOME}/bin${R_ARCH}:${PATH}"
+          fi
+
+          #### END R SECTION ####
+
+          #### BEGIN PG_HOME SECTION ####
+
+          #
+          # Trying smartly and hard to find the PG_HOME
+          #
+          if [ ! "${PG_HOME}" == "notset" ] && [ ! "${PG_HOME}" == "" ]
+          then
+            export PG_HOME=$(cygpath "${PG_HOME}")
+
+            # determined variable
+            echo "cygpath PG_HOME: ${PG_HOME}"
+
+            export ERRORLEVEL=0
+            ls -alrt "${PG_HOME}/bin/pg_config" || export ERRORLEVEL=$?
+            if [ ! "${ERRORLEVEL}" == "0" ]; then echo ERROR - No pg_config found at "${PG_HOME}/bin/pg_config"; exit 1;fi
+
+            # can find PG "libraries"
+            export PATH="${PG_HOME}/lib:${PATH}"
+            #
+            # can find PG "libraries" (and the CORRECT pg_config is found)
+            export PATH="${PG_HOME}/bin:${PATH}"
+
+          fi
+
+          export ERRORLEVEL=0
+          which pg_config || export ERRORLEVEL=$?
+
+          if [ ! "${ERRORLEVEL}" == "0" ]; then echo ERROR - No pg_config found in the PATH - ${PATH}; exit 1;fi
+
+          # had been already on the PATH
+          export BINDIR=$(pg_config | grep "^BINDIR" | sed "s/ = /=/" | sed "s/^.*=//")
+          export BINDIR=$(cygpath $(cygpath -wl "${BINDIR}"))
+
+          echo "pg_config BINDIR: ${BINDIR}"
+
+          if [ "${PG_HOME}" == "notset" ] || [ "${PG_HOME}" == "" ]
+          then
+            export PG_HOME=$(dirname "${BINDIR}")
+            echo "determined PG_HOME: ${PG_HOME}"
+            echo "PG_HOME=$(cygpath -w ${PG_HOME})" >> $GITHUB_ENV}
+
+            # found variable
+            echo "pg_config PG_HOME: ${PG_HOME}"
+
+            # can find PG "libraries"
+            export PATH="${PG_HOME}/lib:${PATH}"
+            #
+            # can find PG "libraries" (and the CORRECT pg_config is found)
+            export PATH="${PG_HOME}/bin:${PATH}"
+          fi
+
+          #
+          # For artifact naming, determine the Compiler Supplied pgversion.
+          #
+          export pgversion=$(pg_config | grep "^VERSION" | sed "s/ = /=/" | sed "s/^.*=//" | grep -oP '[ ].*$' | grep -oP '\d.*$')
+          # potential override
+          echo "pgversion=${pgversion}" >> ${GITHUB_ENV}
+          echo "pg_config VERSION pgversion: ${pgversion}"
+
+          export PKGLIBDIR=$(pg_config | grep "^PKGLIBDIR" | sed "s/ = /=/" | sed "s/^.*=//")
+          export PKGLIBDIR=$(cygpath $(cygpath -wl "${PKGLIBDIR}"))
+
+          echo "pg_config PKGLIBDIR: ${PKGLIBDIR}"
+
+          export SHAREDIR=$(pg_config | grep "^SHAREDIR" | sed "s/ = /=/" | sed "s/^.*=//")
+          export SHAREDIR=$(cygpath $(cygpath -wl "${SHAREDIR}"))
+
+          echo "pg_config SHAREDIR: ${SHAREDIR}"
+
+          #### END PG_HOME SECTION ####
+
+          #### BEGIN PKGCONFIG SECTION ####
+
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          # note "Cygwin" has "no defaults"
+          #
+          # note MSYS(mingw) UCRT uses MSYSTEM_PREFIX="/ucrt64" in place of "/usr"
+          # note MSYS(mingw) UCRT variable PKG_CONFIG_PATH at the tail also has "/ucrt64/share/pkgconfig"
+          #
+          # This case handles Cygwin.
+          if [ "${PKG_CONFIG_PATH}" == "" ];                then export PKG_CONFIG_PATH="/usr/lib/pkgconfig"; fi
+          if [ "${PKG_CONFIG_SYSTEM_INCLUDE_PATH}" == "" ]; then export PKG_CONFIG_SYSTEM_INCLUDE_PATH="/usr/include"; fi
+          if [ "${PKG_CONFIG_SYSTEM_LIBRARY_PATH}" == "" ]; then export PKG_CONFIG_SYSTEM_LIBRARY_PATH="/usr/lib"; fi
+
+          export PKG_CONFIG_PATH_ORIG=$(echo "${PKG_CONFIG_PATH}" |  grep -o '^[^:]*')
+          echo "PKG_CONFIG_PATH_ORIG: ${PKG_CONFIG_PATH}"
+
+          export PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG=$(echo "${PKG_CONFIG_SYSTEM_INCLUDE_PATH}" |  grep -o '^[^:]*')
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH_ORIG}"
+
+          # For MSYS(mingw) and R environment variable R_ARCH and Rlib.dll.a.
+          # Need ONE single leftmost headish important library path.
+          export PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG=$(echo "${PKG_CONFIG_SYSTEM_LIBRARY_PATH}" |  grep -o '^[^:]*')
+          # MSYS2(mingw) environments
+          # e.g. UCRT
+          # export PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG="/ucrt64/lib"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}"
+
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          # Garantee to find the PostgreSQL libraries.
+          # Some packages may also install an old "libpq" that is located in the default install location.
+          # We do not want to use that old "libpg" when compiling PL/R.
+          # Therefore, the PostgreSQL pkgconfig goes in front at the head.
+          #
+          export PKG_CONFIG_PATH="${PG_HOME}/lib/pkgconfig:${PKG_CONFIG_PATH}"
+          export PKG_CONFIG_SYSTEM_INCLUDE_PATH="${PG_HOME}/include:${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PG_HOME}/bin:${PG_HOME}/lib:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH}"
+          echo "PKG_CONFIG_SYSTEM_INCLUDE_PATH: ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+          echo "PKG_CONFIG_SYSTEM_LIBRARY_PATH: ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+
+          #### END PKGCONFIG SECTION ####
+
+          #### BEGIN MAKE POSTGRES INTO A LIBRARY ####
+
+          # This is Part 1 of 2 of a hack to make "meson" think that "libpostgres" is a library.
+          # From the libpq.pc file, create a libpostgres.pc file.
+          if [ ! -f "${PG_HOME}/lib/pkgconfig/libpostgres.pc" ]
+          then
+            cat "${PG_HOME}/lib/pkgconfig/libpq.pc" | sed "s/libpq/libpostgres/g" | sed "s/-lpq/-lpostgres/" > "${PG_HOME}/lib/pkgconfig/libpostgres.pc"
+          fi
+
+          # This is Part 2 of 2 of a hack to make "meson" think that "libpostgres" is a library
+          # libpostgres.exe.a is not recognized as a static library
+          # libpostgres.a     is     recognized as a static library
+          #                         # typical software repository default install
+          if [ ! -f "${PG_HOME}/lib/libpostgres.a" ] && [ ! -f "${PG_HOME}/lib/libpostgres.dll.a" ] && [ -f "${PG_HOME}/lib/libpostgres.exe.a" ]
+          then
+            # Note, a "meson built PostgreSQL install" will produce a file called "libpostgres.exe.a".
+            # cp -f   "${PG_HOME}/lib/libpostgres.exe.a" "${PG_HOME}/lib/libpostgres.a"
+            cp -f   "${PG_HOME}/lib/libpostgres.exe.a" "${PG_HOME}/lib/libpostgres.dll.a"
+          fi
+
+          ls -alrt "${PG_HOME}"/lib/libpostgres*
+
+          #### END MAKE POSTGRES INTO A LIBRARY ####
+
+          #### BEGIN MAKE R INTO A LIBRARY ####
+
+          # Make R into a library
+          if [ ! -d "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig" ]
+          then
+            mkdir "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig"
+          fi
+
+          if [ ! -f "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig/libR.pc" ]
+          then
+            # Uses the provided template file "libR.pc"
+            # This template file is "based" off of the "R for Cygwin" file /lib/pkgconfig/libR.pc.
+            cat "libR.pc" | sed "s|R_HOME|${R_HOME}|" | sed "s|R_ARCH|${R_ARCH}|" | sed "s/rversion/${rversion}/" > "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/pkgconfig/libR.pc"
+          fi
+
+          # Cygwin already has the file /usr/lib/R/lib/libR.dll.a
+          # MSYS2 (mingw) compilers require libR.dll.a.
+          # That file is created by ddltool program parameter "--output-lib".
+          #
+          # Note, Windows compilers (e.g. msvc) require R.lib.
+          # To create this file, instead of using the "dlltool" program, use the msvc "lib" program.
+          # Alternately, in the Windows "msvc" compiler case, just rename an archive dll.a to be a .lib,
+          # and that also works.
+          #
+          if [ ! -d "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}" ]
+          then
+            mkdir   "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}"
+          fi
+
+          # Create and Move, or, Copy, the R static library,
+          # to the target location - "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+          if [ ! -f "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a" ]
+          then
+            #
+            # These should? be exclusive cases.
+            #
+            # Cygwin Repository R install case.
+            # Do I need to do this at all?
+            # If I am not given the R.dll, then THEY must provide the static library libR.dll.a.
+            if [ -f         "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib/libR.dll.a" ]
+            then
+              pushd         "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib"
+              cp libR.dll.a "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+              popd # from   "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}/R/lib"
+            fi
+            # Msys case using "R for Windows" from CRAN
+            # If I am given the R.dll, then I can myself, create the static library libR.dll.a.
+            if [ -f "${R_HOME}/bin${R_ARCH}/R.dll" ]
+            then
+              pushd "${R_HOME}/bin${R_ARCH}"
+              gendef  -         R.dll >     R.def
+              dlltool --dllname R.dll --def R.def --output-lib libR.dll.a
+              #
+              # Put libR.dll.a into the general library location {...ORIG}${R_ARCH}/libR.dll.a
+              mv libR.dll.a "${PKG_CONFIG_SYSTEM_LIBRARY_PATH_ORIG}${R_ARCH}/libR.dll.a"
+              popd # from "${R_HOME}/bin${R_ARCH}"
+            fi
+          fi
+
+          #### END MAKE R INTO A LIBRARY ####
+
+          #### BEGIN CREATE THE PLR DIRECTORY ####
+
+          # Create the contribplr directory parallel to contrib.
+          # Copy all of the PL/R source code into contribplr.
+          #
+          mkdir     "${PG_HOME}/contrib"
+          #
+          mkdir     "${PG_HOME}/contribplr"
+          cp -R   * "${PG_HOME}/contribplr"
+          #
+          pushd     "${PG_HOME}/contribplr"
+
+          #### END CREATE THE PLR DIRECTORY ####
+
+          #### BEGIN SETUP MESON.BUILD FILES AND OPTIONS ####
+
+          mv  meson.build __meson.build.ROOT_CONTRIB_METHOD.HIDDEN
+          mv _meson.build   meson.build
+          mv _meson_options.txt meson_options.txt
+
+          #### END CREATE THE PLR DIRECTORY ####
+
+          #### BEGIN BUILD PLR AND TEST PLR ####
+
+          if [ "${Configuration}" == "Debug" ]
+          then
+            meson setup --prefix="${PG_HOME}/contrib/plr"                                   -Db_pie=true -DR_HOME="${R_HOME}" -DPG_HOME="${PG_HOME}" ../contrib/plr
+          fi
+
+          if [ "${Configuration}" == "Release" ]
+          then
+            meson setup --prefix="${PG_HOME}/contrib/plr" -Dbuildtype=release -Ddebug=false -Db_pie=true -DR_HOME="${R_HOME}" -DPG_HOME="${PG_HOME}" ../contrib/plr
+          fi
+
+          meson compile -C ../contrib/plr  -v
+
+          # install GOOD or BAD artifacts into NIX PG plr.dll and plr.dll.a.
+          #
+          if [ -f "../contrib/plr/plr.dll" ]
+          then
+            echo "plr.dll is found"
+            cp ../contrib/plr/plr.dll   "${PKGLIBDIR}"
+            ls -alrt                    "${PKGLIBDIR}/plr.dll"
+          fi
+          #
+          if [ -f "../contrib/plr/plr.dll.a" ]
+            echo "plr.dll.a is found"
+            then cp ../contrib/plr/plr.dll.a "${PKGLIBDIR}"
+            ls -alrt                         "${PKGLIBDIR}/plr.dll.a"
+          fi
+
+          #
+          # install GOOD OR BAD artifacts into NIX PG - support file - plr.control
+          #
+          cp plr.control "${SHAREDIR}/extension"
+          ls -alrt       "${SHAREDIR}/extension/plr.control"
+
+          #
+          # install GOOD OR BAD artifacts  into NIX PG - SQL support files - versioning "sql"
+          #
+          cp plr--*.sql  "${SHAREDIR}/extension"
+          ls -alrt        ${SHAREDIR}/extension/plr--*.sql
+
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            echo "cygrunsrv START"
+            # shutdown current
+            #### cygrunsrv -E cygserver || true
+            # uninstall previous
+            #### cygrunsrv -R cygserver || true
+            # install
+            cygserver-config --yes
+            # postgresql failing with below error on lion os x
+            # https://stackoverflow.com/questions/6861945/postgresql-failing-with-below-error-on-lion-os-x#:~:text=Failed%20system%20call%20was%20shmget,the%20kernel%20with%20larger%20SHMMAX.
+            echo kern.ipc.shmall 4096 >>     /etc/defaults/etc/cygserver.conf
+            echo kern.ipc.shmmax 16777216 >> /etc/defaults/etc/cygserver.conf
+
+            # start
+            cygrunsrv -S cygserver
+          fi
+
+          echo "whoami: $(whoami)"
+
+          #
+          # Create and start the cluster before
+          # the non-setup regression test (see FAR below).
+          #
+          initdb -D ${WORKSPACE}/PGDATA
+          pg_ctl -D ${WORKSPACE}/PGDATA -l logfile start
+
+          # non-setup regression test
+          # Directories of testing "sql" and testing "expected" results exist here
+          #
+          # Some environments require it
+          export PGUSER=$(whoami)
+          echo "PGUSER: ${PGUSER}"
+          "${PKGLIBDIR}/pgxs/src/test/regress/pg_regress" --bindir="${PG_HOME}/bin" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame || (cat regression.diffs && false)
+
+          # Stop the cluster after
+          # the non-setup regression test (see above).
+          #
+          pg_ctl -D ${WORKSPACE}/PGDATA -l logfile stop
+
+          if [ "${OperatingSystem}" == "Cygwin" ]
+          then
+            echo "cygrunsrv STOP"
+            # shutdown current
+            cygrunsrv -E cygserver
+            # uninstall previous
+            #### cygrunsrv -R cygserver
+          fi
+
+          popd # from "${PG_HOME}/contribplr"
+          # back into WORKSPACE
+
+          #### END BUILD PG AND PLR AND TEST PLR ####
+
+          # save GOOD artifact plr.dll
+          #
+          if [ -f "${PG_HOME}/contrib/plr/plr.dll" ]
+          then
+            echo "Save plr.dll to be an artifact."
+            mkdir -p                                ${WORKSPACE}/tmp/lib
+            cp    LICENSE                           ${WORKSPACE}/tmp/PLR_LICENSE
+            cp    "${PG_HOME}/contrib/plr/plr.dll"  ${WORKSPACE}/tmp/lib
+            ls -alrt                                ${WORKSPACE}/tmp/lib/plr.dll
+            mkdir -p                                ${WORKSPACE}/tmp/share/extension
+            cp    *.control                         ${WORKSPACE}/tmp/share/extension
+            cp    *.sql                             ${WORKSPACE}/tmp/share/extension
+          fi
+
+          #
+          # save GOOD artifact plr.dll.a
+          #
+          if [ -f "${PG_HOME}/contrib/plr/plr.dll.a" ]
+          then
+            echo "Save plr.dll.a to be an artifact."
+            mkdir -p                                  ${WORKSPACE}/tmp/lib
+            cp    "${PG_HOME}/contrib/plr/plr.dll.a"  ${WORKSPACE}/tmp/lib
+            ls -alrt                                  ${WORKSPACE}/tmp/lib/plr.dll.a
+          fi
+
+          # 7z GOOD PL/R Artifact for LATER Release
+          echo "7z: $(which 7z)"
+          echo 7z a -r ${WORKSPACE}/plr-artifact.zip  ${WORKSPACE}/tmp/*
+          if [ -f "${WORKSPACE}/tmp/PLR_LICENSE" ]
+          then
+            echo "Create PL/R Artifact .zip for future Release"
+            7z a -r ${WORKSPACE}/plr-artifact.zip  ${WORKSPACE}/tmp/*
+          fi
+
+          # if "PostgreSQL for Windows" exists, then
+          # copy "Msys artifacts into "PostgreSQL for Windows" for future testing if env.MSYS2testonpgWIN == 'true'.
+          #
+          if ( [ ! "${PGROOT2}" == "notset" ] && [ ! "${PGROOT2}" == "" ] ) && [ "${OperatingSystem}" == "Msys" ]
+          then
+            export PGROOT2=$(cygpath "${PGROOT2}")
+            echo  "cygpath PGROOT2: ${PGROOT2}"
+
+            if [ -d "${PGROOT2}" ]
+            then
+              if [ -f "${PG_HOME}/contrib/plr/plr.dll" ]
+              then
+                echo "PGROOT2 is found. Preparing PostgreSQL for Windows testing."
+
+                cp  "${PG_HOME}/contrib/plr/plr.dll"   "${PGROOT2}/lib"
+                ls -alrt                               "${PGROOT2}/lib/plr.dll"
+                cp plr.control                         "${PGROOT2}/share/extension"
+                ls -alrt                               "${PGROOT2}/share/extension/plr.control"
+                cp plr--*.sql                          "${PGROOT2}/share/extension"
+                ls -alrt                               "${PGROOT2}"/share/extension/plr--*.sql
+
+              fi
+            fi
+          fi
+
+      - name: Windows     msvc Meson PL/R Setup Compile and Non-Meson Manual Test
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
+        env:
+          R_HOME: ${{ env.R_HOME }}
+          Platform: ${{ env.Platform }}
+          R_ARCH: ${{ env.R_ARCH }}
+          rversion: ${{ env.rversion }}
+          PG_HOME: ${{ env.PGROOT2 }} # different
+          PGVER2: ${{ env.PGVER2 }}
+        shell: powershell
+        run: |
+          systeminfo
+          if (Test-Path "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe") {
+            ${env:msvcversion}   = $(& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property catalog_productLineVersion)
+            echo "msvcversion: ${env:msvcversion}"
+            ${env:msvcproductid} = $(& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property productId)
+            echo "msvcproductid: ${env:msvcproductid}"
+          }
+
+          echo "R_HOME: ${env:R_HOME}"
+          echo "Platform: ${env:Platform}"
+          echo "R_ARCH: ${env:R_ARCH}"
+          echo "rversion: ${env:rversion}"
+          echo "PG_HOME: ${env:PG_HOME}"
+          echo "PGVER2: ${env:PGVER2}"
+
+          ${env:WORKSPACE} = ${env:GITHUB_WORKSPACE}
+          echo "WORKSPACE: ${env:WORKSPACE}"
+
+          if("${env:R_HOME}" -eq ""){
+            Write-Error 'R_HOME is missing. Please supply the R_HOME.' -ErrorAction Stop
+          }
+          if("${env:R_ARCH}" -eq ""){
+            Write-Warning 'R_ARCH is missing. Is that the intention? One may supply the R_ARCH.'
+          }
+          if("${env:rversion}" -eq ""){
+            Write-Error 'rversion is missing. Please supply the rversion.' -ErrorAction Stop
+          }
+          if("${env:PG_HOME}" -eq ""){
+            Write-Error 'PG_HOME is missing. Please supply the PG_HOME.' -ErrorAction Stop
+          }
+          if("${env:PGVER2}" -eq ""){
+            Write-Error 'PGVER2 is missing. Please supply the PGVER2.' -ErrorAction Stop
+          }
+
+      - name: Try to Upload artifacts plr.dll and plr.dll.a for export for LOCAL testing
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}
+          # default
+          if-no-files-found: warn
+          path: |
+            tmp\*\*
+            tmp\PLR_LICENSE
+
+      - name: Set R_HOME and PG PATH, Start PG(read OS variables), Test on PostgreSQL for Windows
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
+        env:
+          R_HOME: ${{ env.R_HOME }}
+          R_ARCH: ${{ env.R_ARCH }}
+          #
+          PG_HOME: ${{ env.PGROOT2 }} # different
+          PGBIN2: ${{ env.PGBIN2 }}
+          #
+          PGVER2: ${{ env.PGVER2 }}
+          Platform: ${{ env.Platform }}
+        shell: cmd
+        run: |
+          echo on
+          echo R_HOME   - %R_HOME%
+          echo R_ARCH   - %R_ARCH%
+          echo PG_HOME  - %PG_HOME%
+          echo PGVER2   - %PGVER2%
+          echo PGBIN2   - %PGBIN2%
+          echo Platform - %Platform%
+
+          echo off
+          rem R     Sub-Architectures
+          if "%R_ARCH%"=="/x64"   set PATH=%R_HOME%\bin\x64;%PATH%
+          if "%R_ARCH%"=="/i386"  set PATH=%R_HOME%\bin\i386;%PATH%
+          rem not R Sub-Architectures
+          if "%R_ARCH%"=="notset" set PATH=%R_HOME%\bin;%PATH%
+
+          rem PostgreSQL for Windows, typically runs using
+          rem "Operating System Account: NT AUTHORITY\NetworkService"
+          rem R_HOME must be defined in the environment of the user that starts the postmaster process.
+
+          rem if I use chocolatey then uncomment this line.
+          rem Most chocolatey programs are located here, but not all.
+          rem set PATH="C:\ProgramData\chocolatey\bin";%PATH%
+
+          setx /M R_HOME "%R_HOME%"
+          setx /M PATH   "%PATH%"
+
+          echo M_PATH - %PATH%
+
+          rem Put MY pg_regress in the local PATH, in front of OTHER pg_regress that MAY BE installed.
+          set PATH=%PG_HOME%\bin;%PATH%
+
+          echo on
+          echo PGVER2   - %PGVER2%
+          echo Platform - %Platform%
+          rem Need to manually start PostgreSQL
+          if "%Platform%"=="x64" (net start postgresql-x64-%PGVER2%)
+          if "%Platform%"=="x86" (net start postgresql-%PGVER2%)
+          if "%Platform%"=="notset" (echo Platform is not set, therefore no net start happens.)
+
+          set PGUSER=postgres
+          set PGPASSWORD=root
+          "%PGBIN2%\pg_regress" --bindir="%PGBIN2%" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame || (type regression.diffs && call)
+          if "%ERRORLEVEL%"=="1" exit 1
+
+      - name: Stop PostgreSQL for Windows
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
+        env:
+          PGVER2: ${{ env.PGVER2 }}
+          Platform: ${{ env.Platform }}
+        shell: cmd
+        run: |
+          echo on
+          echo PGVER2   - %PGVER2%
+          echo Platform - %Platform%
+          rem Need to manually start PostgreSQL
+          if "%Platform%"=="x64" (net stop postgresql-x64-%PGVER2%)
+          if "%Platform%"=="x86" (net stop postgresql-%PGVER2%)
+          if "%Platform%"=="notset" (echo Platform is not set, therefore no net stop happens.)
+
+      - name: Windows Prep PL/R Artifact for Release
+        if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' || env.compilerClass == 'msvc' ) }}
+        env:
+          PGVER2: ${{ env.PGVER2 }}
+          Platform: ${{ env.Platform }}
+        shell: cmd
+        run: |
+          echo on
+          if exist plr-artifact.zip copy plr-artifact.zip plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
+          if exist plr-artifact.zip dir                   plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
+
+      # Testing is not done here.
+      # Pushing this tag assumes that the previous Github Actions workflow run had all 'successes'.
+      - name: PL/R Artifact for Release
+        if: github.ref_type == 'tag'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          replacesArtifacts: true
+          # "artifacts" means "paths" and "files"
+          # set of paths representing artifacts to upload to the release
+          artifacts: |
+            plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
+          token: ${{ secrets.ACTIONS_CREATE_RELEASE_REPO_SECRET }}
