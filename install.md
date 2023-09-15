@@ -11,7 +11,7 @@ This presumes you installed PostgreSQL using the PGDG repositories found [here](
 yum install plr-nn
 ```
 
-Where nn is the major version number such as 15 for PostgreSQL version 15.x
+Where nn is the major version number such as 16 for PostgreSQL version 16.x
 
 To set R_HOME for use by PostgreSQL.
 
@@ -73,8 +73,8 @@ You may explicitly include the path of pg_config to `PATH`, such as
 
 ```bash
 cd plr
-PATH=/usr/pgsql-15/bin/:$PATH; USE_PGXS=1 make
-echo "PATH=/usr/pgsql-15/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
+PATH=/usr/pgsql-16/bin/:$PATH; USE_PGXS=1 make
+echo "PATH=/usr/pgsql-16/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
 ```
 If you want to use git to pull the repository, run the following command before the make command:
 
@@ -94,8 +94,8 @@ USE_PGXS=1 make install
 
 In MSYS:
 ```
-export R_HOME=/c/progra~1/R/R-4.2.1
-export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
+export R_HOME=/c/progra~1/R/R-4.3.1
+export PATH=$PATH:/c/progra~1/PostgreSQL/16/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
@@ -115,16 +115,16 @@ that has been downloaded (and installed) from
 then, include the environment variable R_ARCH.
 For example R_ARCH=/x64 (or R_ARCH=/i386 as appropriate):
 ```
-export R_HOME=/c/progra~1/R/R-4.1.3
-export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
+export R_HOME=/c/progra~1/R/R-4.3.1
+export PATH=$PATH:/c/progra~1/PostgreSQL/16/bin
 export R_ARCH=/x64
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
 ```
-export R_HOME=/c/progra~1/R/R-4.2.1
-export PATH=$PATH:/c/progra~1/PostgreSQL/15/bin
-export R_ARCH=/x64
+export R_HOME=/c/progra~1/R/R-4.1.3
+export PATH=$PATH:/c/progra~1/PostgreSQL/16/bin
+export R_ARCH=/i386
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
@@ -132,7 +132,25 @@ Note, R 4.2.0 and greater is not "single architecture."
 It is still "subarchitecture" with only 64bit.
 32bit has been removed.
 
+### Compiling from source and using R for Windows 4.3.0 and later
 
+PL/R that uses R for Windows 4.3.0 and later can no longer be compiled using Microsoft Visual Studio.
+One may read the following.
+
+Status: CLOSED WONTFIX
+[Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'](https://bugs.r-project.org/show_bug.cgi?id=18544)
+
+[The new definition does not work with MSVC compilers because they don't support the C99 _Complex type](https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support?view=msvc-170)
+
+[C Complex Numbers in C++?](https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c)
+
+Instead, for PL/R that uses R for Windows 4.3.0 and later, compile PL/R with MSYS2(UCRT64 or MINGW32).
+
+### Compiling from source using the meson build system
+
+Needed is the PostgreSQL version 16 or later source code, libR installed, PATH set, and R_HOME set. One passes -DR_HOME=value to the `meson setup` command.
+
+Alternately, needed are the PostgreSQL pre-compiled binaries. PostgreSQL can be a version lower than 16. Also needed are the libR installed, libpq installed, libpostgres configured and installed, PATH set, and R_HOME set.  One passes -DR_HOME=value and -DPG_HOME=value2 to the `meson setup` command.
 
 ### Installing from a Pre-Built "plr"
 
@@ -141,7 +159,7 @@ changing:
 
 In Windows environment (generally):
 ```
-R_HOME=C:\Progra~1\R\R-4.2.1
+R_HOME=C:\Progra~1\R\R-4.3.1
 Path=%PATH%;%R_HOME%\x64\bin
 ```
 
@@ -162,13 +180,10 @@ https://cran.r-project.org/doc/manuals/r-release/NEWS.html
 Acquire UCRT through `Windows Update` or at the following URL query result:
 https://www.google.com/search?q=download+UCRT
 
-In a Windows environment, with a PL/R compiled
-using Microsoft Visual Studio [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest),
-with a PostgreSQL compiled
+In a Windows environment, with a PL/R compiled using MSYS2(UCRT64 or MINGW32) or Microsoft Visual Studio
+[https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest), with a PostgreSQL compiled
 with Microsoft Visual Studio [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads),
-and an R acquired
-from [https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/)
-do the following.
+and an R acquired from CRAN [https://cran.r-project.org/bin/windows/base/](https://cran.r-project.org/bin/windows/base/) do the following.
 
 
 
@@ -177,17 +192,18 @@ do the following.
 
 Download and install PostgreSQL compiled with Microsoft Visual Studio
 [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
-Download PL/R compiled using Microsoft Visual Studio
+For R versions earlier than 4.3.0 Download PL/R compiled using Microsoft Visual Studio
+For R versions greather or equal to 4.3.0 Download PL/R compiled using MSYS2 (UCRT64 or MINGW32)
 [https://github.com/postgres-plr/plr/releases/latest](https://github.com/postgres-plr/plr/releases/latest)
 
 Unzip the plr.zip file into a folder, that is called the "unzipped folder".
-If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\15",
+If your installation of PostgreSQL had been installed into "C:\Program Files\PostgreSQL\16",
 then from the unzipped PL/R folder, place the following
 
  * .sql files and the plr.control file, all found in the "share\extension" folder
-   into "C:\Program Files\PostgreSQL\15\share\extension" folder.
+   into "C:\Program Files\PostgreSQL\16\share\extension" folder.
 
- * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\15\lib" folder.
+ * plr.dll file found in the "lib" folder into "C:\Program Files\PostgreSQL\16\lib" folder.
 
 
 
@@ -203,7 +219,7 @@ and choose [ ] "Save version number in registry".
 At a Command Prompt run (and may have to be an Administrator Command Prompt)
 and using wherever your path to R may be, do:
 ```
-setx R_HOME "C:\Program Files\R\R-4.2.1" /M
+setx R_HOME "C:\Program Files\R\R-4.3.1" /M
 ```
 ### Optionally:
 
@@ -212,7 +228,7 @@ and choose [ ] "Save version number in registry".
 Choose Control Panel -> System -> advanced system settings -> Environment Variables button.
 In the "System variables" area, create the System Variable, called R_HOME.
 Give R_HOME the value of the PATH to the R home,
-for example (without quotes) "C:\Program Files\R\R-4.2.1".
+for example (without quotes) "C:\Program Files\R\R-4.3.1".
 
 If you forgot to set the R_HOME environment variable (by any method),
 then (eventually) you may get this error:
@@ -234,8 +250,8 @@ Control Panel -> System -> Advanced System Settings -> Environment Variables but
 In the "System variables" area, choose the System Variable, called "Path".
 Click on the Edit button.
 Add the R.dll folder to the "Path".
-For example (without quotes), add "C:\Program Files\R\R-4.2.1\bin\x64" or
-"C:\Program Files\R\R-4.1.3\bin\x64"  or "C:\Program Files\R\R-4.1.3\bin\i386".
+For example (without quotes), add "C:\Program Files\R\R-4.3.1\bin\x64" or
+or "C:\Program Files\R\R-4.1.3\bin\i386".
 If you are running R version 2.11 or earlier on Windows, the R.dll folder is different;
 instead of "bin\i386" or "bin\x64", it is "bin".
 Note, a 64bit compiled PL/R can only run with a 64bit compiled PostgreSQL.
@@ -254,21 +270,21 @@ Restart the PostgreSQL cluster, do:
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net stop  postgresql-x64-15
+net stop  postgresql-x64-16
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
+Find postgresql-x64-16 (or whatever service your PostgreSQL is running under).
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net start  postgresql-x64-15
+net start  postgresql-x64-16
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-15 (or whatever service your PostgreSQL is running under).
+Find postgresql-x64-16 (or whatever service your PostgreSQL is running under).
 Right click and choose "Start"
 
 

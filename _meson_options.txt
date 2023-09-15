@@ -1,0 +1,5 @@
+
+
+option('R_HOME',  type : 'string', value : '', description : 'Path before the R "include" directory')
+option('PG_HOME', type : 'string', value : '', description : 'Path before the PostgreSQL "include" directory')
+

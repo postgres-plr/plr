@@ -1,0 +1,15 @@
+rhome=R_HOME
+rarch=R_ARCH
+prefix=${rhome}
+exec_prefix=${prefix}
+
+r_libdir1x=${rhome}/bin${rarch}
+r_libdir2x=${rhome}/lib${rarch}
+rincludedir=${rhome}/include
+
+Name: libR
+Description: R as a library
+Version: rversion
+Libs: -fopenmp   -L${r_libdir1x} -L${r_libdir2x} -lR
+Cflags: -I${rincludedir} -I${rincludedir}
+Libs.private:
