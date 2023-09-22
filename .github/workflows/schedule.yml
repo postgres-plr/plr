@@ -4,6 +4,9 @@ name: plr daily
 run-name: plr daily - ${{ github.event.head_commit.message }}
 
 on:
+  push:
+  pull_request:
+  workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 1 * * *'
@@ -21,6 +24,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq r-base-dev acl bison flex libssl-dev
+          sudo R --version
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
