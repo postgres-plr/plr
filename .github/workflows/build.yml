@@ -1,7 +1,7 @@
 name: plr CI
 run-name: plr CI - ${{ github.event.head_commit.message }}
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   master:
     runs-on: ubuntu-latest
@@ -18,6 +18,7 @@ jobs:
           sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
           sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
           sudo apt-get install -qq r-base-dev acl bison flex libssl-dev
+          sudo R --version
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
@@ -51,6 +52,15 @@ jobs:
     strategy:
       matrix:
         include:
+          # SEEN SEP 2023
+          # Ubuntu 22.04	ubuntu-latest
+          # https://github.com/actions/runner-images
+          # jammy (22.04, LTS)
+          # https://wiki.postgresql.org/wiki/Apt
+          # https://apt.postgresql.org/pub/repos/apt/dists/
+          # 16/ - 14-Sep-2023 12:35  
+          # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/
+          - pg: 16
           - pg: 15
           - pg: 14
           - pg: 13
