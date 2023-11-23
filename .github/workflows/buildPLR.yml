@@ -83,7 +83,7 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_16_0
+            pgSRCversion: REL_16_1
             PG_SOURCE: 'D:\PGSOURCE'
             #
             # buildpgFromSRC: true
@@ -94,7 +94,7 @@ jobs:
             buildpgANDplrInSRCcontrib: true
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 16.0-1
+            pgWINversion: 16.1-1
             # 
             MSYS2testonpgWIN: true
 
@@ -106,23 +106,23 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.1
+            rversion: 4.3.2
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            # September 2023 - MSYS2 PostgreSQL version is 15.3
+            # November 2023 - MSYS2 PostgreSQL version is 15.5
             #
             # See the UCRT repository postgreSQL version
             # https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
             #
-            # pgSRCversion: REL_15
+            # pgSRCversion: REL_15_5
             # PG_SOURCE: 'D:\PGSOURCE'
             # buildpgFromSRC: true
             # buildpgFromSRCmethod: make
             # PG_HOME: 'D:\PGINSTALL'
             #
             # download from EnterpriseDB - PostgreSQL for Windows
-            pgWINversion: 15.3-3
+            pgWINversion: 15.5-1
             #
             MSYS2testonpgWIN: true
 
@@ -134,11 +134,11 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.1
+            rversion: 4.3.2
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_14_8
+            pgSRCversion: REL_14_10
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
@@ -147,7 +147,7 @@ jobs:
             # EnterpriseDB PostgreSQL for Windows
             # pgWINversion: 14.x-y
             #
-            # September 2023 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
+            # November 2023 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
             # ServiceName postgresql-x64-14
             # Version 14.8
             # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
@@ -163,17 +163,17 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.1
+            rversion: 4.3.2
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_13_12
+            pgSRCversion: REL_13_13
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 13.12-1
+            pgWINversion: 13.13-1
             #
             MSYS2testonpgWIN: true
 
@@ -192,17 +192,17 @@ jobs:
 ##          Platform: x64
 ##          Configuration: Release
 ##          #
-##          rversion: 4.3.1
+##          rversion: 4.3.2
 ##          R_HOME: 'D:\RINSTALL'
 ##          R_ARCH: /x64
 ##          #
-##          pgSRCversion: REL_12_16
+##          pgSRCversion: REL_12_17
 ##          PG_SOURCE: 'D:\PGSOURCE'
 ##          buildpgFromSRC: true
 ##          buildpgFromSRCmethod: make
 ##          PG_HOME: 'D:\PGINSTALL'
 ##          #
-##          pgWINversion: 12.16-1
+##          pgWINversion: 12.17-1
 ##          #
 ##          MSYS2testonpgWIN: true
 
@@ -214,17 +214,17 @@ jobs:
 ##          Platform: x64
 ##          Configuration: Release
 ##          #
-##          rversion: 4.3.1
+##          rversion: 4.3.2
 ##          R_HOME: 'D:\RINSTALL'
 ##          R_ARCH: /x64
 ##          #
-##          pgSRCversion: REL_11_21
+##          pgSRCversion: REL_11_22
 ##          PG_SOURCE: 'D:\PGSOURCE'
 ##          buildpgFromSRC: true
 ##          buildpgFromSRCmethod: make
 ##          PG_HOME: 'D:\PGINSTALL'
 ##          #
-##          pgWINversion: 11.21-1
+##          pgWINversion: 11.22-1
 ##          #
 ##          MSYS2testonpgWIN: true
 
@@ -819,9 +819,9 @@ jobs:
           "${{ env.rversionlong }}.exe" /VERYSILENT /COMPONENTS=main,%R_ARCHplat% /DIR=%R_HOME% /NOICONS /TASKS=
           dir "%R_HOME%"
 
-      # Github Actions provided PostgreSQL x64-14 (as of SEPTEMBER 2023)
+      # Github Actions provided PostgreSQL x64-14 (as of November 2023)
       #
-      # # AUGUST 2023
+      # # August 2023
       # # The PL/R extension was built using PostreSQL 15
       # ServiceName postgresql-x64-14
       # Version 14.8
