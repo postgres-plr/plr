@@ -13,9 +13,36 @@ jobs:
       # Disable fail-fast as we want results from all even if one fails.
       fail-fast: false
       matrix:
+
+      # Repository/Virtual_Machine PostgreSQL binaries are not known automatically.
+      # (See far below in the matrix.)
+      #
+      # In two matrix items, already-compiled repository found 
+      # PostreSQL already compiled binaries are used. 
+      #
+      # The repository PostgreSQL version in HERE 
+      # is not [easily] detectable ahead of the build method.
+      # Therefore, a HUMAN, must often check and set the build matrix versions
+      # in the Github Actions build matrix, before the Github Action runs.
+      # (I do not yet have an [easy automated] work around.)
+      #
+      # Already-compiled PostgreSQL binaries in repositories in these places HERE.
+      #
+      #    Type: Pull the binary from here.
+      # 1. https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
+      #
+      #    Type: Build within this virtual machine with the installed binary here.
+      # 2. https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+      #    Note, I can not uninstall PostgreSQL for Windows. I tried.
+
+      # "next PostgreSQL" version is not known automatically.
+      #
+      # In the caseof "next PostgreSQL" (See far below in the matrix)
+      # a HUMAN must manually see the VERSION.
+
         include:
 
-          # Note, the x86 Cygwin Server will "not start" on Github Actions
+          # Note, the x86 Cygwin Server will "not start" on Github Actions.
           # Therfore cygwin x86 is "not PostgreSQL regression testable."
           #
           # Repository R and Repository Postgresql
@@ -32,10 +59,15 @@ jobs:
 
           # plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
           # Therefore, here, plr for "R 4.3.0 (and later) for Windows" is compiled with MSYS2(UCRT64/MINGW32).
-          # It is regression tested twice.  The first regression test is within PostgreSQL on MSYS2.
-          # The second regression test is within PostgreSQL on Windows.
+          # It is regression tested twice.  
           #
-          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
+          #   The first regression test is within PostgreSQL on MSYS2.
+          #
+          #   The second regression test is within PostgreSQL that had been compiled with Microsoft Visual Studio 
+          #   from EnterpriseDB (if available: master _RC* and _BETA* versions are often not available).
+          #
+          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows" 
+          # can not be compiled with Microsoft Visual Studio.
           #
           # Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'
           # Status: CLOSED WONTFIX
@@ -83,6 +115,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
+            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
+            # Because this is "next PostgreSQL", 
+            # if available are/is 'release candidate' REL_AA_RC# 
+            # and/or 'beta' REL_AA_BETA# version(s)
+            # then choose that 'latest' version;
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers. 
+            # Otherwise, just choose the latest REL_XX_Y.
             pgSRCversion: REL_16_1
             PG_SOURCE: 'D:\PGSOURCE'
             #
@@ -94,8 +133,9 @@ jobs:
             buildpgANDplrInSRCcontrib: true
             PG_HOME: 'D:\PGINSTALL'
             #
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
             pgWINversion: 16.1-1
-            # 
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
             MSYS2testonpgWIN: true
 
           - os: windows-latest
@@ -110,18 +150,43 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            # November 2023 - MSYS2 PostgreSQL version is 15.5
+            # November 2023 - MSYS2 PostgreSQL version is 16.1
             #
+            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
             # See the UCRT repository postgreSQL version
+            # Build Date: 2023-11-11 17:52:53 
+            # Version: 16.1-1
             # https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
             #
-            # pgSRCversion: REL_15_5
+            # pgSRCversion: REL_16_1
             # PG_SOURCE: 'D:\PGSOURCE'
             # buildpgFromSRC: true
             # buildpgFromSRCmethod: make
             # PG_HOME: 'D:\PGINSTALL'
             #
             # download from EnterpriseDB - PostgreSQL for Windows
+            pgWINversion: 16.1-1
+            #
+            MSYS2testonpgWIN: true
+
+          - os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.3.2
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_15_5
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: make
+            PG_HOME: 'D:\PGINSTALL'
+            #
             pgWINversion: 15.5-1
             #
             MSYS2testonpgWIN: true
@@ -147,6 +212,7 @@ jobs:
             # EnterpriseDB PostgreSQL for Windows
             # pgWINversion: 14.x-y
             #
+            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
             # November 2023 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
             # ServiceName postgresql-x64-14
             # Version 14.8
