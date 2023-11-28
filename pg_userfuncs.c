@@ -411,7 +411,6 @@ plr_environ(PG_FUNCTION_ARGS)
 	 */
 	ReleaseTupleDesc(tupdesc);
 
-	tuplestore_donestoring(tupstore);
 	rsinfo->setResult = tupstore;
 
 	/*

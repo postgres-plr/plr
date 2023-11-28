@@ -2134,7 +2134,6 @@ get_frame_tuplestore(SEXP rval,
 	UNPROTECT(1);
 
 	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-	tuplestore_donestoring(tupstore);
 	MemoryContextSwitchTo(oldcontext);
 
 	return tupstore;
