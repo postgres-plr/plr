@@ -2196,7 +2196,6 @@ get_matrix_tuplestore(SEXP rval,
 	UNPROTECT(1);
 
 	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-	tuplestore_donestoring(tupstore);
 	MemoryContextSwitchTo(oldcontext);
 
 	return tupstore;
@@ -2256,7 +2255,6 @@ get_generic_tuplestore(SEXP rval,
 	UNPROTECT(1);
 
 	oldcontext = MemoryContextSwitchTo(per_query_ctx);
-	tuplestore_donestoring(tupstore);
 	MemoryContextSwitchTo(oldcontext);
 
 	return tupstore;
