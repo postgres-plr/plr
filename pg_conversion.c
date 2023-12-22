@@ -786,6 +786,12 @@ pg_get_one_r(char *value, Oid typtype, SEXP obj, int elnum)
 			else
 				LOGICAL_DATA(obj)[elnum] = NA_LOGICAL;
 			break;
+		case BYTEAOID:
+			if (value)
+				SET_STRING_ELT(coerce_to_char(*obj), elnum, COPY_TO_USER_STRING(value));
+			else
+				SET_STRING_ELT(coerce_to_char(*obj), elnum, NA_STRING);
+			break;
 		default:
 			/* Everything else is defaulted to string */
 			if (value)
