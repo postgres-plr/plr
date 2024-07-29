@@ -134,7 +134,7 @@ jobs:
             PG_HOME: 'D:\PGINSTALL'
             #
             # This may not be available if pgSRCversion is 'RC' or 'BETA'.
-            pgWINversion: 16.2-2
+            pgWINversion: 16.3-2
             # This may not be available if pgSRCversion is 'RC' or 'BETA'.
             MSYS2testonpgWIN: true
 
@@ -165,7 +165,7 @@ jobs:
             # PG_HOME: 'D:\PGINSTALL'
             #
             # download from EnterpriseDB - PostgreSQL for Windows
-            pgWINversion: 16.2-2
+            pgWINversion: 16.3-2
             #
             MSYS2testonpgWIN: true
 
