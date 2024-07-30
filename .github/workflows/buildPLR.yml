@@ -233,13 +233,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_13_STABLE
+            pgSRCversion: REL_10_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 13.15-2
+            pgWINversion: 10.23-1
             #
             MSYS2testonpgWIN: true
 
@@ -306,13 +306,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /i386
             #
-            pgSRCversion: REL_13_STABLE
+            pgSRCversion: REL_11_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 13.15-2
+            pgWINversion: 11.22-2
             #
             MSYS2testonpgWIN: true
 
