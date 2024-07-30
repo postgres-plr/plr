@@ -306,13 +306,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /i386
             #
-            pgSRCversion: REL_10_23
+            pgSRCversion: REL_13_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 10.23-1
+            pgWINversion: 13.15-2
             #
             MSYS2testonpgWIN: true
 
