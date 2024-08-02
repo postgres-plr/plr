@@ -122,7 +122,7 @@ jobs:
             # then choose that 'latest' version;
             # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers. 
             # Otherwise, just choose the latest REL_XX_Y.
-            pgSRCversion: REL_16_1
+            pgSRCversion: REL_16_3
             PG_SOURCE: 'D:\PGSOURCE'
             #
             # buildpgFromSRC: true
@@ -134,7 +134,7 @@ jobs:
             PG_HOME: 'D:\PGINSTALL'
             #
             # This may not be available if pgSRCversion is 'RC' or 'BETA'.
-            pgWINversion: 16.1-1
+            pgWINversion: 16.3-2
             # This may not be available if pgSRCversion is 'RC' or 'BETA'.
             MSYS2testonpgWIN: true
 
@@ -155,7 +155,7 @@ jobs:
             # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
             # See the UCRT repository postgreSQL version
             # Build Date: 2023-11-11 17:52:53 
-            # Version: 16.1-1
+            # Version: 16.3-2
             # https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
             #
             # pgSRCversion: REL_16_1
@@ -165,7 +165,7 @@ jobs:
             # PG_HOME: 'D:\PGINSTALL'
             #
             # download from EnterpriseDB - PostgreSQL for Windows
-            pgWINversion: 16.1-1
+            pgWINversion: 16.3-2
             #
             MSYS2testonpgWIN: true
 
@@ -181,13 +181,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_15_5
+            pgSRCversion: REL_15_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 15.5-1
+            pgWINversion: 15.7-2
             #
             MSYS2testonpgWIN: true
 
@@ -203,7 +203,7 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_14_10
+            pgSRCversion: REL_14_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
@@ -233,13 +233,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_13_13
+            pgSRCversion: REL_10_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 13.13-1
+            pgWINversion: 10.23-1
             #
             MSYS2testonpgWIN: true
 
@@ -306,13 +306,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /i386
             #
-            pgSRCversion: REL_10_23
+            pgSRCversion: REL_11_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 10.23-1
+            pgWINversion: 11.22-2
             #
             MSYS2testonpgWIN: true
 
