@@ -1625,7 +1625,7 @@ plr_convertargs(plr_function *function, Datum *arg, bool *argnull, FunctionCallI
 	int		c = 0;
 	SEXP	rargs,
 			t,
-			el;
+			el = R_NilValue;
 
 #ifdef HAVE_WINDOW_FUNCTIONS
 	if (function->iswindow)

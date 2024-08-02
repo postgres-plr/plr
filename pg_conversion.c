@@ -337,7 +337,7 @@ SEXP
 pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 {
 	char		buf[256];
-	SEXP		result, v, names, row_names;
+	SEXP		result, v, names = R_NilValue, row_names;
 	int64		i, num_frame_row = 0;
 	int			j, nc = 1, nc_effective = 1, df_colnum = 0;
 	Datum		dvalue;
@@ -346,11 +346,11 @@ pg_window_frame_get_r(WindowObject winobj, int argno, plr_function* function)
 	Oid			element_type = function->arg_typid[argno];
 	FmgrInfo	out_func = function->arg_out_func[argno];
 	/* for tuple arguments */
-	HeapTuple	tuple;
+	HeapTuple	tuple = NULL;
 	HeapTupleHeader	tuple_hdr;
 	Oid			tupType;
 	int32		tupTypmod;
-	TupleDesc	tupdesc;
+	TupleDesc	tupdesc = NULL;
 	/* for array arguments */
 	Oid			typelem = function->arg_elem[argno];
 	int16		typlen;
