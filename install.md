@@ -94,7 +94,7 @@ USE_PGXS=1 make install
 
 In MSYS:
 ```
-export R_HOME=/c/progra~1/R/R-4.3.1
+export R_HOME=/c/progra~1/R/R-4.4.1 
 export PATH=$PATH:/c/progra~1/PostgreSQL/16/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
@@ -115,7 +115,7 @@ that has been downloaded (and installed) from
 then, include the environment variable R_ARCH.
 For example R_ARCH=/x64 (or R_ARCH=/i386 as appropriate):
 ```
-export R_HOME=/c/progra~1/R/R-4.3.1
+export R_HOME=/c/progra~1/R/R-4.4.1
 export PATH=$PATH:/c/progra~1/PostgreSQL/16/bin
 export R_ARCH=/x64
 USE_PGXS=1 make
@@ -159,7 +159,7 @@ changing:
 
 In Windows environment (generally):
 ```
-R_HOME=C:\Progra~1\R\R-4.3.1
+R_HOME=C:\Progra~1\R\R-4.4.1
 Path=%PATH%;%R_HOME%\x64\bin
 ```
 
@@ -219,7 +219,7 @@ and choose [ ] "Save version number in registry".
 At a Command Prompt run (and may have to be an Administrator Command Prompt)
 and using wherever your path to R may be, do:
 ```
-setx R_HOME "C:\Program Files\R\R-4.3.1" /M
+setx R_HOME "C:\Program Files\R\R-4.4.1" /M
 ```
 ### Optionally:
 
@@ -228,7 +228,7 @@ and choose [ ] "Save version number in registry".
 Choose Control Panel -> System -> advanced system settings -> Environment Variables button.
 In the "System variables" area, create the System Variable, called R_HOME.
 Give R_HOME the value of the PATH to the R home,
-for example (without quotes) "C:\Program Files\R\R-4.3.1".
+for example (without quotes) "C:\Program Files\R\R-4.4.1".
 
 If you forgot to set the R_HOME environment variable (by any method),
 then (eventually) you may get this error:
@@ -250,7 +250,7 @@ Control Panel -> System -> Advanced System Settings -> Environment Variables but
 In the "System variables" area, choose the System Variable, called "Path".
 Click on the Edit button.
 Add the R.dll folder to the "Path".
-For example (without quotes), add "C:\Program Files\R\R-4.3.1\bin\x64" or
+For example (without quotes), add "C:\Program Files\R\R-4.4.1\bin\x64" or
 or "C:\Program Files\R\R-4.1.3\bin\i386".
 If you are running R version 2.11 or earlier on Windows, the R.dll folder is different;
 instead of "bin\i386" or "bin\x64", it is "bin".
@@ -270,7 +270,7 @@ Restart the PostgreSQL cluster, do:
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net stop  postgresql-x64-16
+net stop postgresql-x64-16
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
@@ -280,7 +280,7 @@ Right click and choose "Stop"
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net start  postgresql-x64-16
+net start postgresql-x64-16
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services

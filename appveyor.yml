@@ -135,7 +135,7 @@ environment:
     # msvc/msys2? - "pg" 10     - last version "pg" supports x86
     # msvc/msys2? - "r"   4.1.3 - last version "r"  supports x86
 
-  - pg: REL_10_23 # static commit - from git
+  - pg: REL_10_STABLE # static commit - from git
     PlatformToolset: v143
     Configuration: Debug
     Platform: x86
@@ -157,7 +157,7 @@ environment:
     rversion: 4.1.3
     compiler: msvc
 
-  - pg: REL_10_23 # verify can compile pgsql.sln on msvc 2015
+  - pg: REL_10_STABLE # verify can compile pgsql.sln on msvc 2015
     PlatformToolset: v120
     Configuration: Debug
     Platform: x86
@@ -168,7 +168,28 @@ environment:
 #   # msvc - late November 2023 - the rest are 64bit builds
 #   # msvc
 
-  - pg: master # non-static commit - from git
+# In Jul 2024 Appveyor msvc - REL_17 [and master] attempted builds do not build
+# cannot open file 'C:/projects/postgresql/src/tools/msvc/Mkvcbuild.pm': No such file or directory
+# msvc(non-meson pure-msvc) builds of pg "17+ and "master" are no longer possible
+#
+#
+# - pg: master # non-static commit - from git
+#   PlatformToolset: v143
+#   Configuration: Debug
+#   Platform: x64
+#   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+#   rversion: 4.2.3
+#   compiler: msvc
+#
+# - pg: REL_17_BETA2 # static commit - from git
+#   PlatformToolset: v143
+#   Configuration: Debug
+#   Platform: x64
+#   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+#   rversion: 4.2.3
+#   compiler: msvc
+
+  - pg: REL_16_3 # static commit - from git
     PlatformToolset: v143
     Configuration: Debug
     Platform: x64
@@ -176,15 +197,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: REL_16_1 # static commit - from git
-    PlatformToolset: v143
-    Configuration: Debug
-    Platform: x64
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-    rversion: 4.2.3
-    compiler: msvc
-
-  - pg: 16.1-1
+  - pg: 16.3-2
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -192,7 +205,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 15.5-1
+  - pg: 15.7-2
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -200,7 +213,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 14.10-1
+  - pg: 14.12-2
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -208,7 +221,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 13.13-1
+  - pg: 13.15-2
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -216,7 +229,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 12.17-1
+  - pg: 12.19-2
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -224,7 +237,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: REL_11_22 # verify can compile pgsql.sln on msvc 2017
+  - pg: REL_11_STABLE # verify can compile pgsql.sln on msvc 2017
     PlatformToolset: v140
     Configuration: Debug
     Platform: x64
@@ -1407,7 +1420,10 @@ deploy:
     prerelease: false
     artifact: plr_7z
     auth_token:
-      secure: DpxrjrmF0pQsm3G/F8m7EDVz6yhBQhlwXWOtqxgQTmUMiofL1PZD+9Q1dAqyKh9Z
+      # Token of Dave
+      secure: nasXR/dCMdQmmouYtN0t1/9jilLmOA6E5EsGoP6Td5yvp3JK4QPfZO0BEVzMeXW1
+      # Token of Andre
+      # secure: DpxrjrmF0pQsm3G/F8m7EDVz6yhBQhlwXWOtqxgQTmUMiofL1PZD+9Q1dAqyKh9Z
     on:
       APPVEYOR_REPO_TAG: true
 
