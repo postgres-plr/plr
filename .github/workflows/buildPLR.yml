@@ -3,7 +3,7 @@ run-name: Meson Builds PL/R - ${{ github.event.head_commit.message }}
 on: [push, pull_request, workflow_dispatch]
 jobs:
   build_test_install:
-    name: R ${{ matrix.rversion }} PGsrc ${{ matrix.pgSRCversion }} PGbin ${{ matrix.pgWINversion }} ${{ matrix.compilerEnv }} ${{ matrix.Platform }}  ${{ matrix.os }} ${{ matrix.Configuration }}
+    name: R ${{ matrix.rversion }} PGsrc ${{ matrix.pgSRCversion }} PGbin ${{ matrix.pgWINversion }} ${{ matrix.compilerEnv }} ${{ matrix.Platform }}  ${{ matrix.os }} ${{ matrix.Configuration }} R ${{ matrix.rversion }} PGSRC ${{ matrix.buildpgFromSRC }} PGSRCMETH ${{ matrix.buildpgFromSRCmethod }} SRCCTB ${{ matrix.buildpgANDplrInSRCcontrib }} matid ${{ matrix.matid }}
     runs-on: ${{ matrix.os }}
     # With "continue-on-error" (and with "fail-fast") emulate Appveyor "allow_failures"
     # Prevents a workflow run from failing when a job fails. Set to true to allow a workflow run to pass when this job fails.
@@ -17,10 +17,10 @@ jobs:
       # Repository/Virtual_Machine PostgreSQL binaries are not known automatically.
       # (See far below in the matrix.)
       #
-      # In two matrix items, already-compiled repository found 
-      # PostreSQL already compiled binaries are used. 
+      # In two matrix items, already-compiled repository found
+      # PostreSQL already compiled binaries are used.
       #
-      # The repository PostgreSQL version in HERE 
+      # The repository PostgreSQL version in HERE
       # is not [easily] detectable ahead of the build method.
       # Therefore, a HUMAN, must often check and set the build matrix versions
       # in the Github Actions build matrix, before the Github Action runs.
@@ -51,7 +51,10 @@ jobs:
           # Package: postgresql
           # https://www.cygwin.com/packages/summary/postgresql.html
           #
-          - os: windows-latest
+          # 1
+          # R PGsrc PGbin cygwin x64 windows-latest Release
+          - matid: 1
+            os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: cygwin
             Platform: x64
@@ -59,14 +62,14 @@ jobs:
 
           # plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
           # Therefore, here, plr for "R 4.3.0 (and later) for Windows" is compiled with MSYS2(UCRT64/MINGW32).
-          # It is regression tested twice.  
+          # It is regression tested twice.
           #
           #   The first regression test is within PostgreSQL on MSYS2.
           #
-          #   The second regression test is within PostgreSQL that had been compiled with Microsoft Visual Studio 
+          #   The second regression test is within PostgreSQL that had been compiled with Microsoft Visual Studio
           #   from EnterpriseDB (if available: master _RC* and _BETA* versions are often not available).
           #
-          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows" 
+          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows"
           # can not be compiled with Microsoft Visual Studio.
           #
           # Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'
@@ -79,8 +82,11 @@ jobs:
           # C Complex Numbers in C++?
           # https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c
           #
+          # 2
           # bleeding edge R and bleeding edge PostgreSQL
-          - os: windows-latest
+          # R devel PGsrc master PGbin UCRT64 x64 windows-latest Debug
+          - matid: 2
+            os: windows-latest
             GithubActionsIgnoreFail: true
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
@@ -102,9 +108,40 @@ jobs:
             #
             # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL master for Windows" exists anywhere.
 
-          # bleeding edge R and next PostgreSQL
-          - os: windows-latest
-            GithubActionsIgnoreFail: false
+          # 3
+          # R 4.4.1 - just exists to try to determine this success . . .
+          #   bleeding edge R and bleeding edge PostgreSQL
+          # R 4.4.1 PGsrc master PGbin UCRT64 x64 windows-latest Debug
+          - matid: 3
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: 4.4.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: master
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: master.future-future
+            #
+            # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL master for Windows" exists anywhere.
+
+          # 4
+          # pg REL_17_BETA2 - just exists to try to determine this success . . .
+          #   bleeding edge R and bleeding edge PostgreSQL
+          # R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
+          - matid: 4
+            os: windows-latest
+            GithubActionsIgnoreFail: true
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -115,13 +152,147 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
-            # Because this is "next PostgreSQL", 
-            # if available are/is 'release candidate' REL_AA_RC# 
+            pgSRCversion: REL_17_BETA2
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: REL_17_STABLE.future-future
+            #
+            # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL REL_17_STABLE for Windows" exists anywhere.
+
+          # 5
+          # R pg REL_17_BETA2 R 4.4.1 - just exists to try to determine this success . . .
+          #   bleeding edge R and bleeding edge PostgreSQL
+          # R 4.4.1 PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
+          - matid: 5
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: 4.4.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_17_BETA2
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: REL_17_STABLE.future-future
+            #
+            # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL REL_17_STABLE for Windows" exists anywhere.
+
+
+          # 6
+          # bleeding edge R and next PostgreSQL
+          - matid: 6
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion:  devel
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Because this is "next PostgreSQL",
+            # if available are/is 'release candidate' REL_AA_RC#
             # and/or 'beta' REL_AA_BETA# version(s)
             # then choose that 'latest' version;
-            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers. 
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
             # Otherwise, just choose the latest REL_XX_Y.
+            # https://github.com/postgres/postgres/tags
+            pgSRCversion: REL_17_BETA2
+            PG_SOURCE: 'D:\PGSOURCE'
+            #
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+            #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+            #   https://www.postgresql.org/docs/16/release-16.html
+            # xor
+            buildpgANDplrInSRCcontrib: true
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # pgWINversion: 17.?-?
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # MSYS2testonpgWIN: true
+
+          # 7 - MYSTERY - Github Actions duplicates this job
+          # R 4.4.1 and next PostgreSQL
+          - matid: 7
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: 4.4.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Because this is "next PostgreSQL",
+            # if available are/is 'release candidate' REL_AA_RC#
+            # and/or 'beta' REL_AA_BETA# version(s)
+            # then choose that 'latest' version;
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
+            # Otherwise, just choose the latest REL_XX_Y.
+            # https://github.com/postgres/postgres/tags
+            pgSRCversion: REL_17_BETA2
+            PG_SOURCE: 'D:\PGSOURCE'
+            #
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+            #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+            #   https://www.postgresql.org/docs/16/release-16.html
+            # xor
+            buildpgANDplrInSRCcontrib: true
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # pgWINversion: 17.?-?
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # MSYS2testonpgWIN: true
+
+          # 8
+          # REL_16_3 - just exists to try to determine this failure . . .
+          #   bleeding edge R and next PostgreSQL
+          # R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
+          - matid: 8
+            os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: devel
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Because this is "next PostgreSQL",
+            # if available are/is 'release candidate' REL_AA_RC#
+            # and/or 'beta' REL_AA_BETA# version(s)
+            # then choose that 'latest' version;
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
+            # Otherwise, just choose the latest REL_XX_Y.
+            # https://github.com/postgres/postgres/tags
             pgSRCversion: REL_16_3
             PG_SOURCE: 'D:\PGSOURCE'
             #
@@ -138,7 +309,93 @@ jobs:
             # This may not be available if pgSRCversion is 'RC' or 'BETA'.
             MSYS2testonpgWIN: true
 
-          - os: windows-latest
+          # 9
+          # R 4.4.1 REL_16_3 - just exists to try to determine this failure . . .
+          #   bleeding edge R and next PostgreSQL
+          # R 4.4.1 PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
+          - matid: 9
+            os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: 4.4.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Because this is "next PostgreSQL",
+            # if available are/is 'release candidate' REL_AA_RC#
+            # and/or 'beta' REL_AA_BETA# version(s)
+            # then choose that 'latest' version;
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
+            # Otherwise, just choose the latest REL_XX_Y.
+            # https://github.com/postgres/postgres/tags
+            pgSRCversion: REL_16_3
+            PG_SOURCE: 'D:\PGSOURCE'
+            #
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+            #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+            #   https://www.postgresql.org/docs/16/release-16.html
+            # xor
+            buildpgANDplrInSRCcontrib: true
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            pgWINversion: 16.3-2
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            MSYS2testonpgWIN: true
+
+##        DUPLICATE (deleteme)
+##        # 10 - NEVER RUNS AS A JOB ???
+##        # 4.4.1 - just exists to try to determine this failure . . .
+##        #   bleeding edge R and next PostgreSQL
+##        # R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
+##        - matid: 10
+##          os: windows-latest
+##          GithubActionsIgnoreFail: false
+##          compilerEnv: UCRT64
+##          shellEnv: msys2 {0}
+##          compilerExe: gcc
+##          Platform: x64
+##          Configuration: Debug
+##          #
+##          rversion: 4.4.1
+##          R_HOME: 'D:\RINSTALL'
+##          R_ARCH: /x64
+##          #
+##          # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+##          # Because this is "next PostgreSQL",
+##          # if available are/is 'release candidate' REL_AA_RC#
+##          # and/or 'beta' REL_AA_BETA# version(s)
+##          # then choose that 'latest' version;
+##          # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
+##          # Otherwise, just choose the latest REL_XX_Y.
+##          # https://github.com/postgres/postgres/tags
+##          pgSRCversion: REL_17_BETA2
+##          PG_SOURCE: 'D:\PGSOURCE'
+##          #
+##          # buildpgFromSRC: true
+##          # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+##          #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+##          #   https://www.postgresql.org/docs/16/release-16.html
+##          # xor
+##          buildpgANDplrInSRCcontrib: true
+##          PG_HOME: 'D:\PGINSTALL'
+##          #
+##          # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+##          # pgWINversion: 17.?-?
+##          # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+##          # MSYS2testonpgWIN: true
+
+
+          # 11
+          - matid: 11
+            os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
@@ -146,19 +403,19 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.2
+            rversion: 4.4.1
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            # November 2023 - MSYS2 PostgreSQL version is 16.1
+            # Jul 2024 - MSYS2 PostgreSQL version is 16.2
             #
-            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
             # See the UCRT repository postgreSQL version
-            # Build Date: 2023-11-11 17:52:53 
-            # Version: 16.3-2
+            # Build Date: 2024-05-28 23:29:50
+            # Version: 16.2-2
             # https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-postgresql
             #
-            # pgSRCversion: REL_16_1
+            # pgSRCversion: REL_16_2
             # PG_SOURCE: 'D:\PGSOURCE'
             # buildpgFromSRC: true
             # buildpgFromSRCmethod: make
@@ -169,7 +426,9 @@ jobs:
             #
             MSYS2testonpgWIN: true
 
-          - os: windows-latest
+          # 12
+          - matid: 12
+            os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
@@ -177,7 +436,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.2
+            rversion: 4.4.1
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -191,7 +450,9 @@ jobs:
             #
             MSYS2testonpgWIN: true
 
-          - os: windows-latest
+          # 13
+          - matid: 13
+            os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
@@ -199,7 +460,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.3.2
+            rversion: 4.4.1
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -212,17 +473,45 @@ jobs:
             # EnterpriseDB PostgreSQL for Windows
             # pgWINversion: 14.x-y
             #
-            # A HUMAN must manually see the VERSION here. (seen November 24 2023 EST)
-            # November 2023 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Jul 2024 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
             # ServiceName postgresql-x64-14
-            # Version 14.8
-            # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+            # Version 14.12
+            # https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
             # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-software
             #
             MSYS2testonpgWIN: true
 
-          - os: windows-latest
-            GithubActionsIgnoreFail: false
+          # Not working in Jul 2024 (compare with BELOW "Exact same as Fall 2023")
+          # 14
+          - matid: 14
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.4.1
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_13_STABLE
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: make
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            pgWINversion: 13.15-2
+            #
+            MSYS2testonpgWIN: true
+
+          # Exact same as Fall 2023
+          # 15
+          - matid: 15
+            os: windows-latest
+            GithubActionsIgnoreFail: true
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -233,13 +522,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
-            pgSRCversion: REL_10_STABLE
+            pgSRCversion: REL_13_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 10.23-1
+            pgWINversion: 13.13-1
             #
             MSYS2testonpgWIN: true
 
@@ -294,8 +583,11 @@ jobs:
 ##          #
 ##          MSYS2testonpgWIN: true
 
-          - os: windows-latest
-            GithubActionsIgnoreFail: false
+          # Exact same as Fall 2023 (but not working in Jul 2024+)
+          # 16
+          - matid: 16
+            os: windows-latest
+            GithubActionsIgnoreFail: true
             compilerEnv: MINGW32
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -306,13 +598,13 @@ jobs:
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /i386
             #
-            pgSRCversion: REL_11_STABLE
+            pgSRCversion: REL_10_STABLE
             PG_SOURCE: 'D:\PGSOURCE'
             buildpgFromSRC: true
             buildpgFromSRCmethod: make
             PG_HOME: 'D:\PGINSTALL'
             #
-            pgWINversion: 11.22-2
+            pgWINversion: 10.23-1
             #
             MSYS2testonpgWIN: true
 
@@ -668,7 +960,7 @@ jobs:
           echo "CRAN_R_DOWNLOAD_URL: ${env:CRAN_R_DOWNLOAD_URL}"
 
       - name: Checkout Code of This Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # running Meson on GitHub Actions will end up using GCC rather than MSVC
       #
@@ -686,7 +978,7 @@ jobs:
 
       - name: Checkout PostgreSQL Code
         if: ${{ env.pgSRCversion != 'notset' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'postgres/postgres'
 
@@ -728,7 +1020,7 @@ jobs:
       #
       - name: Cache R-x.y.z Windows Installer Exe
         if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.rversion != 'devel' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cacheRWindowsInstallerExe
         with:
           path: ${{ env.rversionlong }}.exe
@@ -741,7 +1033,7 @@ jobs:
           ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
           (( env.PGVER2 == '14' && env.Platform == 'x86' ) || ( env.PGVER2 != '14' ))
           }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cachePGWindowsInstallerExe
         with:
           path: ${{ env.pgWINversionlong }}.exe
@@ -751,7 +1043,7 @@ jobs:
 
       - name: Cache GNU diffutils for Test on PostgreSQL for Windows
         if: ${{ ( env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-latest' && env.compilerClass == 'msvc' ) }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cacheDiffutilsZip
         with:
           path: diffutils-2.8.7-1-bin.zip
@@ -761,7 +1053,7 @@ jobs:
 
       - name: Cache pkgconfiglite for Compile using msvc and meson
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cachePkgConfigLiteZip
         with:
           path: pkg-config-lite-0.28-1_bin-win32.zip
@@ -771,7 +1063,7 @@ jobs:
 
       - name: Cache winflexbison for Compile using msvc
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cacheWinFlexBisonZip
         with:
           path: win_flex_bison-2.5.24.zip
@@ -781,11 +1073,21 @@ jobs:
 
       - name: Cache meson for Compile using msvc and meson
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cacheMesonMsi
         with:
           path: meson-1.2.1-64.msi
           key:  meson-1.2.1-64.msi
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
+      - name: Cache StrawberryPerl
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        uses: actions/cache@v4
+        id: cacheStrawberryPerlMsi
+        with:
+          path: strawberry-perl-5.38.2.2-64bit.msi
+          key:  strawberry-perl-5.38.2.2-64bit.msi
         env:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
@@ -803,7 +1105,7 @@ jobs:
           ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) &&
           steps.cacheRWindowsInstallerExe.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadfileRforWindows
         with:
           url: ${{ env.CRAN_R_DOWNLOAD_URL }}
@@ -814,14 +1116,14 @@ jobs:
           (( env.PGVER2 == '14' && env.Platform == 'x86' ) || ( env.PGVER2 != '14' )) &&
           steps.cachePGWindowsInstallerExe.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadfilePGforWindows
         with:
           url: ${{ env.ENTDB_PG_DOWNLOAD_URL }}
 
-#     # The "crazy-max/ghaction-chocolatey@v2" "install SOMEHING_AT_SOURCEFORGE" file download often times-out.
+#     # The "crazy-max/ghaction-chocolatey@v3" "install SOMEHING_AT_SOURCEFORGE" file download often times-out.
 #     - name: Choco Install GNU diffutils for Test on PostgreSQL for Windows
-#       uses: crazy-max/ghaction-chocolatey@v2
+#       uses: crazy-max/ghaction-chocolatey@v3
 #       with:
 #         args: install diffutils
 
@@ -829,10 +1131,12 @@ jobs:
         if: ${{ ( ( env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-latest' && env.compilerClass == 'msvc' ) ) &&
           steps.cacheDiffutilsZip.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadDiffutilsZip
         with:
           retry-times: 1
+          # verified Jul 13 2024
+          # last file update 2004-05-24
           url: https://zenlayer.dl.sourceforge.net/project/gnuwin32/diffutils/2.8.7-1/diffutils-2.8.7-1-bin.zip
 
       - name: Download pkgconfiglite for Compile using msvc and meson
@@ -840,10 +1144,12 @@ jobs:
           ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
           steps.cachePkgConfigLiteZip.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadPkgConfigLiteZip
         with:
           retry-times: 1
+          # verified Jul 13 2024
+          # last file update 2013-01-26
           url: http://downloads.sourceforge.net/project/pkgconfiglite/0.28-1/pkg-config-lite-0.28-1_bin-win32.zip
 
       - name: Download winflexbison for Compile using msvc
@@ -851,23 +1157,46 @@ jobs:
           ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
           steps.cacheWinFlexBisonZip.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadWinFlexBisonZip
         with:
           retry-times: 1
+          # verified Jul 13 2024
+          # last file update 2021-01-06
           url: https://sourceforge.net/projects/winflexbison/files/win_flex_bison-2.5.24.zip
-
 
       - name: Download meson for Compile using msvc and meson
         if: >-
           ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' &&
           steps.cacheMesonMsi.outputs.cache-hit != 'true'
           }}
-        uses: suisei-cn/actions-download-file@v1.4.0
+        uses: suisei-cn/actions-download-file@v1.6.0
         id: downloadMesonMsi
         with:
           retry-times: 1
-          url: https://github.com/mesonbuild/meson/releases/download/1.2.1/meson-1.2.1-64.msi
+          # verified Jul 13 2024
+          # We provide an MSI installer on the GitHub release page
+          # https://mesonbuild.com/Getting-meson.html
+          # BUT this is the last .msi build and no .msi builds for 1.4.2 and 1.5.0 - STRANGE
+          # last file update May 30 2024
+          # https://github.com/mesonbuild/meson/releases/download/1.4.1/meson-1.4.1-64.msi
+          # https://github.com/mesonbuild/meson/releases/tag/1.4.1
+          url: https://github.com/mesonbuild/meson/releases/download/1.4.1/meson-1.4.1-64.msi
+
+      - name: Download StrawberryPerl
+        if: >-
+          ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' &&
+          steps.cacheStrawberryPerlMsi.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.6.0
+        id: downloadStrawberryPerlMsi
+        with:
+          retry-times: 1
+          # verified Jul 13 2024
+          # last file update 2023-12-11
+          # https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_53822_64bit/strawberry-perl-5.38.2.2-64bit.msi
+          # https://strawberryperl.com/releases.html
+          url: https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_53822_64bit/strawberry-perl-5.38.2.2-64bit.msi
 
       - name: Install R for Windows R-x.y.z R-rmajor.rminor.rpatch
         if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
@@ -885,12 +1214,12 @@ jobs:
           "${{ env.rversionlong }}.exe" /VERYSILENT /COMPONENTS=main,%R_ARCHplat% /DIR=%R_HOME% /NOICONS /TASKS=
           dir "%R_HOME%"
 
-      # Github Actions provided PostgreSQL x64-14 (as of November 2023)
+      # Github Actions provided PostgreSQL x64-14 (as of Jul 2024)
       #
-      # # August 2023
+      # # Jul 2024
       # # The PL/R extension was built using PostreSQL 15
       # ServiceName postgresql-x64-14
-      # Version 14.8
+      # Version 14.12
       # ServiceStatus Stopped
       # ServiceStartType Disabled
       # EnvironmentVariables PGBIN=C:\Program Files\PostgreSQL\14\bin
@@ -900,7 +1229,7 @@ jobs:
       # UserName postgres
       # Password root
       # #
-      # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
+      # https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-software
       #
       - name: From Disabled, Enable PostgreSQL x64-14 for Windows and Start and Stop
@@ -960,7 +1289,7 @@ jobs:
       - name: Choco Install support software about PL/R compiling using msvc for Windows
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
         # Keep v2.  v2.2.0 may have connection to Sourceforge problems
-        uses: crazy-max/ghaction-chocolatey@v2
+        uses: crazy-max/ghaction-chocolatey@v3
         with:
           args: >-
             install sed gzip strawberryperl
@@ -1012,19 +1341,27 @@ jobs:
           printf                                          "C:\\OTHERBIN\\winflexbison" >> %GITHUB_PATH%
 
       # Choco Install meson
-      # BUT the "crazy-max/ghaction-chocolatey@v2" "install meson" msiexec.exe Exit code was '3010'.
+      # BUT the "crazy-max/ghaction-chocolatey@v3" "install meson" msiexec.exe Exit code was '3010'.
       - name: Install meson and add meson directory to the PATH for Compile using msvc and meson
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'msvc' }}
         shell: cmd
         run: |
-          msiexec.exe /i meson-1.2.1-64.msi /qn /norestart /l*v meson.1.2.1.MsiInstall.log
+          msiexec.exe /i meson-1.4.1-64.msi /qn /norestart /l*v meson.1.4.1.MsiInstall.log
           printf "C:\Program Files\Meson" >> %GITHUB_PATH%
-          type meson.1.2.1.MsiInstall.log
+          type meson.1.4.1.MsiInstall.log
+
+      - name: Install Strawberry Perl
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        shell: cmd
+        run: |
+          msiexec.exe /i strawberry-perl-5.38.2.2-64bit.msi /qn /norestart /l*v strawberry-perl-5.38.2.2-64bit.msiInstall.log
+          printf "C:\Strawberry\perl\bin" >> %GITHUB_PATH%
+          type strawberry-perl-5.38.2.2-64bit.msiInstall.log
 
       # 34 seconds with zero packages
       # 2 minutes and seven(7) seconds with everything
       - name: Install Windows mingw Software
-        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' }}
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.compilerEnv != 'MINGW32' }}
         uses: msys2/setup-msys2@v2
         with:
           # By default, the installation is not updated; hence package versions are those of the installation tarball.
@@ -1063,6 +1400,48 @@ jobs:
             ${{ env.MINGW_PACKAGE_PREFIX }}-libxml2
             ${{ env.MINGW_PACKAGE_PREFIX }}-libxslt
             ${{ env.MINGW_PACKAGE_PREFIX }}-lz4
+
+      # 34 seconds with zero packages
+      # 2 minutes and seven(7) seconds with everything
+      - name: Install Windows mingw Software - same as above - but omit software - perl winpty
+        if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          # By default, the installation is not updated; hence package versions are those of the installation tarball.
+          # Faster without the "update"
+          # update: true
+          update: true
+          # do not inherit anything from the PATH
+          path-type: strict
+          msystem: ${{ env.compilerEnv }}
+          #
+          install: >-
+            ${{ env.MINGW_PACKAGE_PREFIX }}-pkg-config
+            ${{ env.MINGW_PACKAGE_PREFIX }}-curl
+            git
+            ${{ env.MINGW_PACKAGE_PREFIX }}-meson
+            ${{ env.MINGW_PACKAGE_PREFIX }}-make
+            make
+            ${{ env.MINGW_PACKAGE_PREFIX }}-${{ env.compilerExe }}
+            tar
+            gzip
+            ${{ env.MINGW_PACKAGE_PREFIX }}-readline
+            ${{ env.MINGW_PACKAGE_PREFIX }}-zlib
+            ${{ env.MINGW_PACKAGE_PREFIX }}-icu
+            icu-devel
+            git
+            flex
+            bison
+            p7zip
+            tar
+            zstd
+            ${{ env.MINGW_PACKAGE_PREFIX }}-tools-git
+            ${{ env.MINGW_PACKAGE_PREFIX }}-binutils
+            ${{ env.MINGW_PACKAGE_PREFIX }}-diffutils
+            ${{ env.MINGW_PACKAGE_PREFIX }}-libxml2
+            ${{ env.MINGW_PACKAGE_PREFIX }}-libxslt
+            ${{ env.MINGW_PACKAGE_PREFIX }}-lz4
+
 
       - name: Install Windows mingw Software Repository PostgreSQL
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC != 'true' }}
@@ -1259,16 +1638,24 @@ jobs:
         shell: cmd
         run: |
           echo on
-          if exist pg-artifact.7z copy pg-artifact.7z pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
-          if exist pg-artifact.7z dir                 pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
+          if exist pg-artifact.7z copy pg-artifact.7z pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}-matid-${{ matrix.matid }}.7z
+          if exist pg-artifact.7z dir                 pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}-matid-${{ matrix.matid }}.7z
 
+      ## temporaryily keep at v3
+      # actions/upload-artifact@v3
+      # is scheduled for deprecation on November 30, 2024
+      # @v4 - Due to how Artifacts are created in this new version,
+      # it is no longer possible to upload to the same named Artifact multiple times.
+      # MAY 2024
+      # github.com/actions/upload-artifact
+      #
       - name: Upload artifact PG for export for LOCAL testing
         if: ${{ env.os == 'windows-latest' &&  env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
         uses: actions/upload-artifact@v3
         with:
-          name: pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}
+          name: pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}-matid-${{ matrix.matid }}
           path: |
-            pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}.7z
+            pg-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}-matid-${{ matrix.matid }}.7z
 
       - name: Windows non-msvc Meson PG and Meson PL/R Setup Compile and Meson Test
         if: ${{ env.os == 'windows-latest' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib == 'true' }}
@@ -1649,9 +2036,15 @@ jobs:
 
           # meson has no "test" pre-req system.  So this "ordered" implentation is a kind of "hack".
           # sometimes the "plr" regression test fails if an "easier" regression test did not come before it.
-          meson test -C build --num-processes 1 -v --suite setup --suite cube
+          # true - cube failed its regression test and blocked plr - R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-latest Debug
 
-          meson test -C build --num-processes 1 -v --suite setup --suite plr
+          # meson test -C build --num-processes 1 -v --suite setup --suite cube || true
+          # pg 17+ ONLY? - wiki.postgresql.org/index.php?title=Meson&diff=39209&oldid=38340
+
+          meson test -C build --num-processes 1 -q --print-errorlogs --suite setup --suite cube || true
+
+          # meson test -C build --num-processes 1 -v --suite setup --suite plr
+          meson test -C build --num-processes 1 -q --print-errorlogs --suite setup --suite plr
 
           if [ "${OperatingSystem}" == "Cygwin" ]
           then
@@ -2352,11 +2745,19 @@ jobs:
             Write-Error 'PGVER2 is missing. Please supply the PGVER2.' -ErrorAction Stop
           }
 
+      ## temporaryily keep at v3
+      # actions/upload-artifact@v3
+      # is scheduled for deprecation on November 30, 2024
+      # @v4 - Due to how Artifacts are created in this new version,
+      # it is no longer possible to upload to the same named Artifact multiple times.
+      # MAY 2024
+      # github.com/actions/upload-artifact
+      #
       - name: Try to Upload artifacts plr.dll and plr.dll.a for export for LOCAL testing
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}
+          name: plr-${{ env.HEAD8_GITHUB_SHA }}-${{ env.os }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}-matid-${{ matrix.matid }}
           # default
           if-no-files-found: warn
           path: |

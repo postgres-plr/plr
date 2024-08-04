@@ -45,6 +45,72 @@ jobs:
         env:
           USE_PGXS: 1
 
+  REL_17_:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo site details
+        run: echo building master
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: checkout postgres
+        run: |
+          set -x -v -e
+          sudo apt-get update -qq
+          sudo apt-get install -qq r-base-dev acl bison flex libssl-dev
+          sudo R --version
+          sudo /etc/init.d/postgresql stop
+          sudo apt-get remove --purge postgresql\*
+          sudo rm -rf /etc/postgresql /var/lib/postgresql
+          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_[0-9]')
+          if [ "${RET}" -gt "0" ]
+          then
+            echo -n "Release(s) are found.  Taking the last Release . . . "
+            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_[0-9]' | tail -n 1)
+          else
+            echo "Release(s) are not found.  Trying Release Candidates."
+            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_RC[0-9]')
+            if [ "${RET}" -gt "0" ]
+            then
+              echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . "
+              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_RC[0-9]' | tail -n 1)
+            else
+              echo "Release Candidate(s) are not found. Trying Betas."
+              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_BETA[0-9]')
+              if [ "${RET}" -gt "0" ]
+              then
+                echo -n "Beta(s) are found. Taking the last Beta . . . "
+                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_BETA[0-9]' | tail -n 1)
+              else
+                echo "Beta(s) are not found."
+              fi
+            fi
+          fi
+          echo $GITTAG
+          git clone --branch $GITTAG --depth=1 https://github.com/postgres/postgres.git
+          pushd postgres
+          ./configure
+          make
+          sudo make install
+          export PATH=/usr/local/pgsql/bin:$PATH
+          initdb -D data
+          pg_ctl -D data -l logfile start
+          popd
+
+      - name: Script
+        run: |
+          set -x -v -e
+          export USE_PGXS=1
+          export PATH=/usr/local/pgsql/bin:$PATH
+          SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
+          # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
+          sudo USE_PGXS=1 PATH=/usr/local/pgsql/bin:$PATH make install
+          psql --version
+          make installcheck || (cat regression.diffs && false)
+        env:
+          USE_PGXS: 1
+
   build:
     runs-on: ubuntu-latest
     env:
@@ -52,14 +118,15 @@ jobs:
     strategy:
       matrix:
         include:
-          # SEEN SEP 2023
+          # SEEN JUL 2024
           # Ubuntu 22.04	ubuntu-latest
           # https://github.com/actions/runner-images
           # jammy (22.04, LTS)
           # https://wiki.postgresql.org/wiki/Apt
           # https://apt.postgresql.org/pub/repos/apt/dists/
-          # 16/ - 14-Sep-2023 12:35  
           # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/
+          # Source: postgresql-??
+          # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/main/binary-amd64/Packages
           - pg: 16
           - pg: 15
           - pg: 14
@@ -72,7 +139,7 @@ jobs:
         run: echo PG $PG
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Before Script
         run: |
