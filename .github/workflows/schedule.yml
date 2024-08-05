@@ -3,10 +3,13 @@
 name: plr daily
 run-name: plr daily - ${{ github.event.head_commit.message }}
 
-on: [push, pull_request, workflow_dispatch]
-  schedule:
+on: 
+   push:
+   pull_request: 
+   workflow_dispatch:
+   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '30 1 * * *'
+      - cron:  '30 1 * * *'
 jobs:
   master:
     # SEEN JUL 2024
