@@ -1,7 +1,11 @@
 name: plr CI
 run-name: plr CI - ${{ github.event.head_commit.message }}
 
-on: [push, pull_request, workflow_dispatch]
+on: 
+   push:
+   pull_request: 
+   workflow_dispatch:
+
 jobs:
   master:
     runs-on: ubuntu-latest
@@ -127,6 +131,7 @@ jobs:
           # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/
           # Source: postgresql-??
           # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/main/binary-amd64/Packages
+          - pg: 17
           - pg: 16
           - pg: 15
           - pg: 14
