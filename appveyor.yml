@@ -1,10 +1,11 @@
 
-# Skipping commits affecting specific files (GitHub and Bitbucket only).
-skip_commits:
-  files:
-    # skipping AppVeyor build if, in the push’s head commit, all of the files
-    # have the extension .md
-    - '**/*.md'
+
+##  # Skipping commits affecting specific files (GitHub and Bitbucket only).
+##  skip_commits:
+##    files:
+##      # skipping AppVeyor build if, in the push’s head commit, all of the files
+##      # have the extension .md
+##      - '**/*.md'
 
 image: Visual Studio 2015
 clone_depth: 1
@@ -197,7 +198,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 16.3-2
+  - pg: 16.4-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -205,7 +206,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 15.7-2
+  - pg: 15.8-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -213,7 +214,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 14.12-2
+  - pg: 14.13-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -221,7 +222,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 13.15-2
+  - pg: 13.16-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -229,7 +230,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 12.19-2
+  - pg: 12.20-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -1421,9 +1422,7 @@ deploy:
     artifact: plr_7z
     auth_token:
       # Token of Dave
-      secure: nasXR/dCMdQmmouYtN0t1/9jilLmOA6E5EsGoP6Td5yvp3JK4QPfZO0BEVzMeXW1
-      # Token of Andre
-      # secure: DpxrjrmF0pQsm3G/F8m7EDVz6yhBQhlwXWOtqxgQTmUMiofL1PZD+9Q1dAqyKh9Z
+      secure: DpxrjrmF0pQsm3G/F8m7EDVz6yhBQhlwXWOtqxgQTmUMiofL1PZD+9Q1dAqyKh9Z
     on:
       APPVEYOR_REPO_TAG: true
 
