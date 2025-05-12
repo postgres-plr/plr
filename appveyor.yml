@@ -190,7 +190,7 @@ environment:
 #   rversion: 4.2.3
 #   compiler: msvc
 
-  - pg: REL_16_3 # static commit - from git
+  - pg: REL_16_STABLE # static commit - from git
     PlatformToolset: v143
     Configuration: Debug
     Platform: x64
@@ -198,7 +198,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 16.4-1
+  - pg: 16.9-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -206,7 +206,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 15.8-1
+  - pg: 15.13-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -214,7 +214,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 14.13-1
+  - pg: 14.18-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
@@ -222,7 +222,7 @@ environment:
     rversion: 4.2.3
     compiler: msvc
 
-  - pg: 13.16-1
+  - pg: 13.21-1
     PlatformToolset: v143
     Configuration: Release
     Platform: x64
