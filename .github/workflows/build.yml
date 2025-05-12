@@ -49,7 +49,13 @@ jobs:
         env:
           USE_PGXS: 1
 
-  REL_17_:
+  REL_18_:
+    # SEEN MAY 2025
+    # Ubuntu 24.04	ubuntu-latest
+    # https://github.com/actions/runner-images
+    # noble (24.04, LTS)
+    # https://wiki.postgresql.org/wiki/Apt
+    # https://apt.postgresql.org/pub/repos/apt/dists/
     runs-on: ubuntu-latest
     steps:
       - name: Echo site details
@@ -67,31 +73,31 @@ jobs:
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
-          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_[0-9]')
+          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_[0-9]')
           if [ "${RET}" -gt "0" ]
           then
-            echo -n "Release(s) are found.  Taking the last Release . . . "
-            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_[0-9]' | tail -n 1)
+            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_[0-9]' | tail -n 1)
+            echo -n "Release(s) are found.  Taking the last Release . . . GITTAG: ${GITTAG}"
           else
+            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_RC[0-9]')
             echo "Release(s) are not found.  Trying Release Candidates."
-            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_RC[0-9]')
             if [ "${RET}" -gt "0" ]
             then
-              echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . "
-              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_RC[0-9]' | tail -n 1)
+              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_RC[0-9]' | tail -n 1)
+              echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . GITTAG: ${GITTAG}"
             else
+              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_BETA[0-9]')
               echo "Release Candidate(s) are not found. Trying Betas."
-              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_17_BETA[0-9]')
               if [ "${RET}" -gt "0" ]
               then
-                echo -n "Beta(s) are found. Taking the last Beta . . . "
-                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_17_BETA[0-9]' | tail -n 1)
+                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_BETA[0-9]' | tail -n 1)
+                echo -n "Beta(s) are found. Taking the last Beta . . . GITTAG: ${GITTAG}"
               else
                 echo "Beta(s) are not found."
               fi
             fi
           fi
-          echo $GITTAG
+          echo "GITTAG: ${GITTAG}"
           git clone --branch $GITTAG --depth=1 https://github.com/postgres/postgres.git
           pushd postgres
           ./configure
@@ -122,15 +128,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # SEEN JUL 2024
-          # Ubuntu 22.04	ubuntu-latest
+          # SEEN MAY 2025
+          # Ubuntu 24.04	ubuntu-latest
           # https://github.com/actions/runner-images
-          # jammy (22.04, LTS)
+          # noble (24.04, LTS)
           # https://wiki.postgresql.org/wiki/Apt
           # https://apt.postgresql.org/pub/repos/apt/dists/
-          # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/
-          # Source: postgresql-??
-          # https://apt.postgresql.org/pub/repos/apt/dists/jammy-pgdg/main/binary-amd64/Packages
+          # ##
+          # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/
+          # Regular expression search - "Package: postgresql-17$"
+          # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-amd64/Packages
           - pg: 17
           - pg: 16
           - pg: 15

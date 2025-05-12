@@ -87,6 +87,11 @@ jobs:
           # https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c
           #
 
+          # SEEN MAY 2025 (not yet SWITCHING to windows-2025 - need to modify HARDCODED yaml from 14 to 17)
+          # windows-2025 (uses PG 17)
+          # windows-latest or windows-2022 (uses PG 14)
+          # https://github.com/actions/runner-images
+
           # R bleeding edge and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
           - matid: 2
             os: windows-latest
@@ -118,7 +123,7 @@ jobs:
             Platform: x64
             Configuration: Debug
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -139,7 +144,7 @@ jobs:
             Platform: x64
             Configuration: Debug
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -163,9 +168,86 @@ jobs:
             buildpgANDplrInSRCcontrib: true
             PG_HOME: 'D:\PGINSTALL'
 
-
           # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
           - matid: 5
+            os: windows-latest
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion:  devel
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_18_BETA1
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: REL_X_Y.future-future
+            #
+            # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL REL_X_Y for Windows" exists anywhere.
+            #
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # pgWINversion: x.y-z
+            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+            # MSYS2testonpgWIN: true
+            # pgWINversion: 18.?-?
+            MSYS2testonpgWIN: false
+
+
+          # R latest and PostgreSQL latest (buildpgFromSRCmethod meson)
+          - matid: 6
+            os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.5.0
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_18_BETA1
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: 18.?-?
+            MSYS2testonpgWIN: false
+
+
+          # R latest and PostgreSQL latest (buildpgANDplrInSRCcontrib true)
+          - matid: 7
+            os: windows-latest
+            GithubActionsIgnoreFail: false
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Release
+            #
+            rversion: 4.5.0
+            R_HOME: 'D:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_18_BETA1
+            PG_SOURCE: 'D:\PGSOURCE'
+            buildpgANDplrInSRCcontrib: true
+            PG_HOME: 'D:\PGINSTALL'
+            #
+            # pgWINversion: 18.?-?
+            MSYS2testonpgWIN: false
+
+          # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
+          - matid: 8
             os: windows-latest
             GithubActionsIgnoreFail: true
             compilerEnv: UCRT64
@@ -197,7 +279,7 @@ jobs:
 
 
           # R latest and PostgreSQL latest (buildpgFromSRCmethod meson)
-          - matid: 6
+          - matid: 9
             os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
@@ -206,7 +288,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -221,7 +303,7 @@ jobs:
 
 
           # R latest and PostgreSQL latest (buildpgANDplrInSRCcontrib true)
-          - matid: 7
+          - matid: 10
             os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
@@ -230,7 +312,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -243,7 +325,7 @@ jobs:
             MSYS2testonpgWIN: true
 
 
-          - matid: 8
+          - matid: 11
             os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
@@ -252,7 +334,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -265,7 +347,7 @@ jobs:
             MSYS2testonpgWIN: true
 
 
-          - matid: 9
+          - matid: 12
             os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
@@ -274,7 +356,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
@@ -288,7 +370,7 @@ jobs:
             MSYS2testonpgWIN: true
 
 
-          - matid: 10
+          - matid: 13
             os: windows-latest
             GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
@@ -297,7 +379,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.4.1
+            rversion: 4.5.0
             R_HOME: 'D:\RINSTALL'
             R_ARCH: /x64
             #
