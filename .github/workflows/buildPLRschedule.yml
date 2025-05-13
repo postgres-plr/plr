@@ -287,7 +287,7 @@ jobs:
 ##            # pgWINversion: x.y-z
 ##            # This may not be available if pgSRCversion is 'RC' or 'BETA'.
 ##            # MSYS2testonpgWIN: true
-##            pgWINversion: 17.0-1
+##            pgWINversion: 17.5-1
 ##            MSYS2testonpgWIN: true
 ##
 ##
@@ -311,7 +311,7 @@ jobs:
 ##            buildpgFromSRCmethod: meson
 ##            PG_HOME: 'D:\PGINSTALL'
 ##            #
-##            pgWINversion: 17.0-1
+##            pgWINversion: 17.5-1
 ##            MSYS2testonpgWIN: true
 ##
 ##
@@ -334,7 +334,7 @@ jobs:
 ##            buildpgANDplrInSRCcontrib: true
 ##            PG_HOME: 'D:\PGINSTALL'
 ##            #
-##            pgWINversion: 17.0-1
+##            pgWINversion: 17.5-1
 ##            MSYS2testonpgWIN: true
 ##
 ##
@@ -356,7 +356,7 @@ jobs:
 ##            buildpgANDplrInSRCcontrib: true
 ##            PG_HOME: 'D:\PGINSTALL'
 ##            #
-##            pgWINversion: 16.4-1
+##            pgWINversion: 16.9-1
 ##            MSYS2testonpgWIN: true
 ##
 ##
@@ -379,7 +379,7 @@ jobs:
 ##            buildpgFromSRCmethod: make
 ##            PG_HOME: 'D:\PGINSTALL'
 ##            #
-##            pgWINversion: 15.8-1
+##            pgWINversion: 15.13-1
 ##            MSYS2testonpgWIN: true
 ##
 ##
@@ -404,6 +404,7 @@ jobs:
 ##            #
 ##            # EnterpriseDB PostgreSQL for Windows
 ##            # pgWINversion: 14.x-y
+              # (if MANUAL would be: 14.18)
 ##            #
 ##            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
 ##            # Jul 2024 - Pre-installed Github Actions PostgreSQL for Windows version is x64-14
@@ -1277,7 +1278,7 @@ jobs:
 
       - name: Set up Cygwin
         if: ${{ env.os == 'windows-latest' && env.compilerClass == 'cygwin' }}
-        uses: cygwin/cygwin-install-action@v4
+        uses: cygwin/cygwin-install-action@v5
         with:
           # x86 or x86_64
           #         GitHub offers ternary operator like behaviour that you can use in expressions
@@ -1838,18 +1839,19 @@ jobs:
 
           if [ "${OperatingSystem}" == "Cygwin" ]
           then
-            echo "cygrunsrv START"
-            # shutdown current
-            #### cygrunsrv -E cygserver || true
-            # uninstall previous
-            #### cygrunsrv -R cygserver || true
-            # install
+            echo "cygrunsrv START 1"
+            cygrunsrv -I cygserver --path /usr/sbin/cygserver || true
+            echo "which cygserver: $(which cygserver)"
+            # must be stopped
+            cygrunsrv -E cygserver
+            # must be +e
+            set +x +v +e
             cygserver-config --yes
+            set -x -v -e
             # postgresql failing with below error on lion os x
             # https://stackoverflow.com/questions/6861945/postgresql-failing-with-below-error-on-lion-os-x#:~:text=Failed%20system%20call%20was%20shmget,the%20kernel%20with%20larger%20SHMMAX.
             echo kern.ipc.shmall 4096 >>     /etc/defaults/etc/cygserver.conf
             echo kern.ipc.shmmax 16777216 >> /etc/defaults/etc/cygserver.conf
-
             # start
             cygrunsrv -S cygserver
           fi
@@ -2531,18 +2533,19 @@ jobs:
 
           if [ "${OperatingSystem}" == "Cygwin" ]
           then
-            echo "cygrunsrv START"
-            # shutdown current
-            #### cygrunsrv -E cygserver || true
-            # uninstall previous
-            #### cygrunsrv -R cygserver || true
-            # install
+            echo "cygrunsrv START 2"
+            cygrunsrv -I cygserver --path /usr/sbin/cygserver || true
+            echo "which cygserver: $(which cygserver)"
+            # must be stopped
+            cygrunsrv -E cygserver
+            # must be +e
+            set +x +v +e
             cygserver-config --yes
+            set -x -v -e
             # postgresql failing with below error on lion os x
             # https://stackoverflow.com/questions/6861945/postgresql-failing-with-below-error-on-lion-os-x#:~:text=Failed%20system%20call%20was%20shmget,the%20kernel%20with%20larger%20SHMMAX.
             echo kern.ipc.shmall 4096 >>     /etc/defaults/etc/cygserver.conf
             echo kern.ipc.shmmax 16777216 >> /etc/defaults/etc/cygserver.conf
-
             # start
             cygrunsrv -S cygserver
           fi
