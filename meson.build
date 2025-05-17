@@ -48,7 +48,7 @@ plr = shared_module('plr',
 contrib_targets += plr
 
 install_data(
-  'plr--unpackaged--8.4.7.sql',
+  'plr--unpackaged--8.4.8.sql',
   'plr--8.3.0.18--8.4.sql',
   'plr--8.4.1--8.4.2.sql',
   'plr--8.4.3--8.4.4.sql',
@@ -57,7 +57,8 @@ install_data(
   'plr--8.4.4--8.4.5.sql',
   'plr--8.4.5--8.4.6.sql',
   'plr--8.4.6--8.4.7.sql',
-  'plr--8.4.7.sql',
+  'plr--8.4.7--8.4.8.sql',
+  'plr--8.4.8.sql',
   'plr.control',
   kwargs: contrib_data_args,
 )
