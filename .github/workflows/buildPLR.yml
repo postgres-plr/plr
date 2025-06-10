@@ -817,7 +817,7 @@ jobs:
         if: ${{ env.os == 'windows-latest' && env.pgSRCversion != 'notset' }}
         shell: powershell
         run: |
-          Move-Item -Path PGSOURCE -Destination ${{ env.PG_SOURCE }}
+          Copy-Item -Path PGSOURCE -Destination ${{ env.PG_SOURCE }} -Recurse -Force
           Get-ChildItem                         ${{ env.PG_SOURCE }}
 
       # I do not want to cache "R for Windows devel version".
