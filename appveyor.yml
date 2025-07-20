@@ -401,7 +401,7 @@ for:
         # git branch or commit - alphanumeric and all lowercase letters (slower download)
         #
         if("${env:pghint}" -eq "commit") {
-          git clone -q                            https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q                            https://github.com/postgres/postgres c:\projects\postgresql
           pwd
           pushd c:\projects\postgresql
           pwd
@@ -415,7 +415,7 @@ for:
         # PostgreSQL case - git branches and tags have at least one capital letter - but expect mostly CAPS
         #
         } else {
-          git clone -q --depth 1 --branch ${env:pg} https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q --depth 1 --branch ${env:pg} https://github.com/postgres/postgres c:\projects\postgresql
           pushd c:\projects\postgresql
           pwd
           git branch
@@ -736,7 +736,7 @@ for:
         # git branch or commit - alphanumeric and all lowercase letters (slower download)
         #
         if("${env:pghint}" -eq "commit") {
-          git clone -q                            https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q                            https://github.com/postgres/postgres c:\projects\postgresql
           pwd
           pushd c:\projects\postgresql
           pwd
@@ -750,7 +750,7 @@ for:
         # PostgreSQL case - git branches and tags have at least one capital letter - but expect mostly CAPS
         #
         } else {
-          git clone -q --depth 1 --branch ${env:pg} https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q --depth 1 --branch ${env:pg} https://github.com/postgres/postgres c:\projects\postgresql
           pushd c:\projects\postgresql
           pwd
           git branch
@@ -1035,7 +1035,7 @@ for:
         # git branch or commit - alphanumeric and all lowercase letters (slower download)
         #
         if(("${env:pg}" -cmatch  "^[a-z0-9]+$") -and ("${env:pghint}" -eq "commit")) {
-          git clone -q                            https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q                            https://github.com/postgres/postgres c:\projects\postgresql
           pwd
           pushd c:\projects\postgresql
           pwd
@@ -1049,7 +1049,7 @@ for:
         # PostgreSQL case - git branches and tags have at least one capital letter - but expect mostly CAPS
         #
         } else {
-          git clone -q --depth 1 --branch ${env:pg} https://git.postgresql.org/git/postgresql.git c:\projects\postgresql
+          git clone -q --depth 1 --branch ${env:pg} https://github.com/postgres/postgres c:\projects\postgresql
           pushd c:\projects\postgresql
           pwd
           git branch
