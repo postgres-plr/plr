@@ -1,7 +1,10 @@
 ### PL/R - PostgreSQL support for R as a procedural language (PL)
 [![GitHub license](https://img.shields.io/github/license/postgres-plr/plr.svg?cacheSeconds=2592000)](https://github.com/postgres-plr/plr/blob/master/LICENSE)
+[![daily plr](https://github.com/postgres-plr/plr/actions/workflows/schedule.yml/badge.svg)](https://github.com/postgres-plr/plr/actions/workflows/schedule.yml)
+[![daily Meson Builds PL/R](https://github.com/postgres-plr/plr/actions/workflows/buildPLRschedule.yml/badge.svg)](https://github.com/postgres-plr/plr/actions/workflows/buildPLRschedule.yml)
+[![plr CI](https://github.com/postgres-plr/plr/actions/workflows/build.yml/badge.svg)](https://github.com/postgres-plr/plr/actions/workflows/build.yml)
+[![Meson Builds PL/R](https://github.com/postgres-plr/plr/actions/workflows/buildPLR.yml/badge.svg)](https://github.com/postgres-plr/plr/actions/workflows/buildPLR.yml)
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/postgres-plr/plr?svg=true)](https://ci.appveyor.com/project/davecramer/plr-daun5 "Get your fresh Windows build here!")
-[![Travis build Status](https://travis-ci.org/postgres-plr/plr.png)](https://travis-ci.org/postgres-plr/plr)
 [![Code coverage](https://img.shields.io/codecov/c/github/postgres-plr/plr.svg?logo=codecov&cacheSeconds=2592000)](https://codecov.io/github/postgres-plr/plr)
 [![Chat on Slack](https://img.shields.io/badge/Slack-chat-orange.svg?logo=slack&cacheSeconds=2592000)](https://postgresteam.slack.com/messages/CJQUZ1475/ "Join the conversation!")
 

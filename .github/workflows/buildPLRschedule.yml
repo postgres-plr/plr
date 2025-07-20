@@ -195,7 +195,7 @@ jobs:
 ##            R_HOME: 'D:\RINSTALL'
 ##            R_ARCH: /x64
 ##            #
-##            pgSRCversion: REL_18_BETA1
+##            pgSRCversion: REL_18_STABLE
 ##            PG_SOURCE: 'D:\PGSOURCE'
 ##            buildpgFromSRC: true
 ##            buildpgFromSRCmethod: meson
@@ -227,7 +227,7 @@ jobs:
 ##            R_HOME: 'D:\RINSTALL'
 ##            R_ARCH: /x64
 ##            #
-##            pgSRCversion: REL_18_BETA1
+##            pgSRCversion: REL_18_STABLE
 ##            PG_SOURCE: 'D:\PGSOURCE'
 ##            buildpgFromSRC: true
 ##            buildpgFromSRCmethod: meson
@@ -251,7 +251,7 @@ jobs:
 ##            R_HOME: 'D:\RINSTALL'
 ##            R_ARCH: /x64
 ##            #
-##            pgSRCversion: REL_18_BETA1
+##            pgSRCversion: REL_18_STABLE
 ##            PG_SOURCE: 'D:\PGSOURCE'
 ##            buildpgANDplrInSRCcontrib: true
 ##            PG_HOME: 'D:\PGINSTALL'
