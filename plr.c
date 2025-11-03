@@ -56,6 +56,7 @@ static bool	plr_be_init_done = false;
 /* namespace OID for the PL/R language handler function */
 static Oid plr_nspOid = InvalidOid;
 
+extern int R_SignalHandlers;
 /*
  * defines
  */
@@ -514,7 +515,7 @@ plr_init(void)
 	/*
 	 * Stop R using its own signal handlers
 	 */
-	int R_SignalHandlers = 0;
+	R_SignalHandlers = 0;
 
 	/*
 	 * When initialization fails, R currently exits. Check the return
