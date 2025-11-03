@@ -108,7 +108,7 @@
 #if (R_VERSION >= 132096) /* R_VERSION >= 2.4.0 */
 #include "Rembedded.h"
 #endif
-#if !defined(WIN32) && !defined(WIN64)
+#if !defined(WIN32) && !defined(WIN64) && !((defined(_WIN64)) && defined(_UCRT))
 #include "Rinterface.h"
 #else
 extern int R_SignalHandlers;
