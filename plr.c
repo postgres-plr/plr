@@ -514,12 +514,13 @@ plr_init(void)
 	/*
 	 * Stop R using its own signal handlers
 	 */
-	R_SignalHandlers = 0;
+	int R_SignalHandlers = 0;
 
 	/*
 	 * When initialization fails, R currently exits. Check the return
 	 * value anyway in case this ever gets fixed
 	 */
+	
 	if (!Rf_initEmbeddedR(rargc, rargv))
 		ereport(ERROR,
 				(errcode(ERRCODE_OBJECT_NOT_IN_PREREQUISITE_STATE),
