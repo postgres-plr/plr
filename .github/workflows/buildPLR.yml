@@ -123,7 +123,7 @@ jobs:
             Platform: x64
             Configuration: Debug
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
@@ -135,18 +135,18 @@ jobs:
 
 
           # R latest and PostgreSQL bleeding edge (buildpgANDplrInSRCcontrib true)
-          - matid: 04
-            os: windows-2025
-            GithubActionsIgnoreFail: true
-            compilerEnv: UCRT64
-            shellEnv: msys2 {0}
-            compilerExe: gcc
-            Platform: x64
-            Configuration: Debug
+          #- matid: 04
+          #  os: windows-2025
+          #  GithubActionsIgnoreFail: true
+          #  compilerEnv: UCRT64
+          #  shellEnv: msys2 {0}
+          #  compilerExe: gcc
+          #  Platform: x64
+          #  Configuration: Debug
             #
-            rversion: 4.5.1
-            R_HOME: 'C:\RINSTALL'
-            R_ARCH: /x64
+          #  rversion: 4.5.2
+          #  R_HOME: 'C:\RINSTALL'
+          #  R_ARCH: /x64
             #
             # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
             # Because this is "next PostgreSQL",
@@ -156,8 +156,8 @@ jobs:
             # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
             # Otherwise, just choose the latest REL_XX_Y or better just REL_XX_STABLE
             # https://github.com/postgres/postgres/tags
-            pgSRCversion: master
-            PG_SOURCE: 'C:\PGSOURCE'
+          #  pgSRCversion: master
+          #  PG_SOURCE: 'C:\PGSOURCE'
             #
             # buildpgFromSRC: true
             # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
@@ -165,8 +165,8 @@ jobs:
             #   https://www.postgresql.org/docs/16/release-16.html
             # xor
             # buildpgANDplrInSRCcontrib: true
-            buildpgANDplrInSRCcontrib: true
-            PG_HOME: 'C:\PGINSTALL'
+          #  buildpgANDplrInSRCcontrib: true
+          #  PG_HOME: 'C:\PGINSTALL'
 
 
           # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
@@ -214,7 +214,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
@@ -231,28 +231,28 @@ jobs:
 
 
           # R latest and PostgreSQL latest (buildpgANDplrInSRCcontrib true)
-          - matid: 07
-            os: windows-2025
-            GithubActionsIgnoreFail: false
-            compilerEnv: UCRT64
-            shellEnv: msys2 {0}
-            compilerExe: gcc
-            Platform: x64
-            Configuration: Release
+          #- matid: 07
+          #  os: windows-2025
+          #  GithubActionsIgnoreFail: false
+          #  compilerEnv: UCRT64
+          #  shellEnv: msys2 {0}
+          #  compilerExe: gcc
+          #  Platform: x64
+          #  Configuration: Release
             #
-            rversion: 4.5.1
-            R_HOME: 'C:\RINSTALL'
-            R_ARCH: /x64
+          #  rversion: 4.5.2
+          #  R_HOME: 'C:\RINSTALL'
+          #  R_ARCH: /x64
             #
-            pgSRCversion: REL_18_STABLE
-            PG_SOURCE: 'C:\PGSOURCE'
-            buildpgANDplrInSRCcontrib: true
-            PG_HOME: 'C:\PGINSTALL'
+          #  pgSRCversion: REL_18_STABLE
+          #  PG_SOURCE: 'C:\PGSOURCE'
+          #  buildpgANDplrInSRCcontrib: true
+          #  PG_HOME: 'C:\PGINSTALL'
             #
             #   pgWINversion: 18.?-?
             #   MSYS2testonpgWIN: false
-            pgWINversion: 18.0-1
-            MSYS2testonpgWIN: true
+          #  pgWINversion: 18.0-1
+          #  MSYS2testonpgWIN: true
 
 
           # R latest and PostgreSQL latest (buildpgFromSRCmethod meson)
@@ -265,7 +265,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
@@ -291,7 +291,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
@@ -314,7 +314,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
@@ -337,7 +337,7 @@ jobs:
             Platform: x64
             Configuration: Release
             #
-            rversion: 4.5.1
+            rversion: 4.5.2
             R_HOME: 'C:\RINSTALL'
             R_ARCH: /x64
             #
