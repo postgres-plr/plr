@@ -1887,7 +1887,7 @@ jobs:
           popd # fr "${PG_SOURCE}/contrib/cube"
 
           pushd     "${PG_SOURCE}/contrib/plr"
-          "${PKGLIBDIR}/pgxs/src/test/regress/pg_regress" --bindir="${PG_HOME}/bin" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame || (cat regression.diffs && false)
+          "${PKGLIBDIR}/pgxs/src/test/regress/pg_regress" --bindir="${PG_HOME}/bin" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame parallel || (cat regression.diffs && false)
           popd # fr "${PG_SOURCE}/contrib/plr"
 
           # Stop the cluster after
@@ -2512,7 +2512,7 @@ jobs:
           # Some environments require it
           export PGUSER=$(whoami)
           echo "PGUSER: ${PGUSER}"
-          "${PKGLIBDIR}/pgxs/src/test/regress/pg_regress" --bindir="${PG_HOME}/bin" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame || (cat regression.diffs && false)
+          "${PKGLIBDIR}/pgxs/src/test/regress/pg_regress" --bindir="${PG_HOME}/bin" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame parallel || (cat regression.diffs && false)
 
           # Stop the cluster after
           # the non-setup regression test (see above).
@@ -2711,7 +2711,7 @@ jobs:
 
           set PGUSER=postgres
           set PGPASSWORD=root
-          "%PGREGRESS2%\pg_regress" --bindir="%PGBIN2%" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame || (type regression.diffs && call)
+          "%PGREGRESS2%\pg_regress" --bindir="%PGBIN2%" --dbname=pl_regression plr bad_fun opt_window do out_args plr_transaction opt_window_frame parallel || (type regression.diffs && call)
           if "%ERRORLEVEL%"=="1" exit 1
 
       - name: Stop PostgreSQL for Windows

@@ -15,6 +15,7 @@ plr_regress = [
   'out_args',
   'plr_transaction',
   'opt_window_frame',
+  'parallel'
 ]
 
 R_home = get_option('R_HOME')
