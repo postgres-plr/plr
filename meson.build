@@ -60,7 +60,8 @@ install_data(
   'plr--8.4.6--8.4.7.sql',
   'plr--8.4.7--8.4.8.sql',
   'plr--8.4.8--8.4.8.1.sql',
-  'plr--8.4.8.1.sql',
+  'plr--8.4.8.1--8.4.8.2.sql',
+  'plr--8.4.8.2.sql',
   'plr.control',
   kwargs: contrib_data_args,
 )
