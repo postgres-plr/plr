@@ -55,13 +55,17 @@ jobs:
         env:
           USE_PGXS: 1
 
-  REL_18_:
-    # SEEN MAR 2026
+  REL_19_:
+    # SEEN JUN 2026
     # Ubuntu 24.04 - ubuntu-latest or ubuntu-24.04
     # https://github.com/actions/runner-images
     # noble (24.04, LTS), plucky (25.04, amd64 only)
     # https://wiki.postgresql.org/wiki/Apt
     # https://apt.postgresql.org/pub/repos/apt/dists/
+    # ##
+    # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/
+    # Regular expression search - "Package: postgresql-18$"
+    # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-amd64/Packages
     runs-on: ubuntu-latest
     steps:
       - name: Echo site details
@@ -81,24 +85,24 @@ jobs:
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
-          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_[0-9]')
+          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_[0-9]')
           if [ "${RET}" -gt "0" ]
           then
-            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_[0-9]' | tail -n 1)
+            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_[0-9]' | tail -n 1)
             echo -n "Release(s) are found.  Taking the last Release . . . GITTAG: ${GITTAG}"
           else
-            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_RC[0-9]')
+            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_RC[0-9]')
             echo "Release(s) are not found.  Trying Release Candidates."
             if [ "${RET}" -gt "0" ]
             then
-              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_RC[0-9]' | tail -n 1)
+              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_RC[0-9]' | tail -n 1)
               echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . GITTAG: ${GITTAG}"
             else
-              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_18_BETA[0-9]')
+              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_BETA[0-9]')
               echo "Release Candidate(s) are not found. Trying Betas."
               if [ "${RET}" -gt "0" ]
               then
-                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_18_BETA[0-9]' | tail -n 1)
+                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_BETA[0-9]' | tail -n 1)
                 echo -n "Beta(s) are found. Taking the last Beta . . . GITTAG: ${GITTAG}"
               else
                 echo "Beta(s) are not found."
