@@ -13,9 +13,10 @@ on:
 # with the following exact exceptions.
 # 1. The YAML items "name" and "run-name" is prefixed with the word "daily".
 # 2. This has a YAML item "schedule".
-# 3. This has exactly ONE matrix item . . .
-#    R bleeding edge and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
-# 4. The ONE matrix items has set ( GithubActionsIgnoreFail false ).
+# 3. This has exactly ONE matrix item or TWO matrix items . . .
+#    R bleeding edge and PostgreSQL bleeding edge             (buildpgFromSRCmethod meson)
+#    R bleeding edge and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
+# 4. Those matrix items have set ( GithubActionsIgnoreFail false ).
 # 5. Steps using actions/upload-artifact are COMMENTED out.
 # 6. Steps using ncipollo/release-action are COMMENTED out.
 
@@ -60,54 +61,55 @@ jobs:
 
         include:
 
-##          # Note, the x86 Cygwin Server will "not start" on Github Actions.
-##          # Therfore cygwin x86 is "not PostgreSQL regression testable."
-##          #
-##          # Repository R and Repository Postgresql
-##          # Package: R
-##          # https://www.cygwin.com/packages/summary/R.html
-##          # Package: postgresql
-##          # https://www.cygwin.com/packages/summary/postgresql.html
-##          #
-##          # current Cygwin repository
-##          - matid: 1
-##            os: windows-2025
-##            GithubActionsIgnoreFail: false
-##            compilerEnv: cygwin
-##            Platform: x64
-##            Configuration: Release
-##
-##          # plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
-##          # Therefore, here, plr for "R 4.3.0 (and later) for Windows" is compiled with MSYS2(UCRT64/MINGW32).
-##          # It is regression tested twice.
-##          #
-##          #   The first regression test is within PostgreSQL on MSYS2.
-##          #
-##          #   The second regression test is within PostgreSQL that had been compiled with Microsoft Visual Studio
-##          #   from EnterpriseDB (if available: master _RC* and _BETA* versions are often not available).
-##          #
-##          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows"
-##          # can not be compiled with Microsoft Visual Studio.
-##          #
-##          # Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'
-##          # Status: CLOSED WONTFIX
-##          # https://bugs.r-project.org/show_bug.cgi?id=18544
-##          #
-##          # The new definition does not work with MSVC compilers because they don't support the C99 _Complex type
-##          # https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support?view=msvc-170
-##          #
-##          # C Complex Numbers in C++?
-##          # https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c
-##          #
-##
-##          # windows-2025 (uses PG 17)
-##          # windows-2022 (uses PG 14)
-##          # https://github.com/actions/runner-images
+          # Note, the x86 Cygwin Server will "not start" on Github Actions.
+          # Therfore cygwin x86 is "not PostgreSQL regression testable."
+          #
+          # Repository R and Repository Postgresql
+          # Package: R
+          # https://www.cygwin.com/packages/summary/R.html
+          # Package: postgresql
+          # https://www.cygwin.com/packages/summary/postgresql.html
+          #
+          # current Cygwin repository
+#         - matid: '01'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: false
+#           compilerEnv: cygwin
+#           Platform: x64
+#           Configuration: Release
+
+
+          # plr for "R 4.3.0 (and later) for Windows" can not be compiled with Microsoft Visual Studio.
+          # Therefore, here, plr for "R 4.3.0 (and later) for Windows" is compiled with MSYS2(UCRT64/MINGW32).
+          # It is regression tested twice.
+          #
+          #   The first regression test is within PostgreSQL on MSYS2.
+          #
+          #   The second regression test is within PostgreSQL that had been compiled with Microsoft Visual Studio
+          #   from EnterpriseDB (if available: master _RC* and _BETA* versions are often not available).
+          #
+          # Here are the reasons why plr for "R 4.3.0 (and later) for Windows"
+          # can not be compiled with Microsoft Visual Studio.
+          #
+          # Bug 18544 - private_data_c Visual Studio 2022 R-4.3.0 Complex.h(81,21): syntax error: missing ';' before identifier 'private_data_c'
+          # Status: CLOSED WONTFIX
+          # https://bugs.r-project.org/show_bug.cgi?id=18544
+          #
+          # The new definition does not work with MSVC compilers because they don't support the C99 _Complex type
+          # https://learn.microsoft.com/en-us/cpp/c-runtime-library/complex-math-support?view=msvc-170
+          #
+          # C Complex Numbers in C++?
+          # https://stackoverflow.com/questions/10540228/c-complex-numbers-in-c
+          #
+
+          # windows-2025-vs2026 (uses PG 17)
+          # windows-2022 (uses PG 14)
+          # https://github.com/actions/runner-images
 
           # R bleeding edge and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
-          - matid: 02
-            os: windows-2025
-            GithubActionsIgnoreFail: false
+          - matid: '02'
+            os: windows-2025-vs2026
+            GithubActionsIgnoreFail: true
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -124,6 +126,167 @@ jobs:
             buildpgFromSRCmethod: meson
             PG_HOME: 'C:\PGINSTALL'
 
+
+#         # R latest and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
+#         - matid: '03'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: true
+#           compilerEnv: UCRT64
+#           shellEnv: msys2 {0}
+#           compilerExe: gcc
+#           Platform: x64
+#           Configuration: Debug
+#           #
+#           rversion: 4.6.0
+#           R_HOME: 'C:\RINSTALL'
+#           R_ARCH: /x64
+#           #
+#           pgSRCversion: master
+#           PG_SOURCE: 'C:\PGSOURCE'
+#           buildpgFromSRC: true
+#           buildpgFromSRCmethod: meson
+#           PG_HOME: 'C:\PGINSTALL'
+
+
+          # R latest and PostgreSQL bleeding edge (buildpgANDplrInSRCcontrib true)
+          #- matid: '04'
+          #  os: windows-2025-vs2026
+          #  GithubActionsIgnoreFail: true
+          #  compilerEnv: UCRT64
+          #  shellEnv: msys2 {0}
+          #  compilerExe: gcc
+          #  Platform: x64
+          #  Configuration: Debug
+            #
+          #  rversion: 4.6.0
+          #  R_HOME: 'C:\RINSTALL'
+          #  R_ARCH: /x64
+            #
+            # A HUMAN must manually see the VERSION here. (seen Jul 13 2024 EST)
+            # Because this is "next PostgreSQL",
+            # if available are/is 'release candidate' REL_AA_RC#
+            # and/or 'beta' REL_AA_BETA# version(s)
+            # then choose that 'latest' version;
+            # 'REL' is later than 'BETA'. Higher numbers are later than lower numbers.
+            # Otherwise, just choose the latest REL_XX_Y or better just REL_XX_STABLE
+            # https://github.com/postgres/postgres/tags
+          #  pgSRCversion: master
+          #  PG_SOURCE: 'C:\PGSOURCE'
+            #
+            # buildpgFromSRC: true
+            # buildpgFromSRCmethod: make/meson(PostgreSQL 16+)
+            #   Add meson build system (Andres Freund, Nazir Bilal Yavuz, Peter Eisentraut)
+            #   https://www.postgresql.org/docs/16/release-16.html
+            # xor
+            # buildpgANDplrInSRCcontrib: true
+          #  buildpgANDplrInSRCcontrib: true
+          #  PG_HOME: 'C:\PGINSTALL'
+
+
+          # RSVP for FUTURE USE
+#         # R latest and PostgreSQL release candidate or beta (buildpgANDplrInSRCcontrib true)
+#         - matid: '04'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: true
+#           compilerEnv: UCRT64
+#           shellEnv: msys2 {0}
+#           compilerExe: gcc
+#           Platform: x64
+#           Configuration: Debug
+#           #
+#           rversion: 4.6.0
+#           R_HOME: 'C:\RINSTALL'
+#           R_ARCH: /x64
+#           #
+#           pgSRCversion: REL_19_STABLE
+#           PG_SOURCE: 'C:\PGSOURCE'
+#           buildpgFromSRC: true
+#           buildpgFromSRCmethod: meson
+#           PG_HOME: 'C:\PGINSTALL'
+
+
+#         # R latest and PostgreSQL release candidate or beta (buildpgANDplrInSRCcontrib true)
+#         - matid: '05'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: true
+#           compilerEnv: UCRT64
+#           shellEnv: msys2 {0}
+#           compilerExe: gcc
+#           Platform: x64
+#           Configuration: Debug
+#           #
+#           rversion: 4.6.0
+#           R_HOME: 'C:\RINSTALL'
+#           R_ARCH: /x64
+#           #
+#           pgSRCversion: REL_19_BETA1
+#           PG_SOURCE: 'C:\PGSOURCE'
+#           buildpgFromSRC: true
+#           buildpgFromSRCmethod: meson
+#           PG_HOME: 'C:\PGINSTALL'
+
+
+#         # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
+#         - matid: '06'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: true
+#           compilerEnv: UCRT64
+#           shellEnv: msys2 {0}
+#           compilerExe: gcc
+#           Platform: x64
+#           Configuration: Debug
+#           #
+#           rversion:  devel
+#           R_HOME: 'C:\RINSTALL'
+#           R_ARCH: /x64
+#           #
+#           pgSRCversion: REL_18_STABLE
+#           PG_SOURCE: 'C:\PGSOURCE'
+#           buildpgFromSRC: true
+#           buildpgFromSRCmethod: meson
+#           PG_HOME: 'C:\PGINSTALL'
+#           #
+#           # pgWINversion: REL_X_Y.future-future
+#           #
+#           # not "MSYS2testonpgWIN: true" - because no existing "PostgreSQL REL_X_Y for Windows" exists anywhere.
+#           #
+#           # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+#           # pgWINversion: x.y-z
+#           # This may not be available if pgSRCversion is 'RC' or 'BETA'.
+#           # MSYS2testonpgWIN: true
+#           #
+#           #   pgWINversion: 18.?-?
+#           #   MSYS2testonpgWIN: false
+#           pgWINversion: 18.4-2
+#           MSYS2testonpgWIN: true
+#
+#
+#         # R latest and PostgreSQL latest (buildpgFromSRCmethod meson)
+#         - matid: '07'
+#           os: windows-2025-vs2026
+#           GithubActionsIgnoreFail: false
+#           compilerEnv: UCRT64
+#           shellEnv: msys2 {0}
+#           compilerExe: gcc
+#           Platform: x64
+#           Configuration: Release
+#           #
+#           rversion: 4.6.0
+#           R_HOME: 'C:\RINSTALL'
+#           R_ARCH: /x64
+#           #
+#           pgSRCversion: REL_18_STABLE
+#           PG_SOURCE: 'C:\PGSOURCE'
+#           buildpgFromSRC: true
+#           buildpgFromSRCmethod: meson
+#           PG_HOME: 'C:\PGINSTALL'
+#           #
+#           #   pgWINversion: 18.?-?
+#           #   MSYS2testonpgWIN: false
+#           pgWINversion: 18.4-2
+#           MSYS2testonpgWIN: true
+
+
     defaults:
       run:
         shell: ${{ matrix.shellEnv || 'bash' }}
@@ -131,7 +294,7 @@ jobs:
     steps:
 
       - name: Windows Machine Stats systeminfo
-        if: ${{ matrix.os == 'windows-2025' }}
+        if: ${{ matrix.os == 'windows-2025-vs2026' }}
         shell: cmd
         run: |
           systeminfo
@@ -143,7 +306,7 @@ jobs:
           git config --global advice.detachedHead false
 
       - name: Matrix Variables
-        if: matrix.os == 'windows-2025'
+        if: matrix.os == 'windows-2025-vs2026'
         shell: powershell
         run: |
           # systeminfo
@@ -448,7 +611,7 @@ jobs:
 
 
       - name: Matrix Windows Platform Specific Variables
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
         shell: powershell
         run: |
           function Set-EnvVar {param($X)     Add-Content -Path ${env:GITHUB_ENV} -Value "$X"}
@@ -500,7 +663,7 @@ jobs:
       # `x64` for 64-bit x86 machines, `x86` for 32-bit x86 machines.
       # https://github.com/bus1/cabuild/blob/8c91ebf06b7a5f8405cf93c89a6928e4c76967e0/action/msdevshell/action.yml
       - name: Prepare Github Actions, MSVC, and Meson
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         uses: bus1/cabuild/action/msdevshell@v1
         with:
           # msvc ARCHITECTURE
@@ -535,7 +698,7 @@ jobs:
           path: PGSOURCE
 
       - name: Windows Move PostgreSQL Code
-        if: ${{ env.os == 'windows-2025' && env.pgSRCversion != 'notset' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.pgSRCversion != 'notset' }}
         shell: powershell
         run: |
           Copy-Item -Path PGSOURCE -Destination ${{ env.PG_SOURCE }} -Recurse -Force
@@ -550,7 +713,7 @@ jobs:
       # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
       #
       - name: Cache R-x.y.z Windows Installer Exe
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.rversion != 'devel' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.rversion != 'devel' }}
         uses: actions/cache@v5
         id: cacheRWindowsInstallerExe
         with:
@@ -561,7 +724,7 @@ jobs:
 
       - name: Cache PostgreSQL for Windows
         if: >-
-          ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
           (( env.PGVER2 == '17' && env.Platform == 'x86' ) || ( env.PGVER2 != '17' ))
           }}
         uses: actions/cache@v5
@@ -573,7 +736,7 @@ jobs:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 10
 
       - name: Cache GNU diffutils for Test on PostgreSQL for Windows
-        if: ${{ ( env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025' && env.compilerClass == 'msvc' ) }}
+        if: ${{ ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' ) }}
         uses: actions/cache@v5
         id: cacheDiffutilsZip
         with:
@@ -583,7 +746,7 @@ jobs:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
       - name: Cache pkgconfiglite for Compile using msvc and meson
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         uses: actions/cache@v5
         id: cachePkgConfigLiteZip
         with:
@@ -593,7 +756,7 @@ jobs:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
       - name: Cache winflexbison for Compile using msvc
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         uses: actions/cache@v5
         id: cacheWinFlexBisonZip
         with:
@@ -603,7 +766,7 @@ jobs:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
       - name: Cache meson for Compile using msvc and meson
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         uses: actions/cache@v5
         id: cacheMesonMsi
         with:
@@ -613,7 +776,7 @@ jobs:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
       - name: Cache StrawberryPerl
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
         uses: actions/cache@v5
         id: cacheStrawberryPerlMsi
         with:
@@ -633,7 +796,7 @@ jobs:
       # five seconds
       - name: Download R for Windows R-x.y.z R-rmajor.rminor.rpatch
         if: >-
-          ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) &&
+          ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) &&
           steps.cacheRWindowsInstallerExe.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -643,7 +806,7 @@ jobs:
 
       - name: Download PostgreSQL for Windows
         if: >-
-          ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
           (( env.PGVER2 == '17' && env.Platform == 'x86' ) || ( env.PGVER2 != '17' )) &&
           steps.cachePGWindowsInstallerExe.outputs.cache-hit != 'true'
           }}
@@ -659,7 +822,7 @@ jobs:
 #         args: install diffutils
 
       - name: Download GNU diffutils for Test on PostgreSQL for Windows
-        if: ${{ ( ( env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025' && env.compilerClass == 'msvc' ) ) &&
+        if: ${{ ( ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' ) ) &&
           steps.cacheDiffutilsZip.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -672,7 +835,7 @@ jobs:
 
       - name: Download pkgconfiglite for Compile using msvc and meson
         if: >-
-          ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' &&
+          ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' &&
           steps.cachePkgConfigLiteZip.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -685,7 +848,7 @@ jobs:
 
       - name: Download winflexbison for Compile using msvc
         if: >-
-          ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' &&
+          ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' &&
           steps.cacheWinFlexBisonZip.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -698,7 +861,7 @@ jobs:
 
       - name: Download meson for Compile using msvc and meson
         if: >-
-          ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' &&
+          ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' &&
           steps.cacheMesonMsi.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -716,7 +879,7 @@ jobs:
 
       - name: Download StrawberryPerl
         if: >-
-          ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' &&
+          ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' &&
           steps.cacheStrawberryPerlMsi.outputs.cache-hit != 'true'
           }}
         uses: suisei-cn/actions-download-file@v1.6.1
@@ -730,7 +893,7 @@ jobs:
           url: https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_53822_64bit/strawberry-perl-5.38.2.2-64bit.msi
 
       - name: Install R for Windows R-x.y.z R-rmajor.rminor.rpatch
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) }}
         env:
           R_HOME: ${{ env.R_HOME }}
           R_ARCHplat: ${{ env.R_ARCHplat }}
@@ -765,7 +928,7 @@ jobs:
       #
       - name: From Disabled, Enable PostgreSQL x64-17 for Windows and Start and Stop
         if: >-
-          ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' || env.compilerClass == 'msvc' ) &&
+          ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' || env.compilerClass == 'msvc' ) &&
           env.PGVER2 == '17' && env.Platform == 'x64'
           }}
         shell: cmd
@@ -777,7 +940,7 @@ jobs:
 
       - name: Install PostgreSQL for Windows and Stop PostgreSQL
         if: >-
-          ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
+          ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'msvc' ) && env.pgWINversion != 'notset' &&
           (( env.PGVER2 == '17' && env.Platform == 'x86' ) || ( env.PGVER2 != '17' ))
           }}
         env:
@@ -818,7 +981,7 @@ jobs:
       #   NOTE - meson - fails with msiexec.exe Exit code was '3010' (see OTHER step)
       #   NOTE - 7z is provided by Github Actions
       - name: Choco Install support software about PL/R compiling using msvc for Windows
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         # Keep v2.  v2.2.0 may have connection to Sourceforge problems
         uses: crazy-max/ghaction-chocolatey@v4
         with:
@@ -829,7 +992,7 @@ jobs:
       # Choco Install GNU diffutils
       # BUT the "crazy-max/ghaction-chocolatey@v4" "install diffutils" file download often times-out
       - name: Extract Diffuntils and add Diffuntils bin directory to the PATH for Test on PostgreSQL for Windows
-        if: ${{ ( env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025' && env.compilerClass == 'msvc' ) }}
+        if: ${{ ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' ) || ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' ) }}
         shell: cmd
         run: |
           rem MKDIR creates any intermediate directories in the path, if needed.
@@ -844,7 +1007,7 @@ jobs:
       # Choco Install pkgconfiglite
       # BUT the "crazy-max/ghaction-chocolatey@v4" "install pkgconfiglite" file download often times-out
       - name: Extract pkgconfiglite and add pkgconfiglite bin directory to the PATH for Compile using msvc and meson
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         shell: cmd
         run: |
           rem MKDIR creates any intermediate directories in the path, if needed.
@@ -859,7 +1022,7 @@ jobs:
       # Choco Install winflexbison
       # BUT the "crazy-max/ghaction-chocolatey@v4" "install pkgconfiglite" file download often times-out
       - name: Extract winflexbison and add the winflexbison directory to the PATH for Compile using msvc
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         shell: cmd
         run: |
           rem MKDIR creates any intermediate directories in the path, if needed.
@@ -874,7 +1037,7 @@ jobs:
       # Choco Install meson
       # BUT the "crazy-max/ghaction-chocolatey@v4" "install meson" msiexec.exe Exit code was '3010'.
       - name: Install meson and add meson directory to the PATH for Compile using msvc and meson
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         shell: cmd
         run: |
           msiexec.exe /i meson-1.4.1-64.msi /qn /norestart /l*v meson.1.4.1.MsiInstall.log
@@ -882,7 +1045,7 @@ jobs:
           type meson.1.4.1.MsiInstall.log
 
       - name: Install Strawberry Perl
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
         shell: cmd
         run: |
           msiexec.exe /i strawberry-perl-5.38.2.2-64bit.msi /qn /norestart /l*v strawberry-perl-5.38.2.2-64bit.msiInstall.log
@@ -892,7 +1055,7 @@ jobs:
       # 34 seconds with zero packages
       # 2 minutes and seven(7) seconds with everything
       - name: Install Windows mingw Software
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.compilerEnv != 'MINGW32' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.compilerEnv != 'MINGW32' }}
         uses: msys2/setup-msys2@v2
         with:
           # By default, the installation is not updated; hence package versions are those of the installation tarball.
@@ -935,7 +1098,7 @@ jobs:
       # 34 seconds with zero packages
       # 2 minutes and seven(7) seconds with everything
       - name: Install Windows mingw Software - same as above - but omit software - perl winpty
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.compilerEnv == 'MINGW32' }}
         uses: msys2/setup-msys2@v2
         with:
           # By default, the installation is not updated; hence package versions are those of the installation tarball.
@@ -975,7 +1138,7 @@ jobs:
 
 
       - name: Install Windows mingw Software Repository PostgreSQL
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC != 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC != 'true' }}
         env:
           # Msys OS variable
           msystem: ${{ env.compilerEnv }}
@@ -985,7 +1148,7 @@ jobs:
           pacman -S --needed --noconfirm ${{ env.MINGW_PACKAGE_PREFIX }}-postgresql
 
       - name: Set up Cygwin
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'cygwin' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'cygwin' }}
         uses: cygwin/cygwin-install-action@v6
         with:
           # x86 or x86_64
@@ -1006,7 +1169,7 @@ jobs:
              R  R-debuginfo
 
       - name: View Cygwin R Version
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'cygwin' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'cygwin' }}
         env:
           # Msys OS variable
           msystem: ${{ env.compilerEnv }}
@@ -1017,7 +1180,7 @@ jobs:
 
       # If the PostgreSQL version is 16 or greater, I can compile PostgreSQL using meson.
       - name: Compile PG using pgSRCversion and PG_SOURCE and Install to here PG_HOME
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgFromSRC == 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgFromSRC == 'true' }}
         env:
           # Cygwin OS variables
           SHELLOPTS: igncr
@@ -1174,7 +1337,7 @@ jobs:
           fi
 
       - name: Windows Prep PG Artifact
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
         env:
           PGVER2: ${{ env.PGVER2 }}
           Platform: ${{ env.Platform }}
@@ -1185,21 +1348,21 @@ jobs:
           if exist pg-artifact.7z copy pg-artifact.7z pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}.7z
           if exist pg-artifact.7z dir                 pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}.7z
 
-##      # @v4 - Due to how Artifacts are created in this new version,
-##      # it is no longer possible to upload to the same named Artifact multiple times.
-##      # MAY 2024
-##      # github.com/actions/upload-artifact
-##      #
-##      - name: Upload artifact PG for export for LOCAL testing
-##        if: ${{ env.os == 'windows-2025' &&  env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
-##        uses: actions/upload-artifact@v7
-##        with:
-##          name: pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}
-##          path: |
-##            pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}.7z
+      # @v4 - Due to how Artifacts are created in this new version,
+      # it is no longer possible to upload to the same named Artifact multiple times.
+      # MAY 2024
+      # github.com/actions/upload-artifact
+      #
+      - name: Upload artifact PG for export for LOCAL testing
+        if: ${{ env.os == 'windows-2025-vs2026' &&  env.compilerClass == 'MSYS2' && env.buildpgFromSRC == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}
+          path: |
+            pg-matid-${{ matrix.matid }}-${{ env.compilerEnv }}-${{ env.Platform }}-PG${{ env.pgversion }}-${{ env.Configuration }}-R${{ env.rversion }}-PGSRC${{ env.buildpgFromSRC }}-PGSRCMETH${{ env.buildpgFromSRCmethod }}-SRCCTB${{ env.buildpgANDplrInSRCcontrib }}.7z
 
       - name: Windows non-msvc Meson PG and Meson PL/R Setup Compile and Non-Meson Manual Test
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib == 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib == 'true' }}
         env:
           # Cygwin shell variables
           SHELLOPTS: igncr
@@ -1702,7 +1865,7 @@ jobs:
 
           # meson has no "test" pre-req system.  So this "ordered" implentation is a kind of "hack".
           # sometimes the "plr" regression test fails if an "easier" regression test did not come before it.
-          # true - cube failed its regression test and blocked plr - R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-2025 Debug
+          # true - cube failed its regression test and blocked plr - R devel PGsrc REL_17_BETA2 PGbin UCRT64 x64 windows-2025-vs2026 Debug
 
           # classic of 2023 and pg16
           # meson test -C build --num-processes 1 -v --suite setup --suite cube
@@ -1784,7 +1947,7 @@ jobs:
           fi
 
       - name: Windows non-msvc Meson PL/R Setup Compile and Non-Meson Manual Test
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib != 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' ) && env.buildpgANDplrInSRCcontrib != 'true' }}
         env:
           # Cygwin shell variables
           SHELLOPTS: igncr
@@ -2366,7 +2529,7 @@ jobs:
           fi
 
       - name: Windows     msvc Meson PL/R Setup Compile and Non-Meson Manual Test
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'msvc' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'msvc' }}
         env:
           R_HOME: ${{ env.R_HOME }}
           Platform: ${{ env.Platform }}
@@ -2410,24 +2573,24 @@ jobs:
             Write-Error 'PGVER2 is missing. Please supply the PGVER2.' -ErrorAction Stop
           }
 
-##      # @v4 - Due to how Artifacts are created in this new version,
-##      # it is no longer possible to upload to the same named Artifact multiple times.
-##      # MAY 2024
-##      # github.com/actions/upload-artifact
-##      #
-##      - name: Try to Upload artifacts plr.dll and plr.dll.a for export for LOCAL testing
-##        if: ${{ always() }}
-##        uses: actions/upload-artifact@v7
-##        with:
-##          name: plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}
-##          # default
-##          if-no-files-found: warn
-##          path: |
-##            tmp\*\*
-##            tmp\PLR_LICENSE
+#     # @v4 - Due to how Artifacts are created in this new version,
+#     # it is no longer possible to upload to the same named Artifact multiple times.
+#     # MAY 2024
+#     # github.com/actions/upload-artifact
+#     #
+#     - name: Try to Upload artifacts plr.dll and plr.dll.a for export for LOCAL testing
+#       if: ${{ always() }}
+#       uses: actions/upload-artifact@v7
+#       with:
+#         name: plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}
+#         # default
+#         if-no-files-found: warn
+#         path: |
+#           tmp\*\*
+#           tmp\PLR_LICENSE
 
       - name: Set R_HOME and PG PATH, Start PG(read OS variables), Test on PostgreSQL for Windows
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
         env:
           R_HOME: ${{ env.R_HOME }}
           R_ARCH: ${{ env.R_ARCH }}
@@ -2488,7 +2651,7 @@ jobs:
           if "%ERRORLEVEL%"=="1" exit 1
 
       - name: Stop PostgreSQL for Windows
-        if: ${{ env.os == 'windows-2025' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
+        if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'MSYS2' && env.MSYS2testonpgWIN == 'true' }}
         env:
           PGVER2: ${{ env.PGVER2 }}
           Platform: ${{ env.Platform }}
@@ -2503,7 +2666,7 @@ jobs:
           if "%Platform%"=="notset" (echo Platform is not set, therefore no net stop happens.)
 
       - name: Windows Prep PL/R Artifact for Release
-        if: ${{ env.os == 'windows-2025' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' || env.compilerClass == 'msvc' ) }}
+        if: ${{ env.os == 'windows-2025-vs2026' && ( env.compilerClass == 'MSYS2' || env.compilerClass == 'cygwin' || env.compilerClass == 'msvc' ) }}
         env:
           PGVER2: ${{ env.PGVER2 }}
           Platform: ${{ env.Platform }}
@@ -2514,16 +2677,16 @@ jobs:
           if exist plr-artifact.zip copy plr-artifact.zip plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
           if exist plr-artifact.zip dir                   plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
 
-##      # Testing is not done here.
-##      # Pushing this tag assumes that the previous Github Actions workflow run had all 'successes'.
-##      - name: PL/R Artifact for Release
-##        if: github.ref_type == 'tag'
-##        uses: ncipollo/release-action@v1
-##        with:
-##          allowUpdates: true
-##          replacesArtifacts: true
-##          # "artifacts" means "paths" and "files"
-##          # set of paths representing artifacts to upload to the release
-##          artifacts: |
-##            plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
-##          token: ${{ secrets.ACTIONS_CREATE_RELEASE_REPO_SECRET }}
+#     # Testing is not done here.
+#     # Pushing this tag assumes that the previous Github Actions workflow run had all 'successes'.
+#     - name: PL/R Artifact for Release
+#       if: github.ref_type == 'tag'
+#       uses: ncipollo/release-action@v1
+#       with:
+#         allowUpdates: true
+#         replacesArtifacts: true
+#         # "artifacts" means "paths" and "files"
+#         # set of paths representing artifacts to upload to the release
+#         artifacts: |
+#           plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
+#         token: ${{ secrets.ACTIONS_CREATE_RELEASE_REPO_SECRET }}
