@@ -307,7 +307,7 @@ for:
   - if     "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" echo APPVEYOR_BUILD_WORKER_IMAGE is 2015
   # Make %x64% available for caching
   # a variable used in the Appveyor cach area must be defined in the init
-  - set gitrevshort=%APPVEYOR_REPO_COMMIT:~0,8%
+  - set gitrevshort=%APPVEYOR_REPO_COMMIT:~0,7%
   - ps: |
       # Set-PSDebug -Trace 2
 
@@ -580,7 +580,7 @@ for:
   - if     "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" echo APPVEYOR_BUILD_WORKER_IMAGE is 2015
   # Make %x64% available for caching
   # a variable used in the Appveyor cach area must be defined in the init
-  - set gitrevshort=%APPVEYOR_REPO_COMMIT:~0,8%
+  - set gitrevshort=%APPVEYOR_REPO_COMMIT:~0,7%
   - ps: |
       # Set-PSDebug -Trace 2
 
@@ -1283,7 +1283,7 @@ for:
   - copy %dll% tmp\lib
   - copy %dll:.dll=.pdb% tmp\symbols
   - dir tmp
-  - set var7z=plr-apvid-%apvid%-%APPVEYOR_REPO_COMMIT:~0,8%-%compiler%-%Platform%-R%rversion%-PG%pgversion%-%Configuration%.7z
+  - set var7z=plr-apvid-%apvid%-%APPVEYOR_REPO_COMMIT:~0,7%-%compiler%-%Platform%-R%rversion%-PG%pgversion%-%Configuration%.7z
   - 7z a -t7z -mmt24 -mx7 -r %var7z% .\tmp\* > nul
   - dir "%var7z%"
   - echo appveyor PushArtifact "%var7z%"

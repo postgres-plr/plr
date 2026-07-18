@@ -85,32 +85,39 @@ jobs:
           sudo /etc/init.d/postgresql stop
           sudo apt-get remove --purge postgresql\*
           sudo rm -rf /etc/postgresql /var/lib/postgresql
-          export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_[0-9]')
+          export PGSRCVERSION=REL_19_
+          export ALLGITTAGS=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52-)
+          quantity() { echo ${ALLGITTAGS} | tr " " "\n" | grep -c "${PGSRCVERSION}${MARK}[0-9]"; }
+          quality()  { echo ${ALLGITTAGS} | tr " " "\n" | grep -e "${PGSRCVERSION}${MARK}[0-9]" | tail -n 1; }
+          export MARK=""
+          export RET=$(quantity)
           if [ "${RET}" -gt "0" ]
           then
-            export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_[0-9]' | tail -n 1)
-            echo -n "Release(s) are found.  Taking the last Release . . . GITTAG: ${GITTAG}"
+            export SPECGITTAG=$(quality)
+            echo -n "Release(s) are found.  Taking the last Release . . . SPECGITTAG: ${SPECGITTAG}"
           else
-            export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_RC[0-9]')
+            export MARK="RC"
+            export RET=$(quantity)
             echo "Release(s) are not found.  Trying Release Candidates."
             if [ "${RET}" -gt "0" ]
             then
-              export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_RC[0-9]' | tail -n 1)
-              echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . GITTAG: ${GITTAG}"
+              export SPECGITTAG=$(quality)
+              echo -n "Release Candidate(s) are found.  Taking the last Release Candidate . . . SPECGITTAG: ${SPECGITTAG}"
             else
-              export RET=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -c 'REL_19_BETA[0-9]')
+              export MARK="BETA"
+              export RET=$(quantity)
               echo "Release Candidate(s) are not found. Trying Betas."
               if [ "${RET}" -gt "0" ]
               then
-                export GITTAG=$(git ls-remote --tags https://github.com/postgres/postgres.git | cut -c 52- | grep -e 'REL_19_BETA[0-9]' | tail -n 1)
-                echo -n "Beta(s) are found. Taking the last Beta . . . GITTAG: ${GITTAG}"
+                export SPECGITTAG=$(quality)
+                echo -n "Beta(s) are found. Taking the last Beta . . . SPECGITTAG: ${SPECGITTAG}"
               else
                 echo "Beta(s) are not found."
               fi
             fi
           fi
-          echo "GITTAG: ${GITTAG}"
-          git clone --branch $GITTAG --depth=1 https://github.com/postgres/postgres.git
+          echo "SPECGITTAG: ${SPECGITTAG}"
+          git clone --branch $SPECGITTAG --depth=1 https://github.com/postgres/postgres.git
           pushd postgres
           ./configure
           make
