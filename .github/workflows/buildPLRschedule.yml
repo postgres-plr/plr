@@ -22,7 +22,7 @@ on:
 
 jobs:
   build_test_install:
-    name: matid ${{ matrix.matid }} R ${{ matrix.rversion }} PGsrc ${{ matrix.pgSRCversion }} PGbin ${{ matrix.pgWINversion }} ${{ matrix.compilerEnv }} ${{ matrix.Platform }}  ${{ matrix.os }} ${{ matrix.Configuration }} R ${{ matrix.rversion }} PGSRC ${{ matrix.buildpgFromSRC }} PGSRCMETH ${{ matrix.buildpgFromSRCmethod }} SRCCTB ${{ matrix.buildpgANDplrInSRCcontrib }}
+    name: matid ${{ matrix.matid }} R ${{ matrix.rversion }} PGsrc ${{ matrix.pgSRCversion }} PGbin ${{ matrix.pgWINversion }} ${{ matrix.compilerEnv }} ${{ matrix.Platform }}  ${{ matrix.os }} ${{ matrix.Configuration }} PGSRC ${{ matrix.buildpgFromSRC }} PGSRCMETH ${{ matrix.buildpgFromSRCmethod }} SRCCTB ${{ matrix.buildpgANDplrInSRCcontrib }}
     runs-on: ${{ matrix.os }}
     # With "continue-on-error" (and with "fail-fast") emulate Appveyor "allow_failures"
     # Prevents a workflow run from failing when a job fails. Set to true to allow a workflow run to pass when this job fails.
@@ -137,7 +137,7 @@ jobs:
 #           Platform: x64
 #           Configuration: Debug
 #           #
-#           rversion: 4.6.0
+#           rversion: 4.6.1
 #           R_HOME: 'C:\RINSTALL'
 #           R_ARCH: /x64
 #           #
@@ -158,7 +158,7 @@ jobs:
           #  Platform: x64
           #  Configuration: Debug
             #
-          #  rversion: 4.6.0
+          #  rversion: 4.6.1
           #  R_HOME: 'C:\RINSTALL'
           #  R_ARCH: /x64
             #
@@ -184,28 +184,28 @@ jobs:
 
 
           # RSVP for FUTURE USE
-#         # R latest and PostgreSQL release candidate or beta (buildpgANDplrInSRCcontrib true)
-#         - matid: '04'
-#           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
-#           compilerEnv: UCRT64
-#           shellEnv: msys2 {0}
-#           compilerExe: gcc
-#           Platform: x64
-#           Configuration: Debug
-#           #
-#           rversion: 4.6.0
-#           R_HOME: 'C:\RINSTALL'
-#           R_ARCH: /x64
-#           #
-#           pgSRCversion: REL_19_STABLE
-#           PG_SOURCE: 'C:\PGSOURCE'
-#           buildpgFromSRC: true
-#           buildpgFromSRCmethod: meson
-#           PG_HOME: 'C:\PGINSTALL'
+          # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
+          - matid: '04'
+            os: windows-2025-vs2026
+            GithubActionsIgnoreFail: true
+            compilerEnv: UCRT64
+            shellEnv: msys2 {0}
+            compilerExe: gcc
+            Platform: x64
+            Configuration: Debug
+            #
+            rversion: 4.6.1
+            R_HOME: 'C:\RINSTALL'
+            R_ARCH: /x64
+            #
+            pgSRCversion: REL_19_STABLE
+            PG_SOURCE: 'C:\PGSOURCE'
+            buildpgFromSRC: true
+            buildpgFromSRCmethod: meson
+            PG_HOME: 'C:\PGINSTALL'
 
 
-#         # R latest and PostgreSQL release candidate or beta (buildpgANDplrInSRCcontrib true)
+#         # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
 #         - matid: '05'
 #           os: windows-2025-vs2026
 #           GithubActionsIgnoreFail: true
@@ -215,7 +215,7 @@ jobs:
 #           Platform: x64
 #           Configuration: Debug
 #           #
-#           rversion: 4.6.0
+#           rversion: 4.6.1
 #           R_HOME: 'C:\RINSTALL'
 #           R_ARCH: /x64
 #           #
@@ -271,7 +271,7 @@ jobs:
 #           Platform: x64
 #           Configuration: Release
 #           #
-#           rversion: 4.6.0
+#           rversion: 4.6.1
 #           R_HOME: 'C:\RINSTALL'
 #           R_ARCH: /x64
 #           #
