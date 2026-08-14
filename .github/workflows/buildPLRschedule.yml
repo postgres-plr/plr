@@ -109,7 +109,7 @@ jobs:
           # R bleeding edge and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
           - matid: '02'
             os: windows-2025-vs2026
-            GithubActionsIgnoreFail: true
+            GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -130,7 +130,7 @@ jobs:
 #         # R latest and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
 #         - matid: '03'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
@@ -151,7 +151,7 @@ jobs:
           # R latest and PostgreSQL bleeding edge (buildpgANDplrInSRCcontrib true)
           #- matid: '04'
           #  os: windows-2025-vs2026
-          #  GithubActionsIgnoreFail: true
+          #  GithubActionsIgnoreFail: false
           #  compilerEnv: UCRT64
           #  shellEnv: msys2 {0}
           #  compilerExe: gcc
@@ -187,7 +187,7 @@ jobs:
           # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
           - matid: '04'
             os: windows-2025-vs2026
-            GithubActionsIgnoreFail: true
+            GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -208,7 +208,7 @@ jobs:
 #         # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
 #         - matid: '05'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
@@ -229,7 +229,7 @@ jobs:
 #         # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
 #         - matid: '06'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
