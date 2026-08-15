@@ -1,6 +1,9 @@
 name: daily Meson Builds PL/R
 run-name: daily Meson Builds PL/R - ${{ github.event.head_commit.message }}
 
+permissions:
+  contents: write
+
 on:
    push:
    pull_request:
@@ -109,7 +112,7 @@ jobs:
           # R bleeding edge and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
           - matid: '02'
             os: windows-2025-vs2026
-            GithubActionsIgnoreFail: true
+            GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -130,7 +133,7 @@ jobs:
 #         # R latest and PostgreSQL bleeding edge (buildpgFromSRCmethod meson)
 #         - matid: '03'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
@@ -151,7 +154,7 @@ jobs:
           # R latest and PostgreSQL bleeding edge (buildpgANDplrInSRCcontrib true)
           #- matid: '04'
           #  os: windows-2025-vs2026
-          #  GithubActionsIgnoreFail: true
+          #  GithubActionsIgnoreFail: false
           #  compilerEnv: UCRT64
           #  shellEnv: msys2 {0}
           #  compilerExe: gcc
@@ -187,7 +190,7 @@ jobs:
           # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
           - matid: '04'
             os: windows-2025-vs2026
-            GithubActionsIgnoreFail: true
+            GithubActionsIgnoreFail: false
             compilerEnv: UCRT64
             shellEnv: msys2 {0}
             compilerExe: gcc
@@ -208,7 +211,7 @@ jobs:
 #         # R latest and PostgreSQL release candidate or beta (buildpgFromSRCmethod meson)
 #         - matid: '05'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
@@ -229,7 +232,7 @@ jobs:
 #         # R bleeding edge and PostgreSQL latest (buildpgFromSRCmethod meson)
 #         - matid: '06'
 #           os: windows-2025-vs2026
-#           GithubActionsIgnoreFail: true
+#           GithubActionsIgnoreFail: false
 #           compilerEnv: UCRT64
 #           shellEnv: msys2 {0}
 #           compilerExe: gcc
@@ -2689,4 +2692,4 @@ jobs:
 #         # set of paths representing artifacts to upload to the release
 #         artifacts: |
 #           plr-matid-${{ matrix.matid }}-${{ env.HEAD7_GITHUB_SHA }}-${{ env.compilerEnv }}-${{ env.Platform }}-R${{ env.rversion }}-PG${{ env.pgversion }}-${{ env.Configuration }}.zip
-#         token: ${{ secrets.ACTIONS_CREATE_RELEASE_REPO_SECRET }}
+#         token: ${{ secrets.GITHUB_TOKEN }}
