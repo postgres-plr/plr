@@ -1453,7 +1453,8 @@ deploy:
     artifact: plr_7z
     auth_token:
       # Token of Dave
-      secure: VqkXyVyyYAtLt58S2SwZb3/70Ekrb94yePX5yJNmi7zcBFEZqx0fbLaj9eIWzgaO
+      secure: uWWqFBjFD5uOu36hzROpuRN/T/keX1PMK+f5gVfwBU5Dgn1EI49cvQlL2qxRrgRW
+
 
     on:
       APPVEYOR_REPO_TAG: true
