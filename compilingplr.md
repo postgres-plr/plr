@@ -27,7 +27,7 @@ move R.lib to the bin dir of R
 run build from postgres/src/tools/msvc
 run install <dir> to install postgresql
 initdb to create the cluster
-start postgres using pg_ctl -D data -l logfile start_
+start postgres using pg_ctl -D data -l logfile -w start_
 
 vcregress plcheck will run the tests
 

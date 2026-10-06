@@ -56,6 +56,14 @@ static bool	plr_be_init_done = false;
 /* namespace OID for the PL/R language handler function */
 static Oid plr_nspOid = InvalidOid;
 
+/* Topic R_SignalHandlers: Part 2 of 3 */
+/* non-Microsoft OS but Cygwin is like Linux in this case */
+#if !defined(WIN32) && !defined(WIN64) && !((defined(_WIN64)) && defined(__MINGW32__))
+#else
+/* Because "extern int R_SignalHandlers;" (in plr.h) */
+int R_SignalHandlers = 1;
+#endif
+
 /*
  * defines
  */
@@ -511,6 +519,11 @@ plr_init(void)
 	 */
 	atexit(plr_atexit);
 
+	/* Topic R_SignalHandlers: Part 3 of 3
+	 *
+	 * Needs to be included "include "Rinterface.h". (in plr.h)
+	 * Otherwise, setting this value has no function.
+	 */
 	/*
 	 * Stop R using its own signal handlers
 	 */

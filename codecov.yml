@@ -1,0 +1,6 @@
+# Codecov will trigger no notifications or statuses 
+# until explicitly told do so by the CLI. 
+# https://docs.codecov.com/docs/codecovyml-reference
+codecov:
+  notify:
+    manual_trigger: true

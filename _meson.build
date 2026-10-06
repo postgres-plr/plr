@@ -1,7 +1,34 @@
 project('plr', 'c',
-  version : '8_4_8_7',
+  version : '8_4_8_8',
   license : 'GNU Public License Version 2',
 )
+
+# 1
+# This has only been tested\used on mingw and cygwin
+# where "postgres" as a library is provided.
+# "Other" compiling platforms (is_linux or is_darwin) 
+# may or may not work (because can not easily get postgres to be a library).
+#
+# For more on non-windows, see "Building postgres statically"
+# Postgres server as a library
+# 2025-12-09
+# hello@davidv.dev
+# https://blog.davidv.dev/posts/postgres-library/
+#
+# see
+# Lines 127 and 134 and 152
+# https://github.com/orafce/orafce/blob/aec025fafa7862c08722239e614b9bbd959a45c9/meson.build
+# Lines . . . 
+# if meson.get_compiler('c').get_id() == 'msvc'
+#   postgres_lib = meson.get_compiler('c').find_library('postgres', ... )
+# ...
+# dependencies: postgres_lib,
+#
+# 2
+# Also, for "other" platforms (if ever possible)  the "include_directories" 
+# are estimates (educated guesses)
+# based on parallel similar directory layouts.
+#
 
 R_home = get_option('R_HOME')
 if R_home == ''
@@ -21,22 +48,115 @@ plr_sources = files(
   'pg_rsupport.c',
 )
 
+# ADDED SEP 2026
+# test/install
+#   in a standalone meson.build ( "not built with PG at the same time")
+# orafce/meson.build
+# Pavel Stehule
+# https://github.com/orafce/orafce/blob/aec025fafa7862c08722239e614b9bbd959a45c9/meson.build
+
+data = [
+  'plr--unpackaged--8.4.8.8.sql',
+  'plr--8.3.0.18--8.4.sql',
+  'plr--8.4.1--8.4.2.sql',
+  'plr--8.4.3--8.4.4.sql',
+  'plr--8.4--8.4.1.sql',
+  'plr--8.4.2--8.4.3.sql',
+  'plr--8.4.4--8.4.5.sql',
+  'plr--8.4.5--8.4.6.sql',
+  'plr--8.4.6--8.4.7.sql',
+  'plr--8.4.7--8.4.8.sql',
+  'plr--8.4.8--8.4.8.1.sql',
+  'plr--8.4.8.1--8.4.8.2.sql',
+  'plr--8.4.8.2--8.4.8.3.sql',
+  'plr--8.4.8.3--8.4.8.4.sql',
+  'plr--8.4.8.4--8.4.8.5.sql',
+  'plr--8.4.8.5--8.4.8.6.sql',
+  'plr--8.4.8.6--8.4.8.7.sql',
+  'plr--8.4.8.7--8.4.8.8.sql',
+  'plr--8.4.8.8.sql',
+  'plr.control',
+]
+
 plr_deps = []
 dep_libR = dependency('libR', required : true)
 plr_deps += dep_libR
-dep_libpq = dependency('libpq', required : true)
-plr_deps += dep_libpq
+# dep_libpq = dependency('libpq', required : true)
+# plr_deps += dep_libpq
 dep_libpostgres = dependency('libpostgres', required : true)
 plr_deps += dep_libpostgres
 
+#
+# Detect MinGW host #8776
+# https://github.com/mesonbuild/meson/issues/8776
+#
+# Operating system names
+# https://mesonbuild.com/Reference-tables.html#operating-system-names
+#
+is_msvc     = meson.get_compiler('c').get_id() == 'msvc'
+is_not_msvc = not is_msvc
+#
+host_machine_system = host_machine.system()
+is_cygwin     = host_machine_system == 'cygwin'
+is_not_cygwin = not is_cygwin                     # do not use
+#
+is_windows    = host_machine_system == 'windows'  # do not use
+is_mingw      = is_windows and is_not_cygwin and is_not_msvc # pre-processor variable WIN32 (see NOTE below)
+# Non-microsoft, check compiler flags, check ...
+#   e.g. "gcc (or clang) -dM -E -xc /dev/null >gcc.txt (or clang.txt)" 
+#   e.g.  Cygwin or Mingw(non-clang), and gcc only
+#   e.g. "gcc -mwin32 -dM -E -xc /dev/null >gcc-mwin32.txt"
+# https://www.cygwin.com/faq.html
+#   Makefiles are not processed by "msvc", but the Makefile "may" or "may not" distinguish Cygwin.
+#     PG Makefile does distinguish.
+is_win32      = is_mingw or is_msvc             # use OFTEN - much better reliable detection than is_not_linux
+is_not_win32  = not is_win32                    # use OFTEN - much better reliable detection than is_linux
+#
+is_linux      = host_machine_system == 'linux'
+is_darwin     = host_machine_system == 'darwin'
+
+if is_mingw
+  cygpath = find_program('cygpath', required : true)
+  # -m -- mixed mode
+  # https://cygwin.com/cygwin-ug-net/cygpath.html
+endif
+
 plr_incdir = []
-pg_incdir1= include_directories(R_home / 'include')
+
+pg_incdir1 = dep_libR.get_variable( pkgconfig : 'rincludedir' )
+#
+# for "mingw", for meson "User defined options" 
+#   change "pg_incdir1" to the "mixed mode" "path form".
+if is_mingw
+# pg_incdir1 = '/c/RINSTALL/include'    # NOT WORK # ERROR: Include dir /c/RINSTALL/include does not exist.
+# pg_incdir1 = 'C:\\RINSTALL\\bin\\x64' # WORKS
+# pg_incdir1 = 'C:/RINSTALL/include'    # WORKS - mixed mode (-m)
+  pg_incdir1 = run_command(cygpath, '-ml', pg_incdir1, check: true).stdout().strip()
+endif
+# if is_mingw # or is_cygwin (works in both)
+# # pg_incdir1 = include_directories(R_home / 'include')
+# endif
 plr_incdir += pg_incdir1
-pg_incdir2 = include_directories(pg_home / 'include' / 'postgresql' / 'server' )
+
+pg_config = find_program('pg_config' , dirs: [ pg_home / 'bin' ], required : true)
+
+includedir_server = run_command(pg_config, '--includedir-server', check: true).stdout().strip()
+
+pg_incdir2 = include_directories(includedir_server)
 plr_incdir += pg_incdir2
-#  mingw
-pg_incdir3 = include_directories(pg_home / 'include' / 'postgresql' / 'server' / 'port' / 'win32' )
+pg_incdir3 = ''
+#
+# msvc
+# port / win32_msvc
+# https://github.com/orafce/orafce/blob/aec025fafa7862c08722239e614b9bbd959a45c9/meson.build
+#
+if is_mingw
+  # Read the PG ./configure file - search for "win32" and "PORTNAME"
+  pg_incdir3 = include_directories(includedir_server / 'port' / 'win32')
+endif
 plr_incdir += pg_incdir3
+
+plr_c_args = []
 
 # Refactor DLSUFFIX handling (PostreSQL 15 AND newer)
 # https://github.com/postgres/postgres/commit/23119d51a14c046dae35ae5e6ad9e35982d044fd
@@ -45,27 +165,35 @@ plr_incdir += pg_incdir3
 # USE_PGXS=1 make CPPFLAGS=-DDLSUFFIX=\".so\"
 # https://github.com/postgres-plr/plr/issues/4
 #
-plr_c_args = []
+# name_suffix    str (SEEN AUG 2026)
+# For shared libraries, the default value is 
+# "dylib" on macOS, "dll" on Windows, and "so" everywhere else. 
+# https://mesonbuild.com/Reference-manual_functions_shared_library.html
 #
-# Detect MinGW host #8776
-# https://github.com/mesonbuild/meson/issues/8776
+# PG 14 and earlier needs -DDLSUFFIX
+pg_config_version = run_command(pg_config, '--version', check: true).stdout().strip()
+# use "split by dot" to truncate. E.g. 'PostgreSQL 14devel' 'PostgreSQL 14beta3' '14.6'
+pg_wordy_version = pg_config_version.replace('PostgreSQL ','').split('.')[0]
+message('DETECTED pg_wordy_version:', pg_wordy_version)
 #
-# Operating system names
-# https://mesonbuild.com/Reference-tables.html#operating-system-names
-#
-if ((host_machine.system() == 'windows') or (host_machine.system()  == 'cygwin'))
-  message('begin -DDLSUFFIX=".dll"')
-  dlsuffix = '-DDLSUFFIX=".dll"'
-  message('end   -DDLSUFFIX=".dll"')
+# Note STRING.version_compare considers "__tail" to be "__"
+if pg_wordy_version.version_compare('<15') 
+  message('doing -DDLSUFFIX shared library file extension determining ...')
+  if is_mingw or is_cygwin
+    message('begin -DDLSUFFIX=".dll"')
+    dlsuffix = '-DDLSUFFIX=".dll"'
+    message('end   -DDLSUFFIX=".dll"')
+  endif
+  if is_linux
+    dlsuffix = '-DDLSUFFIX=".so"'
+  endif
+  if is_darwin
+    dlsuffix = '-DDLSUFFIX=".dylib"'
+  endif
+  plr_c_args += dlsuffix
 endif
 
-if host_machine.system() == 'linux'
-  dlsuffix = '-DDLSUFFIX=".so"'
-endif
-if host_machine.system() == 'darwin'
-  dlsuffix = '-DDLSUFFIX=".dylib"'
-endif
-plr_c_args += dlsuffix
+pkglibdir = run_command(pg_config, '--pkglibdir', check: true).stdout().strip()
 
 plr = shared_module('plr',
   plr_sources,
@@ -73,6 +201,39 @@ plr = shared_module('plr',
   name_prefix : '',
   include_directories: plr_incdir,
   dependencies: plr_deps,
+  install: true,
+  install_dir: pkglibdir,
+)
+# plus add the .sql files and the .control file
+sharedir = run_command(pg_config, '--sharedir', check: true).stdout().strip()
+install_data(data,      install_dir: sharedir / 'extension')
+
+plr_regress = [
+  'plr',
+  'bad_fun',
+  'opt_window',
+  'do',
+  'out_args',
+  'plr_transaction',
+  'opt_window_frame',
+  'parallel'
+]
+
+# here bindir in "test"
+bindir    = run_command(pg_config, '--bindir',    check: true).stdout().strip()
+
+pg_regress = find_program(
+  'pg_regress',
+  dirs: [ pkglibdir / 'pgxs/src/test/regress' ],
+  required : true
+)
+
+test('regress',
+  pg_regress,
+  args: [ '--bindir', bindir,
+         '--inputdir', meson.current_source_dir(),
+         '--encoding', 'utf8',
+        ]  + plr_regress,
 )
 
 if meson.version().version_compare('>=0.57')
@@ -80,7 +241,7 @@ if meson.version().version_compare('>=0.57')
   summary(
     {
       'libR'               : dep_libR,
-      'libpq'              : dep_libpq,
+#     'libpq'              : dep_libpq,
       'libpostgres (fake)' : dep_libpostgres,
     },
     section: 'Required Dependencies',

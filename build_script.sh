@@ -8,7 +8,7 @@ logok "BEGIN build_script.sh"
 set -v -x -e
 # set -e
 
-# which R msys2 and cygwin
+# which R Mingw and Cygwin
 # /c/RINSTALL/bin/x64/R
 # /usr/bin/R
 loginfo "which R $(which R)"
@@ -61,7 +61,7 @@ then
 fi
 
 
-# put this in all non-init.sh scripts - pgroot is empty, if using an msys2 binary
+# put this in all non-init.sh scripts - pgroot is empty, if using an Mingw binary
 # but psql is already in the path
 if [ -f "${pgroot}/bin/psql" ]
 then
@@ -116,7 +116,7 @@ loginfo "END   verify that PLR will link to the correct PostgreSQL"
 # which postgres
 
 #
-# PostgreSQL on msys2 (maybe also cygwin?) does not use(read) PG* variables [always] [correctly] (strange!)
+# PostgreSQL on Mingw (maybe also cygwin?) does not use(read) PG* variables [always] [correctly] (strange!)
 # so, e.g. in psql, I do not rely on environment variables
 
 # build from source
@@ -124,7 +124,7 @@ loginfo "END   verify that PLR will link to the correct PostgreSQL"
 # psql: error: could not connect to server: FATAL:  database "appveyor" does not exist
 #
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty initdb --pgdata="${PGDATA}" --auth=trust --encoding=utf8 --locale=C
 else
@@ -132,25 +132,33 @@ else
 fi
 
 # Success. You can now start the database server using:
-# C:/msys64/mingw64/bin/pg_ctl -D C:/msys64//home/appveyor/mingw64/postgresql/Data -l logfile start
-# C:/msys64/mingw64/bin/pg_ctl -D ${PGDATA} -l logfile start
+# C:/msys64/mingw64/bin/pg_ctl -D C:/msys64//home/appveyor/mingw64/postgresql/Data -l logfile -w start
+# C:/msys64/mingw64/bin/pg_ctl -D ${PGDATA} -l logfile -w start
 
 # first
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 pg_ctl -D ${PGDATA} -l logfile stop
 
 # do again
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 pg_ctl -D ${PGDATA} -l logfile stop
 
 # leave it up
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
-  winpty -Xallow-non-tty psql -d postgres -c 'SELECT version();'
+  winpty -Xallow-non-tty psql -d postgres -c "SELECT version();"
 else
-                         psql -d postgres -c 'SELECT version();'
+                         psql -d postgres -c "SELECT version();"
+fi
+
+
+if [ "${compiler}" == "Mingw" ]
+then
+  winpty -Xallow-non-tty psql -d postgres -c "SELECT version();"
+else
+                         psql -d postgres -c "SELECT current_setting('server_version_num') "server_version_num";"
 fi
 
 pg_ctl -D ${PGDATA} -l logfile stop
@@ -159,7 +167,7 @@ pg_ctl -D ${PGDATA} -l logfile stop
 
 
 #
-# not yet tried/tested in cygwin
+#
 #                                                                                                                           # cygwin case
 if [ "${githubcache}" == "true" ] && [ "${pggithubbincachefound}" == "false" ] && ([ -f "${pgroot}/bin/postgres" ] || [ -f "${pgroot}/sbin/postgres" ])
 then
@@ -207,7 +215,7 @@ then
 fi
 
 # do again
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 
 
 # -g3 because of the many macros
@@ -226,14 +234,14 @@ loginfo "BEGIN plr INSTALLING"
 USE_PGXS=1 make install
 loginfo "END   plr INSTALLING"
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c 'CREATE EXTENSION plr;'
 else
                          psql -d postgres -c 'CREATE EXTENSION plr;'
 fi
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c 'SELECT plr_version();'
 else
@@ -241,7 +249,7 @@ else
 fi
 
 # R 4.2.+ (on Windows utf8) sanity check
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c '\l template[01]'
 else
@@ -252,21 +260,21 @@ fi
 # 2009 - MULTIPLE SOLUTIONS
 # https://stackoverflow.com/questions/1250079/how-to-escape-single-quotes-within-single-quoted-strings
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c 'SELECT * FROM pg_available_extensions WHERE name = '\''plr'\'';'
 else
                          psql -d postgres -c 'SELECT * FROM pg_available_extensions WHERE name = '\''plr'\'';'
 fi
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c 'SELECT   r_version();'
 else
                          psql -d postgres -c 'SELECT   r_version();'
 fi
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres -c 'DROP EXTENSION plr;'
 else

@@ -1,0 +1,140 @@
+
+name: Callee of plr Ubuntu jobs
+run-name: Callee of plr Ubuntu jobs - ${{ github.event.head_commit.message }}
+
+env:
+  TZ: UTC
+
+on:
+
+  workflow_call:
+    inputs:
+      debug_enabled:
+        type: boolean
+        required: false
+        default: false
+      caller_event_name:
+        type: string
+        required: true
+      ragged_strategy_matrix:
+        type: string
+        required: true
+
+jobs:
+
+  ubuntu_job_runner:
+    name: PG ${{ matrix.pg }} R ${{ matrix.R }} os ${{ matrix.os }} ${{ matrix.buildpgFromSRCmethod }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.GithubActionsIgnoreFail == 'true' && true || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.ragged_strategy_matrix) }}
+
+    steps:
+
+    - name: Git Checkout this Repository Code
+      uses: actions/checkout@v6
+
+    - name: Matrix Variables
+      run: |
+        set -x -v -e
+        export PGfromSource="notset"
+        # two(2) consecutive digits
+        if [ $(echo "${{ matrix.PG }}" | grep -qE "^[0-9][0-9]$" && echo 0) ]
+        then # build from PG binary
+          export PGfromSource="false"
+        else # build from PG source
+          export PGfromSource="true"
+          # conditionally
+          if [ "${{ matrix.buildpgFromSRCmethod }}" != "" ]
+          then
+            export buildpgFromSRCmethod="${{ matrix.buildpgFromSRCmethod }}"
+            echo "buildpgFromSRCmethod=${buildpgFromSRCmethod}" >> ${GITHUB_ENV}
+            
+            echo "buildpgFromSRCmethod: ${buildpgFromSRCmethod}"
+          fi
+        fi
+        echo "PGfromSource=${PGfromSource}" >> ${GITHUB_ENV}
+
+        echo "PGfromSource: ${PGfromSource}"
+
+    - name: Get Linux Host Information
+      run: |
+        bash ./get_linux_host_info.sh
+
+    - name: Guarantee PostgreSQL is Not Installed
+      run: |
+        bash ./guarantee_postgres_is_not_installed.sh
+
+    - name: Refresh APT
+      run: |
+        set -x -v -e
+        sudo apt-get update -qq
+
+    - name: Acquire PostgreSQL-Dev (and PostgreSQL to test)
+      run: |
+        set -x -v -e
+        # two(2) consecutive digits
+        if [ $(echo "${{ matrix.PG }}" | grep -qE "^[0-9][0-9]$" && echo 0) ]
+        then
+          echo "Postgres from repository binary ..."
+          bash ./get_postgres_binaries_compiled_on_ubuntu_from_postgres.org.sh ${{ matrix.PG }}
+        else
+          echo "Postgres from source ..."
+          bash ./get_latest_postgres_source_branch_or_tag.sh ${{ matrix.PG }}
+        fi
+
+    - name: Acquire R-Dev (and R to test)
+      run: |
+        set -x -v -e
+        echo "R from CRAN ..."
+        bash ./get_debian_r_binaries_on_ubuntu_from_cran.sh
+
+    - name: Build and Install PL/R
+      run: |
+        set -x -v -e
+        # two(2) consecutive digits
+        if [ $(echo "${{ matrix.PG }}" | grep -qE "^[0-9][0-9]$" && echo 0) ]
+        then
+          echo "PL/R from Postgres from repository binary ..."
+          bash ./build_install_plr_from_binary_postgres_on_ubuntu.sh
+        else
+          echo "PG and PL/R from Postgres from source ... DEBUG and CODE COVERAGE"
+          bash ./build_install_plr_and_postgres_from_source_on_ubuntu.sh
+        fi
+
+    - name: Test or Check PL/R
+      env:
+        CODECOV_TOKEN: '${{ secrets.CODECOV_TOKEN }}'
+      run: |
+        set -x -v -e
+        # two(2) consecutive digits
+        if [ $(echo "${{ matrix.PG }}" | grep -qE "^[0-9][0-9]$" && echo 0) ]
+        then
+          echo "Test of PL/R from Postgres from repository binary ..."
+          bash ./test_plr_from_binary_postgres_on_ubuntu.sh
+        else
+          # NOT "two(2) consecutive digits" (PG is from Source)
+          echo "Test of PL/R from Postgres from source ..."
+          bash ./test_plr_from_source_postgres_on_ubuntu.sh
+          # Show me everything
+          # ls -alrt -R "${PG_SOURCE}"
+        fi
+
+    # .gcno files are generated at compile time
+    # .gcda (gcov data) files are generated at runtime
+    # I USED "lcov" (that uses gcov) to create the coverage.info trace file (that is what it wants)
+    - name: From "source PG and PLR" Upload the PLR C files coverage.info report to Codecov
+      # NOT "two(2) consecutive digits"
+      if: ${{ env.PGfromSource == 'true' && env.buildpgFromSRCmethod != 'make' && inputs.caller_event_name != 'schedule' }}
+      uses: codecov/codecov-action@v7
+      with:
+        verbose: true
+        disable_search: true
+        files: coverage.info
+        name: plr-C-files
+        # Tokenless uploading is unsupported. (SEEN SEP 2026)
+        # This assumes that you've set your Codecov token inside Settings > Secrets as CODECOV_TOKEN.
+        # https://github.com/codecov/codecov-action
+        token: ${{ secrets.CODECOV_TOKEN }} 

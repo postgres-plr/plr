@@ -114,7 +114,32 @@
 #if (R_VERSION >= 132096) /* R_VERSION >= 2.4.0 */
 #include "Rembedded.h"
 #endif
-#if !defined(WIN32) && !defined(WIN64) && !((defined(_WIN64)) && defined(_UCRT))
+
+/*
+ * _MSC_VER
+ *   Since 2010, Microsoft compiler version
+ * __MINGW32__
+ *   Defined by the MinGW-w64 compiler in Mingw for 
+ *   both 32-bit and 64-bit Windows targets
+ * __CYGWIN__
+ *   when building for a Cygwin environment
+ */
+/*
+ * Mingw 
+ * gcc -dM -E -xc /dev/null >gcc.txt
+ *   also returns ... WIN32: 1, WIN64: 1, _WIN64: 1, 
+ * gcc -mwin32 -dM -E -xc /dev/null >gcc-mwin32.txt
+ * https://www.cygwin.com/faq.html
+ *
+ * Mingw 
+ * tested _UCRT with printf 
+ # returns "something" but it is not printable(made visible) by printf
+ *
+ * This also works: "!defined(_MSC_VER) && !defined(__MINGW32__)"
+ */
+/* non-Microsoft OS but Cygwin is like Linux in this case */
+/* Topic R_SignalHandlers: Part 1 of 3 */
+#if !defined(WIN32) && !defined(WIN64)
 #include "Rinterface.h"
 #else
 extern int R_SignalHandlers;

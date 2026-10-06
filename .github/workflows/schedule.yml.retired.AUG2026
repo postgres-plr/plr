@@ -12,7 +12,8 @@ on:
       - cron:  '30 1 * * *'
 jobs:
 
-  master:
+  job_master:
+    name: PG master ubuntu-latest
     runs-on: ubuntu-latest
     steps:
       - name: Echo site details
@@ -39,7 +40,7 @@ jobs:
           sudo make install
           export PATH=/usr/local/pgsql/bin:$PATH
           initdb -D data
-          pg_ctl -D data -l logfile start
+          pg_ctl -D data -l logfile -w start
           psql -d postgres -c "SELECT version();"
           psql -d postgres -c "SELECT current_setting('server_version_num');"
           popd
@@ -55,7 +56,8 @@ jobs:
         env:
           USE_PGXS: 1
 
-  REL_19_:
+  job_REL_19_:
+    name: PG REL_19_ ubuntu-latest
     # SEEN JUN 2026
     # Ubuntu 24.04 - ubuntu-latest or ubuntu-24.04
     # https://github.com/actions/runner-images
@@ -124,7 +126,7 @@ jobs:
           sudo make install
           export PATH=/usr/local/pgsql/bin:$PATH
           initdb -D data
-          pg_ctl -D data -l logfile start
+          pg_ctl -D data -l logfile -w start
           psql -d postgres -c "SELECT version();"
           psql -d postgres -c "SELECT current_setting('server_version_num');"
           popd
