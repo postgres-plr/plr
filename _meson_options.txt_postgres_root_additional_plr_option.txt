@@ -3,4 +3,4 @@
 
 # 2. append this line below    to the file: postgres/meson_options.txt
 
-option('R_HOME', type : 'string', value : '', description : 'In R, the return value of R.home(). When using "--backend vs", this options is written with a colon(:) and backslashes(\)')
+option('R_HOME', type : 'string', value : '', description : 'In R, the return value of R.home().')

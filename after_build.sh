@@ -8,7 +8,7 @@ logok "BEGIN after_build.sh"
 set -v -x -e
 # set -e
 
-# put this in all non-init.sh scripts - pgroot is empty, if using an msys2 binary
+# put this in all non-init.sh scripts - pgroot is empty, if using an Mingw binary
 # but psql is already in the path
 if [ -f "${pgroot}/bin/psql" ]
 then
@@ -26,9 +26,9 @@ then
   export PATH=${pgroot}/sbin:${PATH}
 fi
 
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 
-if [ "${compiler}" == "msys2" ]
+if [ "${compiler}" == "Mingw" ]
 then
   winpty -Xallow-non-tty psql -d postgres --quiet --tuples-only -c "\pset footer off" -c "\timing off" -c "select current_setting('server_version_num')::integer;" --output=${APPVEYOR_BUILD_FOLDER}/server_version_num.txt
 else
@@ -49,7 +49,7 @@ loginfo "server_version_num ${server_version_num}"
 loginfo "OLD pgversion ${pgversion}"
 loginfo "OLD pg ${pg}"
 #
-# override - msys2 and cygwin binary case
+# override - Mingw and Cygwin binary case
 if [ "${pg}" == "none" ]
   then
   export pg=$(postgres -V | grep -oP '(?<=\) ).*$')

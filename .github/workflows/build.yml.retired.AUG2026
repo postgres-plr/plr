@@ -8,7 +8,9 @@ on:
 
 jobs:
 
-  master:
+
+  job_master:
+    name: PG master ubuntu-latest
     runs-on: ubuntu-latest
     steps:
       - name: Echo site details
@@ -35,7 +37,7 @@ jobs:
           sudo make install
           export PATH=/usr/local/pgsql/bin:$PATH
           initdb -D data
-          pg_ctl -D data -l logfile start
+          pg_ctl -D data -l logfile -w start
           psql -d postgres -c "SELECT version();"
           psql -d postgres -c "SELECT current_setting('server_version_num');"
           popd
@@ -51,7 +53,9 @@ jobs:
         env:
           USE_PGXS: 1
 
-  REL_19_:
+
+  job_REL_19_ubuntu-latest:
+    name: PG REL_19_ ubuntu-latest
     # SEEN JUN 2026
     # Ubuntu 24.04 - ubuntu-latest or ubuntu-24.04
     # https://github.com/actions/runner-images
@@ -120,11 +124,11 @@ jobs:
           sudo make install
           export PATH=/usr/local/pgsql/bin:$PATH
           initdb -D data
-          pg_ctl -D data -l logfile start
+          pg_ctl -D data -l logfile -w start
           psql -d postgres -c "SELECT version();"
           psql -d postgres -c "SELECT current_setting('server_version_num');"
           popd
- 
+
       - name: Script
         run: |
           set -x -v -e
@@ -137,14 +141,82 @@ jobs:
         env:
           USE_PGXS: 1
 
-  build:
-    runs-on: ubuntu-latest
+
+  job_18_ubuntu-24_04-arm:
+    name: PG 18 ubuntu-24.04-arm
+    # JUL 18 2026 AUG 17 2026
+    # ubuntu-22.04-arm
+    # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+    # noble (24.04) arm64 (64-bit ARM)
+    # https://wiki.postgresql.org/wiki/Apt
+    # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-arm64/Packages.gz
+    # arm64 (i.e., M1/M2/M3, graviton etc) CPUs
+    # 24.04 (“noble”, amd64 and arm64),
+    # https://cloud.r-project.org/
+    runs-on: ubuntu-24.04-arm
+    env:
+      PG: 18
+    steps:
+      - name: Echo site details
+        run: echo PG $PG
+ 
+      - name: Checkout code
+        uses: actions/checkout@v6
+ 
+      - name: Before Script
+        run: |
+          set -x -v -e
+          echo "Minimal"
+          uname -m
+          uname -a
+          cat /proc/cpuinfo
+          cat /etc/os-release
+          set +x +v +e
+          echo Building plr with PostgreSQL $PG
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo apt-get update -qq
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+          sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+          sudo apt-get install -qq r-base-dev acl
+          sudo R --version
+          # Seems PG does not come pre-installed
+          # sudo /etc/init.d/postgresql stop
+          sudo apt-get remove --purge postgresql\*
+          sudo rm -rf /etc/postgresql /var/lib/postgresql
+          sudo apt-get install postgresql-$PG
+          sudo apt-get install postgresql-server-dev-$PG
+          echo 'local   all             postgres                                trust' | sudo tee /etc/postgresql/$PG/main/pg_hba.conf > /dev/null
+          # Builds under "runner"
+          # Github Actions require elevated priviledges
+          # sudo setfacl -Rm u:postgres:rwx,d:u:runner:rwx /home/runner
+          sudo pg_ctlcluster $PG main reload
+
+      - name: Script
+        run: |
+          sudo pg_lsclusters
+          export USE_PGXS=1
+          SHLIB_LINK=-lgcov PG_CPPFLAGS="-fprofile-arcs -ftest-coverage -O0" make
+          # USE_PGXS=1 is not required in Travis, and it is required in Github Actions
+          sudo USE_PGXS=1 make install
+          /usr/lib/postgresql/$PG/bin/pg_config
+          make installcheck PGUSER=postgres || (cat regression.diffs && false)
+
+      - name: After Success
+        # success() returns true, when none of the previous steps have failed or been canceled.
+        if: ${{ success() }}
+        # Uploads code coverage to codecov.io
+        run: bash <(curl -s https://codecov.io/bash)
+
+  job_build:
+    name: PG ${{ matrix.pg }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     env:
       PG: ${{ matrix.pg }}
     strategy:
       matrix:
         include:
-          # SEEN JUN 2026
+          # SEEN JUN 2026 AUG 2026
           # Ubuntu 24.04 - ubuntu-latest or ubuntu-24.04
           # https://github.com/actions/runner-images
           # noble (24.04, LTS), plucky (25.04, amd64 only)
@@ -155,14 +227,23 @@ jobs:
           # Regular expression search - "Package: postgresql-18$"
           # https://ftp.postgresql.org/pub/repos/apt/dists/noble-pgdg/main/binary-amd64/Packages
           - pg: 18
+            os: ubuntu-latest
           - pg: 17
+            os: ubuntu-latest
           - pg: 16
+            os: ubuntu-latest
           - pg: 15
+            os: ubuntu-latest
           - pg: 14
+            os: ubuntu-latest
           - pg: 13
+            os: ubuntu-latest
           - pg: 12
+            os: ubuntu-latest
           - pg: 11
+            os: ubuntu-latest
           - pg: 10
+            os: ubuntu-latest
     steps:
       - name: Echo site details
         run: echo PG $PG
@@ -206,3 +287,4 @@ jobs:
         if: ${{ success() }}
         # Uploads code coverage to codecov.io
         run: bash <(curl -s https://codecov.io/bash)
+

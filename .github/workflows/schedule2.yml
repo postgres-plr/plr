@@ -1,0 +1,78 @@
+
+name: Ubuntu Builds PLR jobs
+run-name: Ubuntu Builds PLR jobs - ${{ github.event.head_commit.message }}
+
+env:
+  TZ: UTC
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+      debug_enabled:
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+
+  ubuntu_scheduled_daily_job_caller:
+    name: Ubuntu daily builds
+    if: ${{ github.event_name == 'schedule' && github.event.schedule == '30 1 * * *' }}
+    uses: ./.github/workflows/build2.yml
+    secrets: inherit # Automatically passes all repo secrets
+    with:
+      caller_event_name: ${{ github.event_name }}
+      ragged_strategy_matrix: >
+        [
+          { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "REL_19_", "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" }
+        ]
+
+  ubuntu_fullbuildable_job_caller:
+    name: Ubuntu all builds
+    if: ${{ github.event_name != 'schedule' }}
+    uses: ./.github/workflows/build2.yml
+    secrets: inherit # Automatically passes all repo secrets
+    with:
+      caller_event_name: ${{ github.event_name }}
+
+          # PG: PostgreSQL version
+          #     PostgreSQL major version; whole number only.
+          #     or
+          #     PostgreSQL (in Github) branch or tag. Remove STABLE, BETA, RC.
+          #       Always guarantee that the last character is an underscore(_)
+          #
+          # R:  R version.  The only option is 'repo.'
+          #
+          # os: operating system of the [Github Actions] runner.
+          #     Any recent Ubuntu Linux runner images
+          #     at https://github.com/actions/runner-images
+          #     The values are in the "YAML Label".  MacOS images have not been tested.
+          #
+          # GithubActionsIgnoreFail: If 'true' and if the job fails, do not report the failure to the build.
+          #
+          # buildpgFromSRCmethod: If PG is detected to be a PostgreSQL (in Github) branch or tag
+          #                       then can be "" (default internally as meson) or "make".  
+          #                       This parameter is ignored otherwise.
+          #
+
+      ragged_strategy_matrix: >
+        [
+          { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false", "buildpgFromSRCmethod": "make" },
+          { "PG": "18",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "18",      "R": "repo", "os": "ubuntu-26.04-arm",  "GithubActionsIgnoreFail": "false" },
+          { "PG": "REL_19_", "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "17",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "16",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "15",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "14",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "13",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "12",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "11",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+
+          { "PG": "10",      "R": "repo", "os": "ubuntu-24.04",      "GithubActionsIgnoreFail": "false" }
+        ]

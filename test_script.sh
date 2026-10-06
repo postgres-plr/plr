@@ -8,7 +8,7 @@ logok "BEGIN test_script.sh"
 set -v -x -e
 # set -e
 
-# put this in all non-init.sh scripts - pgroot is empty, if using an msys2 binary
+# put this in all non-init.sh scripts - pgroot is empty, if using an Mingw binary
 # but psql is already in the path
 if [ -f "${pgroot}/bin/psql" ]
 then
@@ -36,7 +36,7 @@ logok   "pg_config . . ."
 pg_config
 loginfo "END   verified that PLR has linked to the correct postgreSQL"
 
-pg_ctl -D ${PGDATA} -l logfile start
+pg_ctl -D ${PGDATA} -l logfile -w start
 
 loginfo "BEGIN plr INSTALLCHECK"
 USE_PGXS=1 make installcheck || (cat regression.diffs && false)
