@@ -1,5 +1,5 @@
 project('plr', 'c',
-  version : '8_4_8_8',
+  version : '8_4_8_9',
   license : 'GNU Public License Version 2',
 )
 
@@ -56,7 +56,7 @@ plr_sources = files(
 # https://github.com/orafce/orafce/blob/aec025fafa7862c08722239e614b9bbd959a45c9/meson.build
 
 data = [
-  'plr--unpackaged--8.4.8.8.sql',
+  'plr--unpackaged--8.4.8.9.sql',
   'plr--8.3.0.18--8.4.sql',
   'plr--8.4.1--8.4.2.sql',
   'plr--8.4.3--8.4.4.sql',
@@ -74,7 +74,8 @@ data = [
   'plr--8.4.8.5--8.4.8.6.sql',
   'plr--8.4.8.6--8.4.8.7.sql',
   'plr--8.4.8.7--8.4.8.8.sql',
-  'plr--8.4.8.8.sql',
+  'plr--8.4.8.8--8.4.8.9.sql',
+  'plr--8.4.8.9.sql',
   'plr.control',
 ]
 
