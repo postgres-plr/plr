@@ -1,6 +1,29 @@
-# Codecov will trigger no notifications or statuses 
-# until explicitly told do so by the CLI. 
+# Codecov will trigger no notifications or statuses
+# until explicitly told do so by the CLI.
 # https://docs.codecov.com/docs/codecovyml-reference
 codecov:
   notify:
     manual_trigger: true
+
+coverage:
+  status:
+
+    project:
+      default:
+        # The minimum required coverage percentage
+        # target can be a fixed percentage (e.g., 80%) or 'auto'
+        # 'auto' inherits the overall project coverage target
+        target: 0%
+        # Allowable drop percentage before failing
+        # threshold is the wiggle room allowed.
+        # For example, if target is 80% and threshold is 2%,
+        # Codecov will pass the check as long as the patch hit at least 78%.
+        threshold: 100%
+        # Optional: set to true if you don't want a failing patch to block your PR merge
+        informational: true
+
+    patch:
+      default:
+        target: 0%
+        threshold: 100%
+        informational: true

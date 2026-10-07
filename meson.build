@@ -90,7 +90,7 @@ plr = shared_module('plr',
 contrib_targets += plr
 
 data = [
-  'plr--unpackaged--8.4.8.8.sql',
+  'plr--unpackaged--8.4.8.9.sql',
   'plr--8.3.0.18--8.4.sql',
   'plr--8.4.1--8.4.2.sql',
   'plr--8.4.3--8.4.4.sql',
@@ -108,7 +108,8 @@ data = [
   'plr--8.4.8.5--8.4.8.6.sql',
   'plr--8.4.8.6--8.4.8.7.sql',
   'plr--8.4.8.7--8.4.8.8.sql',
-  'plr--8.4.8.8.sql',
+  'plr--8.4.8.8--8.4.8.9.sql',
+  'plr--8.4.8.9.sql',
   'plr.control'
 ]
 
