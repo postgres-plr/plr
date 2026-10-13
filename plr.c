@@ -45,6 +45,15 @@ typedef struct {
 /*
  * Global data
  */
+
+/* GCC 14 and Clang 5.0 */
+/* avoid "warning: no previous declaration for 'variable name' [-Wmissing-variable-declarations]" */
+/* declare */
+extern MemoryContext plr_caller_context;
+extern MemoryContext plr_SPI_context;
+extern HTAB *plr_HashTable;
+extern char *last_R_error_msg;
+/* define */
 MemoryContext plr_caller_context;
 MemoryContext plr_SPI_context = NULL;
 HTAB *plr_HashTable = (HTAB *) NULL;
@@ -783,7 +792,6 @@ plr_trigger_handler(PG_FUNCTION_ARGS)
 	int				dims[FIXED_NUM_DIMS];
 	int				lbs[FIXED_NUM_DIMS];
 #undef FIXED_NUM_DIMS
-	TRIGGERTUPLEVARS;
 	ERRORCONTEXTCALLBACK;
 	int				i;
 

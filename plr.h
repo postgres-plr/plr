@@ -443,10 +443,6 @@ extern void R_RunExitFinalizers(void);
 
 #define  PLR_CLEANUP \
 	plr_cleanup(int code, Datum arg)
-#define TRIGGERTUPLEVARS \
-	HeapTuple		tup; \
-	HeapTupleHeader	dnewtup; \
-	HeapTupleHeader	dtrigtup
 
 
 #if (PG_VERSION_NUM >= 120000)
