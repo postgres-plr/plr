@@ -6,7 +6,13 @@ env:
 
 on:
   push:
+    # When a push contains ONLY files that match paths-ignore (or do not match paths), 
+    #  GitHub Actions will skip running that workflow.
+    paths-ignore:
+      - '**.md'
   pull_request:
+    paths-ignore:
+      - '**.md'
   workflow_dispatch:
       debug_enabled:
         type: boolean

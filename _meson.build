@@ -1,5 +1,5 @@
 project('plr', 'c',
-  version : '8_4_8_9',
+  version : '8_4_8_10',
   license : 'GNU Public License Version 2',
 )
 
@@ -56,7 +56,7 @@ plr_sources = files(
 # https://github.com/orafce/orafce/blob/aec025fafa7862c08722239e614b9bbd959a45c9/meson.build
 
 data = [
-  'plr--unpackaged--8.4.8.9.sql',
+  'plr--unpackaged--8.4.8.10.sql',
   'plr--8.3.0.18--8.4.sql',
   'plr--8.4.1--8.4.2.sql',
   'plr--8.4.3--8.4.4.sql',
@@ -75,7 +75,8 @@ data = [
   'plr--8.4.8.6--8.4.8.7.sql',
   'plr--8.4.8.7--8.4.8.8.sql',
   'plr--8.4.8.8--8.4.8.9.sql',
-  'plr--8.4.8.9.sql',
+  'plr--8.4.8.9--8.4.8.10.sql',
+  'plr--8.4.8.10.sql',
   'plr.control',
 ]
 
@@ -108,6 +109,7 @@ is_mingw      = is_windows and is_not_cygwin and is_not_msvc # pre-processor var
 #   e.g.  Cygwin or Mingw(non-clang), and gcc only
 #   e.g. "gcc -mwin32 -dM -E -xc /dev/null >gcc-mwin32.txt"
 # https://www.cygwin.com/faq.html
+# Not exactly, because Microsoft "WIN32" comes from "windows.h", but "close enough" to be useful.
 #   Makefiles are not processed by "msvc", but the Makefile "may" or "may not" distinguish Cygwin.
 #     PG Makefile does distinguish.
 is_win32      = is_mingw or is_msvc             # use OFTEN - much better reliable detection than is_not_linux

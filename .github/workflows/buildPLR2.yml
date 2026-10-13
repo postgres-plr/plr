@@ -652,7 +652,6 @@ jobs:
           rem Install skips components that it does not know about
           "${{ env.rversionlong }}.exe" /VERYSILENT /COMPONENTS=main,%R_ARCHplat% /DIR=%R_HOME% /NOICONS /TASKS= /LOG=${{ env.rversionlong }}.exe__install.log /SAVEINF=${{ env.rversionlong }}.exe__setup.inf
           type ${{ env.rversionlong }}.exe__setup.inf
-          type ${{ env.rversionlong }}.exe__install.log
           "%R_HOME%\bin\Rscript" --version
           "%R_HOME%\bin\Rscript" --vanilla -e "writeLines(paste0('R_HOME: ', R.home()))"
           "%R_HOME%\bin\Rscript" --vanilla -e "print(R.version)"
@@ -779,6 +778,7 @@ jobs:
             ${{ env.MINGW_PACKAGE_PREFIX }}-make
             make
             ${{ env.MINGW_PACKAGE_PREFIX }}-${{ env.compilerExe }}
+            ${{ ( env.compilerEnv == 'MINGW32' || env.compilerEnv == 'UCRT64' ) && env.MINGW_PACKAGE_PREFIX || '' }}${{ ( env.compilerEnv == 'MINGW32' || env.compilerEnv == 'UCRT64' ) && '-libgomp' || '' }}
             ${{ env.compilerExe == 'clang' && env.MINGW_PACKAGE_PREFIX || '' }}${{ env.compilerExe == 'clang' && '-llvm-openmp' || '' }}
             tar
             gzip
