@@ -11,7 +11,7 @@ This presumes you installed PostgreSQL using the PGDG repositories found [here](
 yum install plr-nn
 ```
 
-Where nn is the major version number such as 18 for PostgreSQL version 18.x
+Where nn is the major version number such as 19 for PostgreSQL version 19.x
 
 To set R_HOME for use by PostgreSQL.
 
@@ -73,8 +73,8 @@ You may explicitly include the path of pg_config to `PATH`, such as
 
 ```bash
 cd plr
-PATH=/usr/pgsql-18/bin/:$PATH; USE_PGXS=1 make
-echo "PATH=/usr/pgsql-18/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
+PATH=/usr/pgsql-19/bin/:$PATH; USE_PGXS=1 make
+echo "PATH=/usr/pgsql-19/bin/:$PATH; USE_PGXS=1 make install" | sudo sh
 ```
 If you want to use git to pull the repository, run the following command before the make command:
 
@@ -94,8 +94,8 @@ USE_PGXS=1 make install
 
 Using https://www.msys2.org/ UCRT64 or MINGW32:
 ```
-export R_HOME=/c/progra~1/R/R-4.6.1 
-export PATH=$PATH:/c/progra~1/PostgreSQL/18/bin
+export R_HOME=/c/progra~1/R/R-4.6.2 
+export PATH=$PATH:/c/progra~1/PostgreSQL/19/bin
 USE_PGXS=1 make
 USE_PGXS=1 make install
 ```
@@ -106,17 +106,22 @@ If R is built and installed using a sub-architecture, as explained in the sectio
 https://cran.r-project.org/doc/manuals/r-release/R-admin.html
 for example, in an R
 ```
-R-x.y.z for Windows (32/64 bit) and version 4.1.3 or earlier
 R-x.y.z for Windows (64 bit) and version 4.2.0 or later
 ```
 that has been downloaded (and installed) from
 [https://cran.r-project.org/bin/windows/base/old/](https://cran.r-project.org/bin/windows/base/old/)
 
+```
+R-x.y.z for Windows (32/64 bit) and version 4.1.3 or earlier
+```
+that has been downloaded (and installed) from
+[https://cran-archive.r-project.org/bin/windows/base/old/](https://cran-archive.r-project.org/bin/windows/base/old/)
+
 then, include the environment variable R_ARCH.
 For example R_ARCH=/x64 (or R_ARCH=/i386 as appropriate):
 ```
-export R_HOME=/c/progra~1/R/R-4.6.1
-export PATH=$PATH:/c/progra~1/PostgreSQL/18/bin
+export R_HOME=/c/progra~1/R/R-4.6.2
+export PATH=$PATH:/c/progra~1/PostgreSQL/19/bin
 export R_ARCH=/x64
 USE_PGXS=1 make
 USE_PGXS=1 make install
@@ -159,7 +164,7 @@ changing:
 
 In Windows environment (generally):
 ```
-R_HOME=C:\Progra~1\R\R-4.6.1
+R_HOME=C:\Progra~1\R\R-4.6.2
 Path=%PATH%;%R_HOME%\x64\bin
 ```
 
@@ -219,7 +224,7 @@ and choose [ ] "Save version number in registry".
 At a Command Prompt run (and may have to be an Administrator Command Prompt)
 and using wherever your path to R may be, do:
 ```
-setx R_HOME "C:\Program Files\R\R-4.6.1" /M
+setx R_HOME "C:\Program Files\R\R-4.6.2" /M
 ```
 #### Second Optionally:
 
@@ -228,7 +233,7 @@ and choose [ ] "Save version number in registry".
 Choose Control Panel -> System -> advanced system settings -> Environment Variables button.
 In the "System variables" area, create the System Variable, called R_HOME.
 Give R_HOME the value of the PATH to the R home,
-for example (without quotes) "C:\Program Files\R\R-4.6.1".
+for example (without quotes) "C:\Program Files\R\R-4.6.2".
 
 If you forgot to set the R_HOME environment variable (by any method),
 then (eventually) you may get this error:
@@ -250,7 +255,7 @@ Control Panel -> System -> Advanced System Settings -> Environment Variables but
 In the "System variables" area, choose the System Variable, called "Path".
 Click on the Edit button.
 Add the R.dll folder to the "Path".
-For example (without quotes), add "C:\Program Files\R\R-4.6.1\bin\x64" or
+For example (without quotes), add "C:\Program Files\R\R-4.6.2\bin\x64" or
 or "C:\Program Files\R\R-4.1.3\bin\i386".
 If you are running R version 2.11 or earlier on Windows, the R.dll folder is different;
 instead of "bin\i386" or "bin\x64", it is "bin".
@@ -270,21 +275,21 @@ Restart the PostgreSQL cluster, do:
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net stop postgresql-x64-18
+net stop postgresql-x64-19
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-18 (or whatever service your PostgreSQL is running under).
+Find postgresql-x64-19 (or whatever service your PostgreSQL is running under).
 Right click and choose "Stop"
 
 At a Command Prompt run (and you may have to be in an Administrator Command Prompt):
 Use the service name of whatever service your PostgreSQL is running under.
 ```
-net start postgresql-x64-18
+net start postgresql-x64-19
 ```
 Alternately, do the following:
 Control Panel -> Administrative Tools -> Services
-Find postgresql-x64-18 (or whatever service your PostgreSQL is running under).
+Find postgresql-x64-19 (or whatever service your PostgreSQL is running under).
 Right click and choose "Start"
 
 

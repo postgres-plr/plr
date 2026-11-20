@@ -33,8 +33,7 @@ jobs:
       caller_event_name: ${{ github.event_name }}
       ragged_strategy_matrix: >
         [
-          { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
-          { "PG": "REL_19_", "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" }
+          { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" }
         ]
 
   ubuntu_fullbuildable_job_caller:
@@ -65,13 +64,15 @@ jobs:
           #                       This parameter is ignored otherwise.
           #
 
+#         { "PG": "REL_19_", "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+
       ragged_strategy_matrix: >
         [
           { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
           { "PG": "master",  "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false", "buildpgFromSRCmethod": "make" },
+          { "PG": "19",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
+          { "PG": "19",      "R": "repo", "os": "ubuntu-26.04-arm",  "GithubActionsIgnoreFail": "false" },
           { "PG": "18",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
-          { "PG": "18",      "R": "repo", "os": "ubuntu-26.04-arm",  "GithubActionsIgnoreFail": "false" },
-          { "PG": "REL_19_", "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
           { "PG": "17",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
           { "PG": "16",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },
           { "PG": "15",      "R": "repo", "os": "ubuntu-26.04",      "GithubActionsIgnoreFail": "false" },

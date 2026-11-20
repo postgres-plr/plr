@@ -91,8 +91,8 @@ cat ${PG_SOURCE}/meson_options.txt | tail
 cat ${PG_SOURCE}/contrib/meson.build | tail
 echo 'subdir('"'"'plr'"'"')'                                   >>             ${PG_SOURCE}/contrib/meson.build
 cat ${PG_SOURCE}/contrib/meson.build | tail
-# R library
-cat /usr/lib/pkgconfig/libR.pc
+# R library (no longer exists or moved? Deinitely NOT EXACTLY HERE anymore)
+# cat /usr/lib/pkgconfig/libR.pc
 
 # PL/R PREPARE for "meson ( buildpgANDplrInSRCcontrib == 'true' )"
 #
