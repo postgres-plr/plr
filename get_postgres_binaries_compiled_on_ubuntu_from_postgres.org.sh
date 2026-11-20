@@ -9,15 +9,15 @@ if [ ! -f "${GITHUB_ENV}" ]; then touch discard.txt; export GITHUB_ENV=discard.t
 # https://apt.postgresql.org/pub/repos/apt/dists/
 # 
 # Image available ?
-# SEEN OCT 2026
+# SEEN OCT 2026, NOV 19 2026S
 # YAML Label
-# ubuntu-26.04
+# ubuntu-26.04  ubuntu-26.04-arm
 # https://github.com/actions/runner-images
 #
 # Pre-built PG available?
-# SEEN OCT 2026
+# SEEN NOV 19 2026
 # https://ftp.postgresql.org/pub/repos/apt/dists/resolute-pgdg/
-# file "Packages" Regular expression search - "Package: postgresql-18$"
+# file "Packages" Regular expression search - "Package: postgresql-19$"
 # https://ftp.postgresql.org/pub/repos/apt/dists/resolute-pgdg/main/binary-amd64/Packages
 
 # Inputs

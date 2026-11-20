@@ -426,10 +426,10 @@ jobs:
           if(("${env:rversion}" -ne "devel-aarch64") -and ("${env:rversion}" -ne "devel-x86_64")) {
             $matches = @()
             if(-not ("${env:rversionlong}" -match 'patched|devel')) {
-              if([int]"${{ env.rversionnumeric }}" -ge 40000 ) {
+              if([int]"${{ env.rversionnumeric }}" -ge 40200 ) {
                 ${env:CRAN_R_DOWNLOAD_URL} = "https://cran.r-project.org/bin/windows/base/old/${{ env.rversion }}/${env:rversionlong}.exe"
               }
-              if([int]"${{ env.rversionnumeric }}" -le 30603 ) {
+              if([int]"${{ env.rversionnumeric }}" -le 40103 ) {
                 ${env:CRAN_R_DOWNLOAD_URL} = "https://cran-archive.r-project.org/bin/windows/base/old/${{ env.rversion }}/${env:rversionlong}.exe"
               }
             }
@@ -558,6 +558,7 @@ jobs:
         id: downloadfileRforWindows
         with:
           url: ${{ env.CRAN_R_DOWNLOAD_URL }}
+          retry-times: 10
 
       - name: Download R Development for Windows or Windows-Arm, x86_64 or aarch64, respectively
         if: >-
@@ -568,6 +569,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash # Git for Windows Bash
         run: |
+          set -x -v -e
           #
           # Note, since Aug 6, 2026, these are also available here (a second location)
           # https://github.com/r-devel/windows-arm64/releases
@@ -581,13 +583,37 @@ jobs:
           export GITHUB_RUN_ID=$(gh run list --status success --json databaseId --limit 1 | jq -r '.[0].databaseId')
           export "GITHUB_RUN_ID=${GITHUB_RUN_ID}" >>  ${GITHUB_ENV}
           echo "GITHUB_RUN_ID: ${GITHUB_RUN_ID}"
+          gh_download () {
+            for i in {1..10}
+            do
+              gh run download "${GITHUB_RUN_ID}" -n "${AssetName}" && export RESULT_FLAG=$? || export RESULT_FLAG=$? || true 
+              echo "gh download RESULT_FLAG: ${RESULT_FLAG}"
+              echo "End of gh download attempt ${i} of gh download of asset name: ${AssetName}."
+              if [ "${RESULT_FLAG}" -ne "0" ]
+              then
+                echo -n "gh download had failed.  "
+                if [ "${i}" -ne "10" ]
+                then
+                  echo "Retrying ..."
+                else
+                  echo "No more retries will happen.  Error in gh download."
+                  exit 1
+                fi
+              else
+                echo "gh download had succeeded."
+                break
+              fi
+            done
+          }
           if [ "${rversion}" == "devel-aarch64" ]
           then
-            gh run download "${GITHUB_RUN_ID}" -n "Win-installer-aarch64"
+            export AssetName="Win-installer-aarch64"
+            gh_download
           fi
           if [ "${rversion}" == "devel-x86_64" ]
           then
-            gh run download "${GITHUB_RUN_ID}" -n "Win-installer-x86_64"
+            export AssetName="Win-installer-x86_64"
+            gh_download
           fi
           gh repo set-default "${GITHUB_REPOSITORY}"
           echo "GITHUB_REPOSITORY: ${GITHUB_REPOSITORY}"
