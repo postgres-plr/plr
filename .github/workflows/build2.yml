@@ -34,7 +34,7 @@ jobs:
     steps:
 
     - name: Git Checkout this Repository Code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Matrix Variables
       run: |
