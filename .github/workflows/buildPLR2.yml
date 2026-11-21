@@ -443,12 +443,19 @@ jobs:
           Set-EnvVar "CRAN_R_DOWNLOAD_URL=${env:CRAN_R_DOWNLOAD_URL}"
           echo "CRAN_R_DOWNLOAD_URL: ${env:CRAN_R_DOWNLOAD_URL}"
 
+          ${env:WinSSL3} = "${{ matrix.WinSSL3 }}"
+          if("${env:WinSSL3}" -eq ""){${env:WinSSL3} = "notset"}
+          Set-EnvVar "WinSSL3=${env:WinSSL3}"
+
+          echo "WinSSL3: ${env:WinSSL3}"
+
+
       - name: Checkout Code of This Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Checkout PostgreSQL Code
         if: ${{ env.pgSRCversion != 'notset' }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: 'postgres/postgres'
 
@@ -498,7 +505,7 @@ jobs:
           env.rversion != 'devel-aarch64' && env.rversion != 'devel-x86_64' &&
           env.CRAN_R_DOWNLOAD_URL != 'notset'
           }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: cacheRWindowsInstallerExe
         with:
           path: ${{ env.rversionlong }}.exe
@@ -511,7 +518,7 @@ jobs:
           ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.MingwtestonpgWIN == 'true' &&
           env.PGVER2 != env.GITHUB_ACTIONS_WINDOWS_RUNNER_PG_MAJOR_VERSION && env.Platform == 'x64'
           }}
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: cachePGWindowsInstallerExe
         with:
           path: ${{ env.pgWINversionlong }}.exe
@@ -519,9 +526,19 @@ jobs:
         env:
           SEGMENT_DOWNLOAD_TIMEOUT_MINS: 10
 
+      - name: Cache WinSSL3 for Test on PostgreSQL for Windows
+        if: ${{ ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.WinSSL3 == 'true' ) }}
+        uses: actions/cache@v6
+        id: cacheWinSSL3Zip
+        with:
+          path: openssl-3.6.2.zip
+          key:  openssl-3.6.2.zip
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+
 #     - name: Cache GNU diffutils for Test on PostgreSQL for Windows
 #       if: ${{ ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.MingwtestonpgWIN == 'true' ) }}
-#       uses: actions/cache@v5
+#       uses: actions/cache@v6
 #       id: cacheDiffutilsZip
 #       with:
 #         path: diffutils-2.8.7-1-bin.zip
@@ -531,7 +548,7 @@ jobs:
 
 #     - name: Cache StrawberryPerl
 #       if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.compilerEnv == 'MINGW32' }}
-#       uses: actions/cache@v5
+#       uses: actions/cache@v6
 #       id: cacheStrawberryPerlMsi
 #       with:
 #         path: strawberry-perl-5.38.2.2-64bit.msi
@@ -629,6 +646,19 @@ jobs:
         with:
           url: ${{ env.ENTDB_PG_DOWNLOAD_URL }}
 
+      - name: Download WinSSL3 for Test on PostgreSQL for Windows
+        if: ${{ ( ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.WinSSL3 == 'true' ) ) &&
+          steps.cacheWinSSL3Zip.outputs.cache-hit != 'true'
+          }}
+        uses: suisei-cn/actions-download-file@v1.6.1
+        id: downloadWinSSL3Zip
+        with:
+          retry-times: 1
+          # verified NOV 20 2026
+          # last file update 2026-05-03
+          # url from Google Chrome triple verticle dots Download page
+          url: https://psychz.dl.sourceforge.net/project/openssl/openssl-3.6.2-x64/openssl-3.6.2.zip?viasf=1&fid=78c6a18ebfd9607f&e=1795230732&st=ZVbNUVCS0gFL-koE9NOjhg
+
 #     # The "crazy-max/ghaction-chocolatey@v4" "install SOMEHING_AT_SOURCEFORGE" file download often times-out.
 #     - name: Choco Install GNU diffutils for Test on PostgreSQL for Windows
 #       uses: crazy-max/ghaction-chocolatey@v4
@@ -661,6 +691,24 @@ jobs:
 #         # https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_53822_64bit/strawberry-perl-5.38.2.2-64bit.msi
 #         # https://strawberryperl.com/releases.html
 #         url: https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_53822_64bit/strawberry-perl-5.38.2.2-64bit.msi
+
+      # Install WinSSL3
+      - name: Extract WinSSL3Zip and add WinSSL3Zip bin and lib directories to the PATH for Test on PostgreSQL for Windows
+        if: ${{ ( env.os == 'windows-2025-vs2026' && env.compilerClass == 'Mingw' && env.WinSSL3 == 'true' ) }}
+        shell: cmd
+        run: |
+          echo on
+          rem MKDIR creates any intermediate directories in the path, if needed.
+          mkdir                                "C:\OTHERBIN"
+          rem 7z is provided by Github Actions
+          7z x  openssl-3.6.2.zip            -o"C:\OTHERBIN"
+          dir                                  "C:\OTHERBIN\openssl-3.6.2"
+          dir                                  "C:\OTHERBIN\openssl-3.6.2\bin"
+          dir                                  "C:\OTHERBIN\openssl-3.6.2\lib"
+          tree /f                              "C:\OTHERBIN\openssl-3.6.2"
+          rem - man7.org/linux/man-pages/man1/printf.1.html
+          printf                               "C:\\OTHERBIN\\openssl-3.6.2\\bin" >> %GITHUB_PATH%
+          printf                               "C:\\OTHERBIN\\openssl-3.6.2\\lib" >> %GITHUB_PATH%
 
       - name: Install R for Windows R-x.y.z R-rmajor.rminor.rpatch
         if: ${{ env.osClass == 'windows' && env.compilerClass == 'Mingw' }}
@@ -721,12 +769,18 @@ jobs:
           PGVER2: ${{ env.PGVER2 }}
           PGROOT2: ${{ env.PGROOT2 }}
           Platform: ${{ env.Platform }}
+          pgwinmajor: ${{ env.pgwinmajor }}
         shell: cmd
         run: |
           echo on
-          "${{ env.pgWINversionlong }}.exe" --unattendedmodeui none --mode unattended --enable-components server,commandlinetools --disable-components pgAdmin,stackbuilder --superpassword "root" > nul
-          rem postgresql-17.11
-          rem "C:\Program Files\PostgreSQL\17" (OCT 2026)
+          rem PostgreSQL command line parameters
+          rem On Windows and MacOS you can optionally include parameters for a PostgreSQL installation on the command line 
+          rem   when invoking the PostgreSQL installer.
+          rem https://www.enterprisedb.com/docs/supported-open-source/postgresql/installing/command_line_parameters/
+          rem
+          if %pgwinmajor% GEQ 14 "${{ env.pgWINversionlong }}.exe" --unattendedmodeui none --mode unattended --enable-components server,commandlinetools --disable-components stackbuilder --superpassword "root" > nul
+          rem postgresql-17.12
+          rem "C:\Program Files\PostgreSQL\17" (NOV 20 2026)
           rem "C:\Program Files\PostgreSQL\17\data"
           rem root
           rem 5432
@@ -843,7 +897,7 @@ jobs:
 
       - name: Set up Cygwin
         if: ${{ env.os == 'windows-2025-vs2026' && env.compilerClass == 'cygwin' }}
-        uses: cygwin/cygwin-install-action@v6
+        uses: cygwin/cygwin-install-action@v7
         with:
           # x86 or x86_64
           #         GitHub offers ternary operator like behaviour that you can use in expressions
